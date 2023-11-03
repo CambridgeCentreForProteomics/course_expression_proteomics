@@ -1,0 +1,6 @@
+book:
+  chapters:
+    # you can edit how your chapters are organised here
+    - part: "EDIT THIS"
+      chapters:
+        - materials/00-template.md
