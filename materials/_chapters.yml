@@ -1,6 +1,9 @@
 book:
   chapters:
     # you can edit how your chapters are organised here
-    - part: "EDIT THIS"
+    - part: "Expression proteomics"
       chapters:
-        - materials/00-template.md
+        - materials/01-template.Rmd
+    - part: "R and Bioconductor"
+      chapters:
+        - materials/02-template.Rmd
