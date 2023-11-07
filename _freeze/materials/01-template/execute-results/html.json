@@ -1,0 +1,14 @@
+{
+  "hash": "3c69e23c131c13fa546d4fa257e4666f",
+  "result": {
+    "markdown": "---\ntitle: Expression proteomics\n---\n\n\n::: {.callout-tip}\n#### Learning Objectives\n\n- Some objectives\n:::\n\n\n## What is proteomics?\n\nSome info here\n\n## Summary\n\n::: {.callout-tip}\n#### Key Points\n\n- Last section of the page is a bulleted summary of the key points\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
