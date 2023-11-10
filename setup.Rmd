@@ -13,8 +13,10 @@ Note that we use tabsets to provide instructions for all three major operating s
 ::: {.callout-tip level=2}
 ## Workshop Attendees
 
-If you are attending one of our workshops, we will provide a training environment with all of the required software and data.  
-If you want to setup your own computer to run the analysis demonstrated on this course, you can follow the instructions below.
+If you are attending one of our workshops, we will provide a training
+environment with all of the required software and data. If you want to setup
+your own computer to run the analysis demonstrated on this course, you can
+follow the instructions below.
 :::
 
 ## Data
@@ -28,6 +30,12 @@ Download and unzip the folder to your Desktop to follow along with the materials
 </a>
 
 ## Working on your own laptop
+
+If you wish to work on your own laptop during the course and not the training
+machines you will need to have the latest stable versions of R, RStudio and
+Bioconductor including the packages listed below.
+
+### R and RStudio
 
 This lesson assumes that you have current versions of the following installed on 
 your computer:
@@ -72,6 +80,59 @@ Download and install all these using default options:
 
 :::
 
+### R package installation
+
+In this workshop we make use of open-source software from the 
+[R](https://www.r-project.org) [Bioconductor](https://bioconductor.org) 
+[@Huber2015] project. The [Bioconductor initiative](https://bioconductor.org) 
+provides [R](https://www.r-project.org) software packages dedicated
+to the processing of high-throughput complex biological data. Packages are
+open-source, well-documented and benefit from an active community of developers.
+
+Detailed instructions for the installation of Bioconductor packages are
+documented on the [Bioconductor Installation page](http://bioconductor.org/install/). 
+The main packages required for this workshop are installed using the code below.
+Additional packages required for downstream statistics and interpretation are
+installed as required.
+
+```{r install_packages, eval = FALSE, message = FALSE}
+if (!require("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+
+BiocManager::install(c("QFeatures",
+                       "ggplot2",
+                       "stringr"
+                       "NormalyzerDE",
+                       "corrplot",
+                       "Biostrings",
+                       "limma",
+                       "impute",
+                       "dplyr",
+                       "tibble",
+                       "org.Hs.eg.db",
+                       "clusterProfiler",
+                       "enrichplot"))
+```
+
+After installation, each package must be loaded before it can be used in the R
+session. This is achieved via the `library` function. Here we load all packages 
+included in this course.
+
+```{r load_packages, message = FALSE, results = "hide"}
+library("QFeatures")
+library("ggplot2")
+library("stringr")
+library("dplyr")
+library("tibble")
+library("NormalyzerDE")
+library("corrplot")
+library("Biostrings")
+library("limma")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+```
 
 
 <!--

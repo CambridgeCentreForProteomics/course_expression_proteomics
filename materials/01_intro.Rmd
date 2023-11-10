@@ -2,7 +2,7 @@
 title: The data 
 ---
 
-# Use case: Exploring changes in protein abundance across stages of the cell cycle
+## Use case: Exploring changes in protein abundance across stages of the cell cycle
 
 As a use case, we will analyse an expression proteomics dataset from @Queiroz2019.
 The aim of this experiment was to examine proteins involved in the cell cycle
@@ -94,7 +94,7 @@ taken throughout the cell cycle. If we wanted to carry out absolute quantificati
 of proteins, TMT labelling would not be an appropriate method.
 
 
-#### MS2- vs. MS3-based TMT quantitaion
+### MS2- vs. MS3-based TMT quantitaion
 
 Originally the reporter ion of a TMT reagent was released by fragmentation of 
 the precursor peptide. This meant that the reporter ion signals could be 

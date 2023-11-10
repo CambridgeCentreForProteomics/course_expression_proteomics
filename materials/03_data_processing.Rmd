@@ -14,15 +14,30 @@ title: Data processing
 
 :::
 
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("ggplot2")
+library("stringr")
+library("dplyr")
+library("tibble")
+library("NormalyzerDE")
+library("corrplot")
+library("Biostrings")
+library("limma")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+load("output/lesson02.rda", verbose = TRUE)
+```
 
-# Data cleaning at the PSM-level
+## Data cleaning at the PSM-level
 
 Now that we have our PSM level quantitative data stored in a `QFeatures` object,
 the next step is to carry out some data cleaning. However, as with all data 
 analyses, it is sensible to keep a copy of our raw data in case we need to refer
 back to it later. 
 
-## Creating a copy of the raw data 
+### Creating a copy of the raw data 
 
 To create a copy of the `psms_raw` data we can first extract the `assay` and 
 then add it back to our `QFeatures` object using the `addAssay` function. When
@@ -70,7 +85,7 @@ assayLink(x = cc_qf,
 ```
 
 
-## Data cleaning using `filterFeatures`
+### Data cleaning using `filterFeatures`
 
 Now that we have created a copy of our data, we can start the process of data 
 cleaning. We will only remove data from the second copy of our data, the one
@@ -210,7 +225,7 @@ carry out a more stringent or exploratory analyses, these thresholds can be
 altered accordingly.
 
 
-# Management of missing data 
+## Management of missing data 
 
 Having cleaned our data, the next step is to deal with missing values. It is 
 important to be aware that missing values can arise for different reasons in 
@@ -228,7 +243,7 @@ due to technical reasons are **missing completely at random (MCAR)** and appear
 in an intensity-independent manner.
 
 
-## Influence of experimental design
+### Influence of experimental design
 
 All quantitative proteomics datasets will have some number of missing values, 
 although the extent of data missingness differs between label-free and label-based
@@ -256,7 +271,7 @@ a defined range in every run results in more consistent coverage and accuracy
 than DDA experiments, hence lower missing values.
 
 
-## Exploration of missing data
+### Exploration of missing data
 
 The management of missing data can be considered in three main steps:
 
@@ -361,7 +376,7 @@ nNA(cc_qf[["psms_filtered"]])$nNArows$pNA %>%
 ```
 
 
-## Removing data with high levels of missingness
+### Removing data with high levels of missingness
 
 Although the use-case data has only a small number of missing values it is still
 common to remove individual features that have too many missing values across
@@ -381,7 +396,7 @@ proportion of missing values (relative to the average). Therefore, we do not
 need to remove any entire samples/columns.
 
 
-## Imputation of remaining missing values
+### Imputation of remaining missing values
 
 The final step in managing our missing data is to consider whether to impute.
 Imputation involves the replacement of missing values with probable values.
@@ -442,7 +457,7 @@ cc_qf <- impute(object = cc_qf,
 ```
 
 
-# Logarithmic transformation
+## Logarithmic transformation
 
 Now that we are satisfied with our PSM quality, we need to log2 transform the
 quantitative data. If we take a look at our current quantitative data we will 
@@ -500,7 +515,7 @@ cc_qf <- logTransform(object = cc_qf,
 ```
 
 
-# Aggregation of PSMs to proteins
+## Aggregation of PSMs to proteins
 
 We have now reached the point where we are ready to aggregate our PSM level data
 upward to the protein level. In a bottom-up MS experiment we initially identify
@@ -542,7 +557,7 @@ cc_qf <- aggregateFeatures(cc_qf,
 
 
 
-# Normalisation of quantitative data 
+## Normalisation of quantitative data 
 
 We now have log protein level abundance data to which we could apply a parametric
 statistical test. However, to perform a statistical test and discover whether any 
@@ -604,6 +619,9 @@ Create two boxplots to visualise the process of normalisation??
 Determine how many PSMs, peptides and proteins were lost during processing of
 raw data to our final protein list?
 
+```{r, include=FALSE}
+save(cc_qf, file = "output/lesson03.rda")
+```
 
 ::: {.callout-tip}
 #### Key Points

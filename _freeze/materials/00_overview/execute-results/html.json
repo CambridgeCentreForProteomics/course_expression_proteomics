@@ -1,0 +1,14 @@
+{
+  "hash": "4463b2857c12e7b3d752313bc65d9525",
+  "result": {
+    "markdown": "---\ntitle: Overview\n---\n\n  \nSet-up information:\n\n* Instructors\n* Outline - learning objectives (can also do on a per-episode basis)\n* Prerequisites\n* Shared documents (etherpad or google doc) links - for introducing themselves and asking questions\n* Course etiquette\n* Timetable\n\n\nIntroduction: \n\n* Background information about bottom-up MS    \n  + why we do expression proteomics (study changes in protein abundance)?\n  + what is bottom-up proteomics and why?\n  + label-free vs. label-based methods for quantitation\n  + brief overview of mass spec (i.e., MS1 vs. MS2, define PSM etc)\n  + processing of raw mass spec data using third party software\n  + output table of an identification search (include link to excel)\n* Explanation of the use-case data\n\nProvide reference to F1000 paper for additional information\n\n## Instructors\n\nThis workshop will be run by: \n\n* Lisa M. Breckels - Cambridge Centre for Proteomcis, University of Cambridge\n* Charlotte Hutchings - Cambridge Centre for Proteomcis, University of Cambridge\n* Charlotte S. Dawson - Cambridge Centre for Proteomcis, University of Cambridge\n* Thomas Krueger - Department of Biochemistry, University of Cambridge\n\n\n## Course prerequisites \n\nThis workshop is aimed at learners who are interested in developing their skills\nusing R for the analysis of expression proteomics data. **A working knowledge of R is assumed and essential. If you are not familiar with R and the RStudio environment, you will struggle on this course.** If you are not confident using R, we strongly suggest that you\nwork through an introductory R course before attending this course. \n**A basic understanding of proteomics is also expected.** \n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -14,7 +14,7 @@ title: Statistical analysis
 :::
 
 
-# Differential expression analysis 
+## Differential expression analysis 
 
 Having cleaned our data, aggregated from PSM to protein level, completed a
 log2 transformation and normalised the data, we are now ready to carry out
@@ -28,7 +28,7 @@ Our alternative hypothesis is:
 **(H1)** The change in abundance for a protein between cell cycle stages is greater than 0.
 
 
-## Selecting a statistical test
+### Selecting a statistical test
 
 There are a few aspects of our data that we need to consider prior to deciding
 which statistical test to apply.
@@ -48,28 +48,28 @@ tests are easily done within R but will not be covered in this course. Here, we
 will use a form of t-test since we know that these assumptions have been met.
 
 
-## Using the empirical Bayes moderated t-test from the `Limma` package
+### Using the empirical Bayes moderated t-test from the `Limma` package
 
 * Explain each term - Bayes moderated, t-test
 * Explain the concept of contrasts
 * Discuss the two types of limma model (trend = TRUE)
 
 
-## Diagnostic plots to verify suitability of our statistical model
+### Diagnostic plots to verify suitability of our statistical model
 
 * p-value histogram 
 * SA plot
 
-## Interpreting the output of our statisical model
+### Interpreting the output of our statisical model
 
-### Adding user-defined significance thresholds based on FDR and LFC
+#### Adding user-defined significance thresholds based on FDR and LFC
 
 * Discussion about p-value correction and why it is needed -> FDR as a method for this
 * Discussion about whether a log2FC threshold should also be set -> mention MS2 TMT ratio compression
 
 
 
-## Visualising the results of our statistical model
+### Visualising the results of our statistical model
 
 * Volcano plot
 * MA plot

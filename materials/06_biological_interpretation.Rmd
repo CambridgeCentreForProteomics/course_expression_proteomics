@@ -11,7 +11,7 @@ title: Biological interpretation
 
 :::
 
-# Biological interpretation of differentially abundant proteins
+## Biological interpretation of differentially abundant proteins
 
 Our statistical analyses provided us with a list of proteins that are present
 with significantly different abundances between different stages of the cell 
@@ -38,7 +38,7 @@ differential abundance:
 * Compare our changing proteins to those previously identified in other proteomic
 studies of the cell cycle
 
-## Gene Ontology (GO) enrichment analysis 
+### Gene Ontology (GO) enrichment analysis 
 
 One of the common methods used to probe the biological relevance of proteins with
 significant changes in abundance between conditions is to carry out Gene Ontology 
