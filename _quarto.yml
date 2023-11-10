@@ -7,9 +7,9 @@ project:
   type: book
   output-dir: _site
   render:
-    - index.md
-    - setup.md
-    - materials.md
+    - index.Rmd
+    - setup.Rmd
+    - materials.Rmd
     - materials/*
     - "!materials/*/no_render"
 
@@ -49,12 +49,12 @@ book:
       - icon: twitter
         href: https://twitter.com/bioinfocambs
         aria-label: Bioinformatics Training Facility Twitter
-    title: "Analysis of expression Proteomics data in R"
+    title: "Analysis of expression proteomics data in R"
   chapters:
     - part: "Welcome"
       chapters:
         - text: "Overview"
-          href: index.md
+          href: index.Rmd
         - text: "Data & Setup"
-          href: setup.md
+          href: setup.Rmd
     

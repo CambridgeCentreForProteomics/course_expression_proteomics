@@ -1,0 +1,81 @@
+---
+title: Biological interpretation
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Be aware of different analyses that can be done to gain a biological understanding of expression proteomics results
+* Understand the concept of Gene Ontology (GO) enrichment analyses 
+* Complete GO enrichment analyses using the `enrichGO` function from the `clusterProfiler` package
+
+:::
+
+# Biological interpretation of differentially abundant proteins
+
+Our statistical analyses provided us with a list of proteins that are present
+with significantly different abundances between different stages of the cell 
+cycle. We can get an initial idea about what these proteins are and do by 
+looking at the protein descriptions. 
+
+```{r}
+
+```
+
+Whilst we may recognise some of the changing proteins, this might be the first
+time that we are coming across others. Moreover, some protein descriptions 
+contain useful information, but this is very limited. We still want to find out
+more about the biological role of the statistically significant proteins so that
+we can infer the potential effects of their abundance changes. 
+
+There are many functional analyses that could be done on the proteins with
+differential abundance:
+
+* Investigate the biological pathways that the proteins function within (KEGG etc.)
+* Identify potential interacting partners (IntAct, String.dc etc.)
+* Determine the subcellular localisation in which the changing proteins are found 
+* Understand the co-regulation of their mRNAs (Expression Atlas)
+* Compare our changing proteins to those previously identified in other proteomic
+studies of the cell cycle
+
+## Gene Ontology (GO) enrichment analysis 
+
+One of the common methods used to probe the biological relevance of proteins with
+significant changes in abundance between conditions is to carry out Gene Ontology 
+(GO) enrichment, or over-representation, analysis. 
+
+The Gene Ontology consortium have defined a set of hierarchical descriptions to 
+be assigned to genes and their resulting proteins. These descriptions are split
+into three categories: cellular components (CC), biological processes (BP) and
+molecular function (MF). The idea is to provide information about a protein's
+subcellular localisation, functionality and which processes it contributes to
+within the cell. Hence, the overarching aim of GO enrichment analysis is to 
+answer the question: 
+
+*"Given a list of proteins found to be differentially abundant in my phenotype of interest, what are the cellular components, molecular functions and biological processes involved in this phenotype?".*
+
+Unfortunately, just looking at the GO terms associated with our differentially
+abundant proteins is insufficient to draw any solid conclusions. For example, if
+we find that **xx** of the **xx** proteins significantly upregulated in G1 phase
+are annotated with the GO term " xxx ", it may seem intuitive to conclude that 
+this biological process is important for the G1 phenotype. However, if 
+
+This leads us to the concept of an over-representation analysis. We wish to ask 
+whether any GO terms are over-represented (i.e., present at a higher frequency 
+than expected by chance) in our lists of differentially abundant proteins. In 
+other words, we need to know how many proteins with a GO term *could* have
+shown differential abundance in our experiment vs. how many proteins with this
+GO term *did* show differential abundance in our experiment. 
+
+```{r}
+
+```
+
+
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Last section of the page is a bulleted summary of the key points
+:::

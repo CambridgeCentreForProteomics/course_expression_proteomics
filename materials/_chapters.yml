@@ -1,9 +1,15 @@
 book:
   chapters:
-    # you can edit how your chapters are organised here
+    # - part: "Welcome"
+    #   chapters:
+    #     - materials/00_overview.Rmd
+    #     - materials/00_setup.Rmd
     - part: "Expression proteomics"
       chapters:
-        - materials/01-template.Rmd
-    - part: "R and Bioconductor"
-      chapters:
-        - materials/02-template.Rmd
+        - materials/01_intro.Rmd
+        - materials/02_import_and_infrastructure.Rmd
+        - materials/03_data_processing.Rmd
+        - materials/04_protein_exploration.Rmd
+        - materials/05_statistical_analysis.Rmd
+        - materials/06_biological_interpretation.Rmd
+    

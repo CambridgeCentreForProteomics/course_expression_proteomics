@@ -1,0 +1,612 @@
+---
+title: Data processing
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Be aware of key data cleaning steps which should or could be completed during the processing of expression proteomics data
+* Make use of the `filterFeatures` function to conditionally remove data from (i) an entire `QFeatures` object or (ii) specified assays of a `QFeatures` object
+* Understand the importance of dealing with missing values in expression proteomics datasets and be aware of different approaches to doing so
+* Be able to aggregate peptide-level information to protein-level using the `aggregateFeatures` function in the `QFeatures` infrastructure
+* Recognise the importance of log transformation (`logTransform`) and normalisation (`normalize`) during the processing of expression proteomics data 
+* Generate key plots to visualise the processes of data cleaning, transformation and aggregation
+
+:::
+
+
+# Data cleaning at the PSM-level
+
+Now that we have our PSM level quantitative data stored in a `QFeatures` object,
+the next step is to carry out some data cleaning. However, as with all data 
+analyses, it is sensible to keep a copy of our raw data in case we need to refer
+back to it later. 
+
+## Creating a copy of the raw data 
+
+To create a copy of the `psms_raw` data we can first extract the `assay` and 
+then add it back to our `QFeatures` object using the `addAssay` function. When
+we do this, we give the second `assay` a new name. Here we will call it
+`psms_filtered` as by the end of our data cleaning and filtering, this `assay`
+will have had the unwanted data removed, whilst the data remains in our 
+`psms_raw` `assay`. 
+
+```{r}
+## Extract a copy of the raw PSM-level data
+raw_data_copy <- cc_qf[["psms_raw"]] 
+
+## Re-add the assay to our QFeatures object with a new name
+cc_qf <- addAssay(x = cc_qf, 
+                  y = raw_data_copy, 
+                  name = "psms_filtered")
+```
+
+
+When we use `addAssay` to add to a `QFeatures` object, the newly created `assay` 
+does not automatically have links to the pre-exisiting `assay`s. We can use the
+`assayLink()` function to check which links exist for the `psms_filtered` assay. 
+
+
+```{r}
+## Check which assay links exist for the psms_filtered assay
+assayLink(x = cc_qf,
+          i = "psms_filtered")
+```
+
+As we expected, no links exist. If we wanted to explicitly add links between two
+assays we could do so using the `addAssayLink` function, as demonstrated below.
+
+```{r}
+## Create assay link
+cc_qf <- addAssayLink(object = cc_qf, 
+                      from = "psms_filtered", 
+                      to = "psms_raw",
+                      varFrom = "Master.Protein.Accessions",
+                      varTo = "Master.Protein.Accessions")
+
+## Verify
+assayLink(x = cc_qf,
+          i = "psms_raw")
+```
+
+
+## Data cleaning using `filterFeatures`
+
+Now that we have created a copy of our data, we can start the process of data 
+cleaning. We will only remove data from the second copy of our data, the one
+which we called `"psms_filtered"`. Standard data cleaning steps in proteomics 
+include the removal of features which: 
+
+1. Do not have an associated master protein accession
+2. Have a (master) protein accession matching to a contaminant protein 
+3. Do not have quantitative data 
+
+The above steps are necessary for all quantitative proteomics datasets, 
+regardless of experimental goal or data level (PSM or peptide). If a feature
+cannot be identified and quantified then it does not contribute useful 
+information to our analysis. Similarly, contaminant proteins that are introduced
+intentionally as reagents (e.g., trypsin) or accidentally (e.g., human keratins)
+do not contribute to our biological question as they were not originally present
+in the samples.
+
+We also have the option to get rid of any lower quality data by removing those
+features which:
+
+4. Are not rank 1 
+5. Are not unambiguous
+
+Finally, depending upon the experimental question and goal (exploratory vs. 
+stringent), we may also wish to remove features which:
+
+6. Are not unique
+
+The information regarding each of these parameters is present as a column in the 
+output of our identification search, hence is present in the `rowData` of our
+`QFeatures` object. 
+
+To remove features based on variables within our `rowData` we make use of the
+`filterFeatures` function. This function takes a `QFeatures` object as its
+input and then filters this object against (indicated by the `~` operator) a
+condition based on the `rowData`. If the condition is met and returns TRUE for
+a feature, this feature will be kept. For example, to remove PSMs that do not
+have an assigned master protein accession, we can pass `~ Master.Protein.Accessions != ""`
+as a condition and only features that do not have (`!=`) an empty `"Master.Protein.Accessions"`
+column will be retained.
+
+The `filterFeatures` function provides the option to apply our filter (i) to the
+whole `QFeatures` object and all of its `assays`, or (ii) to specific assays within
+the `QFeatures` object. To prevent removing PSMs from our `"raw_psms"` assay, we
+here specify the `i = "psms_filtered"` argument to ensure that the filter is only
+applied to this assay.
+
+
+```{r}
+## filterFeatures removes any features that return TRUE for the provided statement
+## filterFeatures can be applied to only the assay(s) of choice by specifying the i = argument
+cc_qf <- cc_qf %>% 
+  filterFeatures(~ Master.Protein.Accessions != "", i = "psms_filtered")
+```
+
+
+**Make into a challenge** 
+
+Use filterFeatures to carry out the rest of the data cleaning steps described
+above. 
+
+
+```{r}
+cc_qf <- cc_qf %>% 
+  filterFeatures(~ Contaminant != "True", i = "psms_filtered") %>%
+  filterFeatures(~ Quan.Info != "NoQuanLabels", i = "psms_filtered") %>%
+  filterFeatures(~ Rank == 1, i = "psms_filtered") %>%
+  filterFeatures(~ Search.Engine.Rank == 1, i = "psms_filtered") %>%
+  filterFeatures(~ PSM.Ambiguity == "Unambiguous", i = "psms_filtered") %>%
+  filterFeatures(~ Number.of.Protein.Groups == 1, i = "psms_filtered")
+```
+
+
+### Addititional quality control filters available for TMT data
+
+As well as the completion of standard data cleaning steps which are common to 
+all quantitative proteomics experiments (see above), different experimental 
+methods are accompanied by additional data processing considerations. Although
+we cannot provide an extensive discussion of all methods, we will draw attention
+to three key quality control parameters to consider for our use-case TMT data. 
+
+1. Average reporter ion signal-to-noise (S/N)
+
+The quantitation of a TMT experiment is dependent upon the measurement of 
+reporter ion signals from either the MS2 or MS3 spectra. Since reporter ion
+measurements derived from a small number of ions are more prone to stochastic
+ion effects and reduced quantitative accuracy, we want to remove PSMs that rely 
+such quantitation to ensure high data quality. When using an orbitrap analyser, 
+the number of ions is proportional to the S/N ratio of a peak. Hence, removing
+PSMs that have a low S/N value acts as a proxy for removing low quality
+quantitation. 
+
+2. Isolation interference (%)
+
+Isolation interference occurs when multiple TMT-labelled precursor peptides are
+co-isolated within a single data acquisition window. All co-isolated peptides go
+on to be fragmented together and reporter ions from all peptides contribute to
+the reporter ion signal. Hence, quantification for the identified peptide becomes
+inaccurate. To minimise the co-isolation interference problem observed at MS2,
+MS3-based analysis can be used **add refs**. Nevertheless, we remove PSMs with a 
+high percentage isolation interference to prevent the inclusion of inacurrate 
+quantitation values.
+
+3. Synchronous precursor selection mass matches (%) - SPS-MM
+
+SPS-MM is a parameter unique to the Proteome Discoverer software which lets users
+quantify the percentage of MS3 fragments that can be explicitly traced back to
+the precursor peptides. This is important given that quantitation is based on
+the MS3 spectra.
+
+Here we will apply the default quality control thresholds as suggested by 
+Thermo Fisher and keep features with:
+
+* Average reporter ion S/N >= 10
+* Isolation interference < 75%
+* SPS-MM >= 65%
+
+We also remove features that do not have information regarding these quality
+control parameters i.e., have an NA value in the corresponding columns of the
+`rowData`. To remove these features we include the `na.rm = TRUE` argument.
+
+
+```{r}
+cc_qf <- cc_qf %>% 
+  filterFeatures(~ Average.Reporter.SN >= 10, na.rm = TRUE, i = "psms_filtered") %>%
+  filterFeatures(~ Isolation.Interference.in.Percent <= 75, na.rm = TRUE, i = "psms_filtered") %>%
+  filterFeatures(~ SPS.Mass.Matches.in.Percent >= 65, na.rm = TRUE, i = "psms_filtered")
+```
+
+
+In reality, we advise that users take a look at their data to decide whether the
+default quality control thresholds applied above are appropriate. If there is
+reason to believe that the raw MS data was of lower quality than desired, it
+may be sensible to apply stricter thresholds here. Similarly, if users wish to 
+carry out a more stringent or exploratory analyses, these thresholds can be 
+altered accordingly.
+
+
+# Management of missing data 
+
+Having cleaned our data, the next step is to deal with missing values. It is 
+important to be aware that missing values can arise for different reasons in 
+MS data, and these reasons determine the best way to deal with the missing data.
+
+* Biological reasons - a peptide may be genuinely absent from a sample or have such low abundance that it is below the limit of MS detection
+* Technical reasons - technical variation and the stocastic nature of MS (particularly using DDA) may lead to some peptides not being quantified. Some peptides have a lower ionization efficiency which makes them less compatible with MS analysis
+
+Missing values that arise for different reasons can generally be deciphered by 
+their pattern. For example, peptides that have missing quantitation values for
+biological reasons tend to be low intensity or completely absent peptides. Hence,
+these missing values are **missing not at random (MNAR)** and appear in an
+intensity-dependent pattern. By contrast, peptides that do not have quantitation
+due to technical reasons are **missing completely at random (MCAR)** and appear
+in an intensity-independent manner.
+
+
+## Influence of experimental design
+
+All quantitative proteomics datasets will have some number of missing values, 
+although the extent of data missingness differs between label-free and label-based
+DDA experiments as well as between DDA and DIA label-free experiments. 
+
+When carrying out a label-free DDA experiment, all samples are analysed via 
+independent MS runs. Since the selection of precursor ions for fragmentation is
+somewhat stochastic in DDA (e.g., top *N* most abundant precursors are selected)
+experiments, different peptides may be identified and quantified across the 
+different samples. In other words, not all peptides that are analysed in one 
+sample will be analysed in the next, thus introducing a high proportion of 
+missing values.
+
+One of the advantages of using TMT labelling is the ability to multiplex samples
+into a single MS run. In the use-case, 10 samples were TMT labelled and pooled
+together prior to DDA MS analysis. As a result, the same peptides were quantified
+for all samples and we expect a lower proportion of missing values than if we
+were to use label-free DDA. 
+
+More recently, DIA MS analysis of label-free samples has increased in popularity.
+Here, instead of selecting a limited number of precursor peptides (typically the
+most abundance) for subsequent fragmentation and analysis, all precursors within
+a selected *m/z* window are selected. The analysis of all precursor ions within
+a defined range in every run results in more consistent coverage and accuracy
+than DDA experiments, hence lower missing values.
+
+
+## Exploration of missing data
+
+The management of missing data can be considered in three main steps:
+
+1. Exploration of missing data - determine the number/proportion and pattern of missing values
+2. Removal of data with high levels of missingness - this could be features with missing values across too many samples or samples with an abnormally high proportion of missingness compared to the average
+3. Imputation (optional)
+
+**Note**  
+Before we begin managing the missing data, we first need to know what missing data
+looks like. In our data, missing values are notated as `NA` values. Alternative 
+software may display missing values as being zero, or even infinite if 
+normalisation has been applied during the database search. All functions used for
+the management of missing data within the `QFeatures` infrastructure use the `NA` 
+notation. If we were dealing with a dataset that had an alternative encoding, we
+could apply the `zeroIsNA()` or `infIsNA()` functions to convert missing values
+into `NA` values.
+
+The main function that facilitates the exploration of missing data in `QFeatures`
+is `nNA`. Let's try to use this function. Again, we use the `i = ` argument to
+specify which assay within the `QFeatures` object that we wish to look at.
+
+```{r}
+nNA(cc_qf, i = "psms_filtered")
+```
+
+The output from this function is a list of three data frames. The first of these
+(called `nNA`) gives us information about missing data at the global level (i.e.,
+for the entire assay). We get information about the absolute number of missing
+values (`nNA`) and the proportion of the total data set that is missing values
+(`pNA`). The next two data frames also give us `nNA` and `pNA` but this time on 
+a per row/feature (`nNArows`) and per column/sample (`nNAcols`) basis.
+
+To access one `DataFrame` within a list we use the standard `$` operator, 
+followed by another `$` operator if we wish to access specific columns.
+
+```{r}
+## Output the number of missing values (nNA) per column (nNAcols)
+nNA(cc_qf, i = "psms_filtered")$nNAcols$nNA
+```
+
+
+We can also pass the output data from `nNA` to `ggplot` to visualise the missing
+data. This is particularly useful so that we can see whether any of our samples
+have an abnormally high proportion of missing values compared to the average. This
+could be the case if something had gone wrong during sample preparation. It is 
+also useful to see whether there is any specific conditions that have a greater
+number of missing values.
+
+```{r}
+## Visualise the proportion of missing values per sample - check for sample and condition bias
+
+## Look at the raw PSMs
+nNA(cc_qf[["psms_raw"]])$nNAcols %>%
+  as_tibble() %>%
+  mutate(condition = colData(cc_qf)$condition) %>%
+  ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Sample", y = "Missing values (%)") + 
+  theme_bw()
+
+## Look at the filtered PSMs
+nNA(cc_qf[["psms_filtered"]])$nNAcols %>%
+  as_tibble() %>%
+  mutate(condition = colData(cc_qf)$condition) %>%
+  ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Sample", y = "Missing values (%)") +
+  theme_bw()
+```
+
+**note** **put into a box** 
+In this experiment we expect all samples to have a low proportion of missing 
+values due to the TMT labelling strategy. We also expect that all samples should
+have a similar proportion of missing values because we do not expect cell cycle
+stage to have a large impact on the majority of the proteome. Hence, the samples
+here should be very similar. This is the case in most expression proteomics
+experiments which aim to identify differential protein abundance upon a cellular
+perturbation. However, in some other MS-based proteomics experiments this would
+not be the case. For example, proximity labelling and co-immunoprecipitation 
+(Co-IP) experiments have control samples that are not expected to have any proteins
+in, although there is always a small amount of unwanted noise. In such cases it 
+would be expected to have control samples with a large proportion of missing
+values and experimental samples with a much lower proportion. It is important to
+check that the data corresponds to the experimental setup.
+
+
+**Challenge**
+Ideas ...
+Something to do with missing data across rows - prior to filtering based on a 
+feature having >20% missing values. Ask them to work out how many this will be?
+Ask them to work out the max and min number of missing values per feature?
+Ask them to create a plot looking at the number of missing values across the
+intensity distribution (are they intensity dependent or independent?)
+
+
+```{r}
+nNA(cc_qf[["psms_filtered"]])$nNArows$nNA %>%
+  max()
+
+nNA(cc_qf[["psms_filtered"]])$nNArows$pNA %>%
+  max()
+```
+
+
+## Removing data with high levels of missingness
+
+Although the use-case data has only a small number of missing values it is still
+common to remove individual features that have too many missing values across
+samples. Here, we remove PSMs that have >20% missing values. This is done using
+the `filterNA` function where the `pNA` argument specifies the maximum proportion
+of missing values to allow per feature.
+
+
+```{r}
+cc_qf <- cc_qf %>%
+  filterNA(pNA = 0.2, i = "psms_filtered")
+```
+
+
+We already established that none of our samples have an abnormally high 
+proportion of missing values (relative to the average). Therefore, we do not
+need to remove any entire samples/columns.
+
+
+## Imputation of remaining missing values
+
+The final step in managing our missing data is to consider whether to impute.
+Imputation involves the replacement of missing values with probable values.
+Unfortunately, estimating probable values is difficult and requires complex 
+assumptions about why a value is missing. For example, if a value is missing 
+because a peptide is completely absent or present at an abundance below the limit
+of detection then the most suitable replacement value is arguably the lowest
+abundance value recorded in the data set (since this represents the limit of
+detection). Alternatively, if a value is missing because of stochastic technical
+reasons then it might be more appropriate to replace it with a value derived 
+from a similar peptide. Overall, left-censored methods such as minimal value and
+limit of detection approaches work best for data that is MNAR (intensity-dependent
+missing values). Hot deck methods such as k-nearest neighbors, random forest and 
+maximum likelihood methods work better for data that is MCAR (intensity-independent).
+To confuse the situation further, most data sets contain missing values that are
+a mixture of MNAR and MCAR, so mixed imputation methods can be applied.
+
+Given that imputation is difficult to get right and can have substantial effects
+on the results of downstream analysis, it is generally recommended to avoid
+it where we can. This means that if there is not a large proportion of missing
+values in our data, we should not impute. 
+
+We can now check to see how many missing values remain in the data.
+
+```{r}
+nNA(cc_qf[["psms_filtered"]])$nNA
+```
+
+We only have `r nNA(cc_qf[["psms_filtered"]])$nNA$pNA`% missing values in our
+data, so imputation is not really necessary here. We could either remove the 
+PSMs that still have missing values or continue our analysis. The latter is 
+possible since missing values are often lost during aggregation and there are
+now aggregation methods that are able to deal with missing data.
+
+For demonstration purposes we will carry out imputation anyway. Since we are 
+only imputing `r nNA(cc_qf[["psms_filtered"]])$nNA$nNA` values we do not expect
+a large effect on the data structure or downstream analysis.
+
+Imputation within the `QFeatures` infrastructure is completed using the `impute`
+function. To see what imputation methods this function facilitates we can use
+`MsCoreUtils::imputeMethods()`
+
+
+```{r}
+## Check which imputation methods are available within the QFeatures impute function
+MsCoreUtils::imputeMethods()
+```
+
+
+Here we will use a k-nearest neighbors (k-NN) method.
+
+
+```{r, results = "hide"}
+cc_qf <- impute(object = cc_qf,
+                method = "knn", 
+                i = "psms_filtered",
+                name = "psms_imputed")
+```
+
+
+# Logarithmic transformation
+
+Now that we are satisfied with our PSM quality, we need to log2 transform the
+quantitative data. If we take a look at our current quantitative data we will 
+see that our abundance values are dramatically skewed towards zero.
+
+
+```{r, warning = FALSE}
+## Look at distribution of abundance values in untransformed data
+cc_qf[["psms_imputed"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() + 
+  theme_bw()
+```
+
+
+This is to be expected since the majority of proteins exist at low abundances
+within the cell and only a few proteins are highly abundant. However, if we 
+leave the quantitative data in a non-Gaussian distribution then we will not be
+able to apply parametric statistical tests later on. Consider the case where
+we have a protein with three abundance values across samples A, B and C. If the
+abundance values were 0.1, 1 and 10, we can tell from just looking at the numbers
+that the protein is 10-fold more abundant in sample B compared to sample A, and
+10-fold more abundant in sample C than sample B. However, even though the fold-
+changes are equal, the abundance values in A and B are much closer together on 
+a linear scale than those of B and C. A parametric test would not account for 
+this bias and would not consider A and B to be as equally different as B and C.
+
+By applying a logarithmic transformation (log2 is the standard for proteomics
+data) we can convert our skewed asymmetrical data distribution into a symmetrical,
+Gaussian distribution, as visualised below.
+
+
+```{r, warning = FALSE}
+## Look at distribution of abundance values in untransformed data
+cc_qf[["psms_imputed"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = log2(value))) +
+  geom_histogram() + 
+  theme_bw()
+```
+
+
+To apply this log2 transformation to our data we use the `logTransform` function
+and specify `base = 2`.
+
+
+```{r}
+cc_qf <- logTransform(object = cc_qf, 
+                      base = 2, 
+                      i = "psms_imputed", 
+                      name = "log_imputed_psms")
+```
+
+
+# Aggregation of PSMs to proteins
+
+We have now reached the point where we are ready to aggregate our PSM level data
+upward to the protein level. In a bottom-up MS experiment we initially identify
+and quantify peptides. Further, each peptide can be identified and quantified on 
+the basis of multiple matched spectra (the peptide spectrum matches, PSMs). We 
+now want to group information from all PSMs that correspond to the same master
+protein accession. 
+
+We are going to aggregate all PSMs from our `"log_imputed_psms"` assay that have
+the same value in the `"Master.Protein.Accessions"` column of the `rowData`.
+There are many ways in which we can combine the quantitative values from each of
+the contributing PSMs into a single consensus protein quantitation. Simple methods
+for doing this include calculating the master protein quantitation based on the 
+mean, median or sum PSM quantitation. Although the use of these simple 
+mathematical functions can be effective, using `colMeans` or `colMedians` can
+become difficult for data sets that still contain missing values. Similarly, 
+using `colSums` can result in protein quantitation values being biased by the
+presence of missing values. Here we will use `robustSummary`, a state-of-the
+art aggregation method that is able to aggregate effectively even in the 
+presence of missing values.
+
+
+**note** **potentially add to a box**
+Since we are aggregating all PSMs that are assigned to the same master protein
+accession, the downstream statistical analysis will be carried out at the 
+level of protein groups. This is important to consider since most people will 
+report "proteins" as displaying significantly different abundances across 
+conditions, when in reality they are referring to protein groups.
+
+
+```{r, warning = FALSE}
+cc_qf <- aggregateFeatures(cc_qf, 
+                           i = "log_imputed_psms", 
+                           fcol = "Master.Protein.Accessions",
+                           name = "log_proteins",
+                           fun = MsCoreUtils::robustSummary,
+                           na.rm = TRUE)
+```
+
+
+
+# Normalisation of quantitative data 
+
+We now have log protein level abundance data to which we could apply a parametric
+statistical test. However, to perform a statistical test and discover whether any 
+proteins differ in abundance between conditions (here cell cycle stages), we first
+need to account for non-biological variance that may contribute to such differential
+abundance. Such variance can arise from experimental error or technical variation,
+although the latter is much more prominent when dealing with label-free DDA data.
+
+Normalisation is the process by which we account for non-biological variation in
+protein abundance between samples and attempt to return our quantitative data 
+back to its 'normal' condition i.e., representative of how it was in the original
+biological system. There are various methods that exist to normalise expression
+proteomics data and it is necessary to consider which of these to apply on a 
+case-by-case basis.
+
+
+**Challenge: apply Normalyzer to non-log protein data**
+Ask them to aggregate directly from psms_filtered to proteins and call the assay
+"raw_proteins". Use this assay as input to the Normalyzer. Look at report and
+determine most appropriate normalisation strategy for the data.
+
+
+```{r, eval = FALSE, warning = FALSE}
+library(NormalyzerDE)
+cc_qf <- aggregateFeatures(cc_qf,
+                           i = "psms_imputed",
+                           fcol = "Master.Protein.Accessions",
+                           name = "raw_proteins", 
+                           fun = MsCoreUtils::robustSummary,
+                           na.rm = TRUE)
+
+normalyzer(jobName = "normalyzer",
+           experimentObj = cc_qf[["raw_proteins"]][,-1],
+           sampleColName = "sample",
+           groupColName = "condition",
+           outputDir = ".")
+```
+
+
+To demonstrate the approach to normalisation within `QFeatures`, we here normalise 
+using a center median method. This is achieved using the `normalize` function.
+To see which other normalisation methods are supported within this function,
+type `?normalize` to access the function's help page.
+
+
+```{r}
+cc_qf <- normalize(cc_qf, 
+                   i = "log_proteins", 
+                   name = "log_norm_proteins",
+                   method = "center.median")
+```
+
+
+**Challenge**
+Create two boxplots to visualise the process of normalisation?? 
+
+
+**Challenge**
+Determine how many PSMs, peptides and proteins were lost during processing of
+raw data to our final protein list?
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Last section of the page is a bulleted summary of the key points
+:::
