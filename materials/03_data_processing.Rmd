@@ -10,7 +10,6 @@ title: Data processing
 * Understand the importance of dealing with missing values in expression proteomics datasets and be aware of different approaches to doing so
 * Be able to aggregate peptide-level information to protein-level using the `aggregateFeatures` function in the `QFeatures` infrastructure
 * Recognise the importance of log transformation (`logTransform`) and normalisation (`normalize`) during the processing of expression proteomics data 
-* Generate key plots to visualise the processes of data cleaning, transformation and aggregation
 
 :::
 
@@ -87,7 +86,7 @@ assayLink(x = cc_qf,
 
 ### Data cleaning using `filterFeatures`
 
-Now that we have created a copy of our data, we can start the process of data 
+Now that we have created a copy of our raw data, we can start the process of data 
 cleaning. We will only remove data from the second copy of our data, the one
 which we called `"psms_filtered"`. Standard data cleaning steps in proteomics 
 include the removal of features which: 
@@ -97,7 +96,7 @@ include the removal of features which:
 3. Do not have quantitative data 
 
 The above steps are necessary for all quantitative proteomics datasets, 
-regardless of experimental goal or data level (PSM or peptide). If a feature
+regardless of the experimental goal or data level (PSM or peptide). If a feature
 cannot be identified and quantified then it does not contribute useful 
 information to our analysis. Similarly, contaminant proteins that are introduced
 intentionally as reagents (e.g., trypsin) or accidentally (e.g., human keratins)
@@ -110,8 +109,20 @@ features which:
 4. Are not rank 1 
 5. Are not unambiguous
 
-Finally, depending upon the experimental question and goal (exploratory vs. 
-stringent), we may also wish to remove features which:
+Since each spectrum can have multiple potential matches (PSMs), the software 
+used for our identification search provides some parameters to help us decide
+how confident we are in a match. Firstly, each PSM is give a rank based on the
+probability of it being incorrect - the PSM with the lowest probability of being 
+wrong is allocated rank 1. Secondly, each PSM is assigned a level of ambiguity
+to tell us whether it was easy to assign with no other options (unambiguous), 
+whether it was selected as the best match from a series of potential matches 
+(selected), or whether it was not possible to distinguish between potential 
+matches (ambiguous). High quality identifications should be both rank 1 and 
+unambiguous. The exact filters we set here would depend on how exploratory or 
+stringent we wish to be.
+
+Finally, depending upon the experimental question and goal, we may also wish to
+remove features which:
 
 6. Are not unique
 
@@ -186,8 +197,8 @@ co-isolated within a single data acquisition window. All co-isolated peptides go
 on to be fragmented together and reporter ions from all peptides contribute to
 the reporter ion signal. Hence, quantification for the identified peptide becomes
 inaccurate. To minimise the co-isolation interference problem observed at MS2,
-MS3-based analysis can be used **add refs**. Nevertheless, we remove PSMs with a 
-high percentage isolation interference to prevent the inclusion of inacurrate 
+MS3-based analysis can be used @McAlister2014. Nevertheless, we remove PSMs with 
+a high percentage isolation interference to prevent the inclusion of inaccurate 
 quantitation values.
 
 3. Synchronous precursor selection mass matches (%) - SPS-MM
@@ -243,7 +254,7 @@ due to technical reasons are **missing completely at random (MCAR)** and appear
 in an intensity-independent manner.
 
 
-### Influence of experimental design
+### Influence of experimental design  
 
 All quantitative proteomics datasets will have some number of missing values, 
 although the extent of data missingness differs between label-free and label-based
@@ -275,7 +286,7 @@ than DDA experiments, hence lower missing values.
 
 The management of missing data can be considered in three main steps:
 
-1. Exploration of missing data - determine the number/proportion and pattern of missing values
+1. Exploration of missing data - determine the number and pattern of missing values
 2. Removal of data with high levels of missingness - this could be features with missing values across too many samples or samples with an abnormally high proportion of missingness compared to the average
 3. Imputation (optional)
 
@@ -320,6 +331,7 @@ could be the case if something had gone wrong during sample preparation. It is
 also useful to see whether there is any specific conditions that have a greater
 number of missing values.
 
+
 ```{r}
 ## Visualise the proportion of missing values per sample - check for sample and condition bias
 
@@ -341,6 +353,7 @@ nNA(cc_qf[["psms_filtered"]])$nNAcols %>%
   labs(x = "Sample", y = "Missing values (%)") +
   theme_bw()
 ```
+
 
 **note** **put into a box** 
 In this experiment we expect all samples to have a low proportion of missing 
@@ -479,7 +492,7 @@ This is to be expected since the majority of proteins exist at low abundances
 within the cell and only a few proteins are highly abundant. However, if we 
 leave the quantitative data in a non-Gaussian distribution then we will not be
 able to apply parametric statistical tests later on. Consider the case where
-we have a protein with three abundance values across samples A, B and C. If the
+we have a protein with abundance values across three samples A, B and C. If the
 abundance values were 0.1, 1 and 10, we can tell from just looking at the numbers
 that the protein is 10-fold more abundant in sample B compared to sample A, and
 10-fold more abundant in sample C than sample B. However, even though the fold-
@@ -535,7 +548,7 @@ become difficult for data sets that still contain missing values. Similarly,
 using `colSums` can result in protein quantitation values being biased by the
 presence of missing values. Here we will use `robustSummary`, a state-of-the
 art aggregation method that is able to aggregate effectively even in the 
-presence of missing values.
+presence of missing values @Sticker2020.
 
 
 **note** **potentially add to a box**
@@ -562,7 +575,7 @@ cc_qf <- aggregateFeatures(cc_qf,
 We now have log protein level abundance data to which we could apply a parametric
 statistical test. However, to perform a statistical test and discover whether any 
 proteins differ in abundance between conditions (here cell cycle stages), we first
-need to account for non-biological variance that may contribute to such differential
+need to account for non-biological variance that may contribute to any differential
 abundance. Such variance can arise from experimental error or technical variation,
 although the latter is much more prominent when dealing with label-free DDA data.
 
@@ -626,5 +639,11 @@ save(cc_qf, file = "output/lesson03.rda")
 ::: {.callout-tip}
 #### Key Points
 
-- Last section of the page is a bulleted summary of the key points
+- The `filterFeatures` function can be used to remove data from a `QFeatures` object (or an `assay` within a `QFeatures` object) based on filtering parameters within the `rowData`.
+- Data processing includes (i) standard proteomics data cleaning steps e.g., removal of contaminants, and (ii) data-specific quality control filtering e.g., co-isolation interference thresholding for TMT data.
+- The management of missing quantitative data in expression proteomics data is complex. The `nNA` function can be used to explore missing data and the `filterNA` function can be used to remove features with undesirably high levels of missing data. Where imputation is absolutely necessary, the `impute` function exists within the `QFeatures` infrastructure.
+- Expression proteomics data should be log2 transformed to generate a Gaussian distribution which is suitable for parametric statistical testing. This is done using the `logTransform` function.
+- Aggregation from lower level data (e.g., PSM) to high level identification and quantification (e.g., protein) is achieved using the `aggregateFeatures` function, which also creates explicit links between the original and newly created `assays`.
+- To remove non-biological variation, data normalisation should be completed using the `normalize` function. To help users decide which normalisation method is appropriate for their data we recommend using the `normalyzer` function to create a report containing a comparison of methods.
+
 :::

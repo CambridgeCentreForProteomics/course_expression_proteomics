@@ -7,7 +7,7 @@ title: The data
 As a use case, we will analyse an expression proteomics dataset from @Queiroz2019.
 The aim of this experiment was to examine proteins involved in the cell cycle
 (see Figure \@ref(fig:experimental-method)). Briefly, cells from a human cell 
-line (U20S) were treated with Nocodazole to inhibit the polymerisation of
+line (U-2 0S) were treated with Nocodazole to inhibit the polymerisation of
 microtubules and block the transition beyond the prometaphase stage of M-phase.
 After 18-hours of treatment, the cells were released from cell cycle inhibition 
 by withdrawing Nocodazole. Samples were taken in triplicate at 0, 6 and 23-hours
@@ -48,7 +48,7 @@ knitr::kable(tabl1,
 ```
 
 
-## Isobaric peptide labelling using Tandem Mass Tags (TMT)
+### Isobaric peptide labelling using Tandem Mass Tags (TMT)
 
 As outlined above, the use-case experiment made use of tandem mass tag (TMT)
 labelling. TMT reagents are **isobaric** chemical labels that can be covalently 
@@ -93,8 +93,9 @@ reporter ion intensity of our TMT labels to compare abundance between samples
 taken throughout the cell cycle. If we wanted to carry out absolute quantification 
 of proteins, TMT labelling would not be an appropriate method.
 
+**Note** **put in box** **relative vs. abusolute quant**
 
-### MS2- vs. MS3-based TMT quantitaion
+#### MS2- vs. MS3-based TMT quantitaion
 
 Originally the reporter ion of a TMT reagent was released by fragmentation of 
 the precursor peptide. This meant that the reporter ion signals could be 
@@ -107,10 +108,10 @@ results in **co-isolation interference** since the reporter ions present at MS2
 are not only from the identified peptide but also any other co-isolated peptides.
 
 More recently, MS3-based quantitation has been applied to reduce the problem of
-co-isolation interference and increase quantitation accuracy when using TMT labels.
-In this approach the initial round of precursor fragmentation only uses a weak
-fragmentation method (e.g., collision induced dissociation, CID) to ensure that
-TMT reporter ions are not broken off at MS2. The most abundance fragment ions
+co-isolation interference and increase quantitation accuracy when using TMT labels
+@Ting2011. In this approach the initial round of precursor fragmentation only uses 
+a weak fragmentation method (e.g., collision induced dissociation, CID) to ensure
+that TMT reporter ions are not broken off at MS2. The most abundance fragment ions
 from MS2 are then selected for a second round of fragmentation, this time using
 a stronger force (e.g., high-energy collision dissociation) so that the TMT
 reporter ions are released. Since the MS2 fragment ions derived from the intended
@@ -123,19 +124,19 @@ of all co-isolated peptides.
 The specific MS3 data acquisition approach used to generate our data was 
 synchronous precursor selection (SPS)-MS3. In simple terms, the SPS method 
 allows us to select multiple MS2 fragments for additional fragmentation to the
-MS3 level, rather than just one.
+MS3 level, rather than just one @McAlister2014.
 
 
 ## Identification search of the raw MS data
 
 Having analysed the pooled TMT sample via MS, the raw MS were processed using 
 Proteome Discoverer v3.0 (Thermo Fisher Scientific). This software is one of 
-several that can be used to carry out a database search to identify peptide 
-sequences, and therefore proteins, from raw MS data. Others include MaxQuant, 
-FragPipe and PEAKS. 
+several that can be used to carry out a database search to identify and 
+quantify peptide sequences, and therefore proteins, from raw MS data. Others 
+include MaxQuant, FragPipe and PEAKS. 
 
 Briefly, database searching of MS data involves comparing the observed MS spectra
-to expected MS spectra generated via an in silico digestion of a selected protein 
+to expected MS spectra generated via in silico digestion of a selected protein 
 database. Since the use-case data used human cells, we provided the human proteome
 to Proteome Discoverer as the database for searching. We also provided a 
 database of common contaminants that could be present in our sample due to (i)
@@ -143,7 +144,9 @@ human contamination (e.g., keratin from nails, hair or skin), or (ii) sample
 preparation (e.g., enzymes used for protein digestion). These two databases are
 provided... **give link/reference to github**. The result of such a database 
 search is a list of **peptide spectrum matches (PSMs)**, that is a list of matches
-between observed and expected spectra. 
+between observed and expected spectra. Most software will also aggregate the 
+PSM level data upward and provide output files at all data levels (PSM, peptide
+and protein). It is up to the user which output file to use for further analysis.
 
 The starting point for this workshop and data processing workflow in R is an 
 output file from the identification search. Proteome Discoverer provides each 
@@ -191,3 +194,17 @@ assign an identification. If successful, this means that there may be peptide
 level data in the absence of PSM level data. Hence, if we used PSM level data 
 for the processing and analysis of label-free data then we would lose out on 
 the benefit of RT alignment.
+
+
+## Summary
+The use-case data that we will process and analyse in this workshop is a **DDA**
+**TMT-labelled** **bottom-up** proteomics dataset. The aim of the experiment is
+to calculate **relative protein abundances** between samples. This will then allow 
+us to apply statistical tests to determine whether any proteins have significantly
+different abundances relative to each other.
+
+Although many of the processing and analysis steps discussed in this course are
+also applicable to other types of proteomics datasets (particularly label-free
+DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
+proteomics. Some aspects of the workflow would need to be adapted for other
+types of proteomics experiment.
