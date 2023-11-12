@@ -13,6 +13,22 @@ title: Statistical analysis
 
 :::
 
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("ggplot2")
+library("stringr")
+library("dplyr")
+library("tibble")
+library("NormalyzerDE")
+library("corrplot")
+library("Biostrings")
+library("limma")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+load("output/lesson03.rda", verbose = TRUE)
+```
+
 
 ## Differential expression analysis 
 
@@ -50,10 +66,53 @@ will use a form of t-test since we know that these assumptions have been met.
 
 ### Using the empirical Bayes moderated t-test from the `Limma` package
 
+Many different R packages can be used to carry out differential expression 
+(abundance) analysis on proteomics data. Here we will use `limma`, a package that
+is widely used for omics analysis and has several models that allow differential
+abundance to be assessed in multifactorial experiments. Specifically, we are 
+going to apply `limma`'s empirical Bayes moderated t-test.
+
+
 * Explain each term - Bayes moderated, t-test
 * Explain the concept of contrasts
 * Discuss the two types of limma model (trend = TRUE)
 
+```{r}
+## Extract protein list from our QFeatures object - remove sample 1
+all_proteins <- cc_qf[["log_norm_proteins"]][, -1]
+
+## Ensure that conditions are stored as levels of a factor
+all_proteins$condition <- factor(all_proteins$condition)
+```
+
+
+
+```{r}
+## Design a matrix containing all factors that we wish to model
+m_design <- model.matrix(~ 0 + all_proteins$condition)
+colnames(m_design) <- levels(all_proteins$condition)
+
+## Verify
+m_design
+```
+
+
+```{r}
+## Specify contrasts of interest
+contrasts <- makeContrasts(M_G1 = )
+```
+
+
+```{r}
+## Fit linear model using the design matrix and desired contrasts
+fit_model <- lmFit(assay(all_proteins), m_design)
+fit_contrasts <- contrasts.fit(fit_model, contrasts)
+
+## Update the model using the limma eBayes algorithm
+fit_contrasts <- eBayes(fit_contrasts)
+
+colnames(fit_contrasts$contrasts)
+```
 
 ### Diagnostic plots to verify suitability of our statistical model
 
