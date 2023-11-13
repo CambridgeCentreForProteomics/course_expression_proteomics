@@ -111,6 +111,7 @@ library("NormalyzerDE")
 library("corrplot")
 library("Biostrings")
 library("limma")
+library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
@@ -251,7 +252,7 @@ cc_qf$sample <- c("Control", "M_1", "M_2", "M_3",
 
 cc_qf$rep <- c(NA, rep(1:3, 3))
 
-cc_qf$condition <- c("Pre-treatment", rep(c("M-phase", "G1-phase", "Desynch"), each = 3))
+cc_qf$condition <- c("Pre-treatment", rep(c("M", "G1", "Desynch"), each = 3))
 
 ## Verify
 colData(cc_qf)
