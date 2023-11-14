@@ -21,13 +21,13 @@ since this is lost in the output of `limma` analysis.
 
 ```{r}
 ## Add master protein descriptions back
-M_G1_results$protein_description <- all_proteins %>%
+M_Desynch_results$protein_description <- all_proteins %>%
   rowData() %>%
   as_tibble() %>%
   pull(Master.Protein.Descriptions)
 
-## Extract proteins that have significant abundance changes in M vs. G1
-sig_changing <- M_G1_results %>% 
+## Extract proteins that have significant abundance changes in M vs. Desynch
+sig_changing <- M_Desynch_results %>% 
   as_tibble() %>%
   filter(significance == "sig")
 
@@ -47,7 +47,7 @@ cycle. We can get an initial idea about what these proteins are and do by
 looking at the protein descriptions. 
 
 ```{r}
-## Look at descriptions of proteins upregulated in G1 relative to M
+## Look at descriptions of proteins upregulated in M relative to deysnchronized cells
 sig_up %>%
   select(protein_description) %>%
   head()
@@ -88,8 +88,8 @@ answer the question:
 Unfortunately, just looking at the GO terms associated with our differentially
 abundant proteins is insufficient to draw any solid conclusions. For example, if
 we find that `r (nrow(sig_up)/3` of the `r nrow(sig_up)` proteins significantly
-upregulated in G1 phase are annotated with the GO term "kinase activity", it may
-seem intuitive to conclude that this biological process is important for the G1 
+upregulated in M phase are annotated with the GO term "kinase activity", it may
+seem intuitive to conclude that this biological process is important for the M-phase 
 phenotype. However, if 90% of all proteins in the cell were kinases (an extreme
 example), then we might expect to discover a high representation of the "kinase
 activity" GO term in any protein list we end up with.
