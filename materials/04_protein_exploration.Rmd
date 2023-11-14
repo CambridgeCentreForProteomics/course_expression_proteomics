@@ -6,20 +6,240 @@ bibliography: course_refs.bib
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Objectives here 
+* Know how to determine the number of PSMs, peptides, proteins and protein groups (i.e., master proteins) in an assay of a `QFeatures` object
+* Understand what the `.n` column corresponds to when using the `aggregateFeatures` function to aggregate features
+* Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
+* Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation 
+* Complete PCA using the `prcomp` function from the `stats` package
 
 :::
 
 
-**Challenge** 
-Add an assay link between the final protein list and raw PSMs to see how many
-PSMs were in support of identification prior to filtering
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("ggplot2")
+library("stringr")
+library("dplyr")
+library("tibble")
+library("NormalyzerDE")
+library("corrplot")
+library("Biostrings")
+library("limma")
+library("statmod")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+load("output/lesson03.rda", verbose = TRUE)
+```
+
+
+Before we carry out statistical analysis to determine which of our proteins 
+show significantly differential abundance across conditions (cell cycle stages),
+we first want to do some exploration of the protein level data. This includes
+determining some information that may be required for reporting and publication
+purposes as well as information corresponding to quality control.
+
+
+## Determining the dimensions of our final protein data
+
+Given that we started from the PSM level and did extensive data cleaning, 
+filtering and management of missing data, it would be useful to know how much 
+data we have left. We may want to know how many PSMs, peptides and proteins
+the `log_norm_proteins` assay contains, given that this is the data to which
+statistical analysis will be applied.
+
+We can easily find the number of master proteins in the assay by looking at the 
+number of rows.
+
+```{r}
+cc_qf
+```
+
+We have `r nrow(cc_qf[["log_norm_proteins"]])` master proteins, each representing
+a protein group.
+
+
+```{r}
+protein_groups <- cc_qf[["log_norm_proteins"]] %>%
+  nrow()
+```
+
+
+### The `.n` column created by `aggregateFeatures`
+
+If we look at the names of the columns within our `"log_proteins"` and 
+`"log_norm_proteins"` assays we see that there is a column called `.n`. This 
+column was not present in the `"log_imputed_psms"`.
+
+```{r}
+## Check columns in the log normalised protein assay
+cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  names()
+```
+
+This column is created during the aggregation process that is completed via the
+`aggregateFeatures` function. This column stores information about how many 
+child features were aggregated into each parent feature. Since we aggregated
+directly from the PSMs to protein, the `.n` column tells us how many PSMs we 
+have in support of each protein in the final dataset.
+
+```{r}
+cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  table()
+```
+
+From this information we can derive the average PSM support per protein or plot
+a histogram to visualise the distribution of PSM support.
+
+```{r}
+cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  ggplot(aes(x = .n)) +
+  geom_histogram(binwidth = 1)
+```
+
+We can also calculate the sum of all values in the `.n` column to find out how
+many PSMs contribute to our protein level data.
+
+```{r}
+psms <- cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  sum()
+```
+
 
 **Challenge**
-Determine PSM and peptide support per protein - can be done in multiple ways...
+Now we know how many master proteins are in our final dataset and how many PSMs
+support the quantification of these proteins. Determine how many peptide 
+sequences are in support of the final master proteins.
+
+1. Use the `aggregateFeatures` function to aggregate from log imputed PSM level to log peptide and then log peptide to log protein
+2. Calculate the sum of the `.n` column in the log peptide and log protein assays - think about what these values mean in each instance
+
+**Below is the solution - change to eval=TRUE, include=FALSE**
+
+```{r, warning = FALSE}
+## Aggregate from PSM to peptide
+cc_qf <- aggregateFeatures(cc_qf, 
+                           i = "log_imputed_psms", 
+                           fcol = "Sequence",
+                           name = "log_peptides",
+                           fun = MsCoreUtils::robustSummary,
+                           na.rm = TRUE)
+
+## Aggregate from peptide to protein
+cc_qf <- aggregateFeatures(cc_qf, 
+                           i = "log_peptides", 
+                           fcol = "Master.Protein.Accessions",
+                           name = "log_proteins_2",
+                           fun = MsCoreUtils::robustSummary,
+                           na.rm = TRUE)
+
+## Sum of .n in peptide-level (i.e., total PSMs)
+cc_qf[["log_peptides"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  sum()
+
+## Sum of .n in protein level (i.e., total peptides)
+cc_qf[["log_proteins_2"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  sum()
+```
+
+
+**Challenge** 
+Sometimes we also want to know the dimensions of the raw data. For example, if 
+we want to report how many PSMs or peptides were in support of a protein's
+*identification* rather than its *quantitation* then using the raw data is 
+more appropriate. 
+
+Look at the names of the `rowData` colums in the `"psms_raw"` assay. Determine
+how many PSMs, unique peptide sequences (i.e., sequences regardless of modification)
+and master protein accessions were identified from the raw data.
+
+**Below is the solution! need to hide**
+
+```{r}
+cc_qf[["psms_raw"]] %>% 
+  nrow()
+
+cc_qf[["psms_raw"]] %>% 
+  rowData() %>%
+  as_tibble() %>%
+  pull(Sequence) %>%
+  unique() %>%
+  length()
+
+cc_qf[["psms_raw"]] %>% 
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length()
+```
+
+
+## Extracting information about a specific feature using `subsetByFeature`
+
+As well as determining the dimensions of our entire dataset, both in its raw
+state and its final state, sometimes we may wish to find out information about 
+a specific feature e.g., a protein of interest. The `QFeatures` infrastructure
+provides a convenient function called `subsetByFeature` to extract all data 
+levels corresponding to a particular feature.
+
+The `subsetByFeature` function take a `QFeatures` object as its input and an 
+additional argument specifying one or more features of interest. The output is
+then a new `QFeatures` object with only data corresponding to the specified 
+features.
+
+Let's take a look at O43583
+
+```{r}
+subsetByFeature(cc_qf, "O43583")
+```
+
+
+
+## Principal Component Analysis (PCA)
+
+
+
+```{r}
+protein_pca <- cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  t() %>%
+  prcomp(scale = TRUE, center = TRUE)
+
+summary(protein_pca)
+```
+
+
+```{r}
+protein_pca$x %>%
+  as_tibble() %>%
+  mutate(condition = cc_qf[["log_norm_proteins"]]$condition) %>%
+  ggplot(aes(x = PC1, y = PC2, colour = condition)) +
+  geom_point(size = 3) + 
+  theme_bw()
+```
+
 
 ::: {.callout-tip}
 #### Key Points
+
+- The `.n` column created by `aggregateFeatures` is a useful way to trace how many child features have been aggregated into a single parent feature
+- The `subsetByFeature` function 
 
 :::
 
