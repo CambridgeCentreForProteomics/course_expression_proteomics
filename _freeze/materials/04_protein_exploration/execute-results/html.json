@@ -1,8 +1,10 @@
 {
-  "hash": "5be1053dcdc183b6b49c7dff7549635f",
+  "hash": "eb7bbf7a4331a3fad548a8c0a870a55f",
   "result": {
-    "markdown": "---\ntitle: Exploration and visualisation of protein data\n---\n\n\n::: {.callout-tip}\n#### Learning Objectives\n\n* Objectives here \n\n:::\n\n\n**Challenge** \nAdd an assay link between the final protein list and raw PSMs to see how many\nPSMs were in support of identification prior to filtering\n\n**Challenge**\nDetermine PSM and peptide support per protein - can be done in multiple ways... ",
-    "supporting": [],
+    "markdown": "---\ntitle: Exploration and visualisation of protein data\n---\n\n\n::: {.callout-tip}\n#### Learning Objectives\n\n* Objectives here \n\n:::\n\n\n**Challenge** \nAdd an assay link between the final protein list and raw PSMs to see how many\nPSMs were in support of identification prior to filtering\n\n**Challenge**\nDetermine PSM and peptide support per protein - can be done in multiple ways...\n\n::: {.callout-tip}\n#### Key Points\n\n:::",
+    "supporting": [
+      "04_protein_exploration_files"
+    ],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],

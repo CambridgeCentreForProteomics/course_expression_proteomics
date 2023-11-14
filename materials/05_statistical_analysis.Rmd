@@ -235,7 +235,7 @@ p-value adjustment that must be done following multiple hypothesis testing.
 
 Multiple testing describes the process of separately testing each null hypothesis
 i.e., carrying out many statistical tests at a time each to test a different
-hypothesis. Here we have carried out `r nrow(limma_results`) hypothesis tests.
+hypothesis. Here we have carried out `r nrow(limma_results)` hypothesis tests.
 If we were to use the typical p < 0.05 significance threshold for each test we 
 would accept a 5% chance of incorrectly rejecting the null hypothesis *per test*.
 Therefore, for every 100 tests that we carry out we expect an average of 5 false
@@ -369,7 +369,7 @@ head(M_Desynch_results)
 
 ```{r, include=FALSE}
 ## Save results
-save(M_Desynch_results, file = "output/lesson05.rda")
+save(M_Desynch_results, all_proteins, file = "output/lesson05.rda")
 ```
 
 

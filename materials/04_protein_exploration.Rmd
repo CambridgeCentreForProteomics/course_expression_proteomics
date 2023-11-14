@@ -15,4 +15,9 @@ Add an assay link between the final protein list and raw PSMs to see how many
 PSMs were in support of identification prior to filtering
 
 **Challenge**
-Determine PSM and peptide support per protein - can be done in multiple ways... 
+Determine PSM and peptide support per protein - can be done in multiple ways...
+
+::: {.callout-tip}
+#### Key Points
+
+:::

@@ -12,6 +12,23 @@ title: Biological interpretation
 :::
 
 
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("ggplot2")
+library("stringr")
+library("dplyr")
+library("tibble")
+library("NormalyzerDE")
+library("corrplot")
+library("Biostrings")
+library("limma")
+library("statmod")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+load("output/lesson05.rda", verbose = TRUE)
+```
+
 ## Subset differentially abundant proteins
 
 Before we can look any further into the biological meaning of any protein 
@@ -87,7 +104,7 @@ answer the question:
 
 Unfortunately, just looking at the GO terms associated with our differentially
 abundant proteins is insufficient to draw any solid conclusions. For example, if
-we find that `r (nrow(sig_up)/3` of the `r nrow(sig_up)` proteins significantly
+we find that `r (nrow(sig_up))/3` of the `r nrow(sig_up)` proteins significantly
 upregulated in M phase are annotated with the GO term "kinase activity", it may
 seem intuitive to conclude that this biological process is important for the M-phase 
 phenotype. However, if 90% of all proteins in the cell were kinases (an extreme
@@ -102,21 +119,21 @@ shown differential abundance in our experiment vs. how many proteins with this
 GO term *did* show differential abundance in our experiment. 
 
 
-```{r}
-ego_down <- enrichGO(gene = sig_down$protein,
-                   universe = M_G1_results$protein,
-                   OrgDb = org.Hs.eg.db,
-                   keyType = "UNIPROT",
-                   ont = "CC",
-                   pAdjustMethod = "BH",
-                   pvalueCutoff = 0.05,
-                   qvalueCutoff = 0.05,
-                   readable = TRUE)
-```
+<!-- ```{r} -->
+<!-- ego_down <- enrichGO(gene = sig_down$protein, -->
+<!--                    universe = M_G1_results$protein, -->
+<!--                    OrgDb = org.Hs.eg.db, -->
+<!--                    keyType = "UNIPROT", -->
+<!--                    ont = "CC", -->
+<!--                    pAdjustMethod = "BH", -->
+<!--                    pvalueCutoff = 0.05, -->
+<!--                    qvalueCutoff = 0.05, -->
+<!--                    readable = TRUE) -->
+<!-- ``` -->
 
-```{r}
-ego_down$Description
-```
+<!-- ```{r} -->
+<!-- ego_down$Description -->
+<!-- ``` -->
 
 
 
