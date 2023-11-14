@@ -83,31 +83,27 @@ About the authors:
 Please cite these materials if:
 
 - You adapted or used any of them in your own teaching.
-- These materials were useful for your research work. For example, you can cite us in the methods section of your paper: "We carried our analyses based on the recommendations in _TODO_.".
+- These materials were useful for your research work. For example, you can cite us in the methods section of your paper: "We carried our analyses based on the recommendations in Hutchings and Breckels (2023)".
 
 You can cite these materials as:
 
-> TODO
+> Hutchings C, Breckels LM (2023) "CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R", https://cambridgecentreforproteomics.github.io/course_expression_proteomics/setup.html
 
 Or in BibTeX format:
 
 ```
 @Misc{,
-  author = {},
-  title = {},
-  month = {},
-  year = {},
-  url = {},
-  doi = {}
+  author = {Charlotte Hutchings and Lisa M Breckels},
+  title = {CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R},
+  month = {November},
+  year = {2023},
+  url = {https://cambridgecentreforproteomics.github.io/course_expression_proteomics/setup.html}
 }
 ```
 
-To cite our associated workflow for expression proteomics data analysis:
+Please also cite our associated workflow from which these materials were based on:
 
-Hutchings C, Dawson CS, Krueger T et al. A Bioconductor workflow for processing,
-evaluating, and interpreting expression proteomics data [version 1; peer review:
-awaiting peer review]. F1000Research 2023, 12:1402
-[https://doi.org/10.12688/f1000research.139116.1](https://doi.org/10.12688/f1000research.139116.1)
+> Hutchings C, Dawson CS, Krueger T, Lilley KS, Breckels LM. A Bioconductor workflow for processing, evaluating, and interpreting expression proteomics data [version 1; peer review: awaiting peer review]. F1000Research 2023, 12:1402 [https://doi.org/10.12688/f1000research.139116.1](https://doi.org/10.12688/f1000research.139116.1)
 
 
 ```
