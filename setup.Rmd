@@ -1,6 +1,6 @@
 ---
 title: "Data & Setup"
-bibliography: course_refs.bib  
+bibliography: setup_refs.bib  
 number-sections: false
 ---
 

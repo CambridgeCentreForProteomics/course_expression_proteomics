@@ -1,5 +1,6 @@
 ---
-title: The data 
+title: The data
+bibliography: course_refs.bib  
 ---
 
 ## Use case: Exploring changes in protein abundance across stages of the cell cycle
@@ -208,3 +209,5 @@ also applicable to other types of proteomics datasets (particularly label-free
 DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
 proteomics. Some aspects of the workflow would need to be adapted for other
 types of proteomics experiment.
+
+# References
