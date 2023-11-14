@@ -1,9 +1,19 @@
 ---
-title: The data
-bibliography: course_refs.bib  
+title: The use-case data
+bibliography: course_refs.bib
 ---
 
-## Use case: Exploring changes in protein abundance across stages of the cell cycle
+::: {.callout-tip}
+#### Learning Objectives
+
+* Understand the aim and design of a common expression proteomics experiment
+* Know the difference between MS2- and MS3-based quantitation
+* Know what a database/identification search is and what data level to output 
+and begin processing your data
+
+:::
+
+## Exploring changes in protein abundance across stages of the cell cycle
 
 As a use case, we will analyse an expression proteomics dataset from @Queiroz2019.
 The aim of this experiment was to examine proteins involved in the cell cycle
@@ -49,7 +59,7 @@ knitr::kable(tabl1,
 ```
 
 
-### Isobaric peptide labelling using Tandem Mass Tags (TMT)
+## Isobaric peptide labelling using Tandem Mass Tags (TMT)
 
 As outlined above, the use-case experiment made use of tandem mass tag (TMT)
 labelling. TMT reagents are **isobaric** chemical labels that can be covalently 
@@ -96,7 +106,7 @@ of proteins, TMT labelling would not be an appropriate method.
 
 **Note** **put in box** **relative vs. abusolute quant**
 
-#### MS2- vs. MS3-based TMT quantitaion
+## MS2- vs. MS3-based TMT quantitaion
 
 Originally the reporter ion of a TMT reagent was released by fragmentation of 
 the precursor peptide. This meant that the reporter ion signals could be 
@@ -155,7 +165,7 @@ data level output as a separate `.txt` file. Here, we will use the PSM-level
 `.txt` file. 
 
 
-#### Starting analysis from PSM, peptide or protein level
+## Starting analysis from PSM, peptide or protein level
 
 In general, to allow for maximum control of data quality, normalisation and
 aggregation it is advisable to begin analysis from the lowest possible data 
@@ -170,6 +180,7 @@ called retention time (RT) alignment, which uses the match between runs (MBR)
 function.
 
 **What problem does retention time alignment address?**
+
 Retention time alignment aims to deal with the problem of missing values in 
 label-free data-dependent acquisition (DDA) MS data. Since label-free samples 
 are all analysed by independent MS runs, the stochastic nature of DDA means 
@@ -177,6 +188,7 @@ that different peptides are identified and quantified between samples, hence
 there are a high number of missing values. 
 
 **How does retention time alignment work?**
+
 Quantification of label-free samples is achieved at the MS1 level. This means 
 that we have potentially useful quantitative information before we have any
 peptide identification (MS1 before MS2). In cases where a peptide is identified
@@ -187,6 +199,7 @@ assigned to an MS1 spectra from a completely independent run, even if this
 spectrum does not have a corresponding MS2 spectrum.
 
 **Why does retention time alignment prevent analysis from PSM level?**
+
 The process of RT alignment and MBRs occurs after the process of peptide
 spectrum matching. First, PSMs are derived from an identification search. This
 is done independently for each sample. The remaining spectra for which no PSM
@@ -210,4 +223,4 @@ DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
 proteomics. Some aspects of the workflow would need to be adapted for other
 types of proteomics experiment.
 
-# References
+## References {-}
