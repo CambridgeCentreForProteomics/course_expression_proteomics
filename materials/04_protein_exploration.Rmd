@@ -1,5 +1,6 @@
 ---
 title: Exploration and visualisation of protein data
+bibliography: course_refs.bib
 ---
 
 ::: {.callout-tip}
@@ -21,3 +22,5 @@ Determine PSM and peptide support per protein - can be done in multiple ways...
 #### Key Points
 
 :::
+
+## References {-}

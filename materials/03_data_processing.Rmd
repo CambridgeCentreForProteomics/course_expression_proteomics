@@ -1,5 +1,6 @@
 ---
 title: Data processing
+bibliography: course_refs.bib
 ---
 
 ::: {.callout-tip}
@@ -648,3 +649,5 @@ save(cc_qf, file = "output/lesson03.rda")
 - To remove non-biological variation, data normalisation should be completed using the `normalize` function. To help users decide which normalisation method is appropriate for their data we recommend using the `normalyzer` function to create a report containing a comparison of methods.
 
 :::
+
+## References {-}

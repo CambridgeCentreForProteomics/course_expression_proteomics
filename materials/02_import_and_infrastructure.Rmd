@@ -1,5 +1,6 @@
 ---
 title: Import and infrastructure
+bibliography: course_refs.bib
 ---
 
 ::: {.callout-tip}
@@ -291,3 +292,5 @@ save(cc_qf, file = "output/lesson02.rda")
 - Explicit links between `assay`s are (i) generated automatically when aggregating data using `aggregateFeatures` or (ii) added manually using the `addAssayLinks` function, as we will see later on.
 - Within each `SummarizedExperiment` the feature data is stored within the `rowData`, quantitative data in the `assay`, and sample metadata in the `colData`. These slots are accessible using their corresponding functions.
 :::
+
+## References {-}

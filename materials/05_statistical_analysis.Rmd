@@ -1,5 +1,6 @@
 ---
 title: Statistical analysis
+bibliography: course_refs.bib
 ---
 
 ::: {.callout-tip}
@@ -405,3 +406,5 @@ M_Desynch_results %>%
 
 - Last section of the page is a bulleted summary of the key points
 :::
+
+## References {-}
