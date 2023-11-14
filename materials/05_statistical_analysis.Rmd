@@ -70,6 +70,9 @@ is widely used for omics analysis and has several models that allow differential
 abundance to be assessed in multifactorial experiments. Specifically, we are 
 going to apply `limma`'s **empirical Bayes moderated t-test**.
 
+
+### What is a t-test?
+
 A t-test is a parametric statistical test used to compare the mean values of two
 groups, essentially asking whether the difference between means is significantly
 greater than 0. The output of such a test includes several parameters:
@@ -78,21 +81,33 @@ greater than 0. The output of such a test includes several parameters:
 * **degrees of freedom** = the number of observations minus the number of independent variables (*n* - 1)
 * **p-value** = the probability of achieving the t-value under the null hypothesis i.e., by chance
 
-Here, we will apply a empirical Bayes moderated t-test to each of our proteins 
-independently to ask whether the difference in the mean abundance of a protein
-between cell cycle stages is significantly different from 0.
+Here, we will apply a  t-test to each of our proteins to ask whether the
+difference in the mean abundance of a protein between cell cycle stages is 
+significantly different from 0.
 
 
 ### What does the empirical Bayes part mean?
 
 When carrying out high throughput omics experiments we not only have a population
 of samples but also a population of features - here we have several thousand 
-proteins. 
+proteins. Whilst we do not have time to go into detail about this, considering our 
+parameters of interest (mean, variation and difference in means) across the
+entire population of proteins provides us with some prior knowledge of what to 
+expect. This prior knowledge facilitates empirical Bayesian methods (a mixture
+between frequentist and Bayesian statistics), a much more powerful approach than
+looking at the data one protein at a time.
 
+Essentially, the empirical Bayes method borrows information across features 
+(proteins) and shifts the per-protein variance estimates towards an expected
+value based on the variance estimates of other proteins with a similar abundance.
+This results in greater statistical power for detecting significant abundance
+changes for proteins with higher variation and reduces the number of false 
+positives that arise from proteins with small variances (where normally even a
+small abundance change could be considered significant). For more detail 
+about empirical Bayes methods see [here](https://online.stat.psu.edu/stat555/node/40/).
 
-* Explain each term - Bayes moderated, t-test
-* Explain the concept of contrasts
-* Discuss the two types of limma model (trend = TRUE)
+Overall, empirical Bayes provides a way to increase the statistical power and
+reduce false positives within our differential abundance analysis.
 
 
 ## Defining the statistical model 
@@ -181,17 +196,26 @@ next step is to apply the statistical model.
 ## Fit linear model using the design matrix and desired contrasts
 fit_model <- lmFit(assay(all_proteins), m_design)
 fit_contrasts <- contrasts.fit(fit_model, contrasts)
+```
 
+The initial model has now been applied to each of the proteins in our data. 
+We now update the model using the `eBayes` function. When we do this we include
+two other arguments: `trend = TRUE` and `robust = TRUE` @Phipson2016 @Smyth2004.
+
+* `trend` - takes a logical value of `TRUE` or `FALSE` to indicate whether an intensity-dependent trend should be allowed for the prior variance (i.e., the population level variance prior to empirical Bayes moderation). This means that when the empirical Bayes moderation is applied the protein variances are not squeezed towards a global mean but rather towards an intensity-dependent trend.
+* `robust` - takes a logical value of `TRUE` or `FALSE` to indicate whether the parameter estimation of the priors should be robust against outlier sample variances.
+
+
+```{r}
 ## Update the model using the limma eBayes algorithm
 fit_contrasts <- eBayes(fit_contrasts, 
                         trend = TRUE,
                         robust = TRUE)
 ```
 
-The initial t-test has now been applied to each of the proteins in our data. 
-We now update 
-
-
+Finally, we can take a look out the output of our differential abundance testing.
+The `topTable` function allows us to look at the results of our linear model. 
+This includes a result of the test for each individual protein.
 
 ```{r}
 ## Format results
@@ -204,15 +228,42 @@ limma_results <- topTable(fit_contrasts,
 head(limma_results)
 ```
 
+### Multiple hypothesis testing and correction
+
+Here we see another argument appear, the `adjust.method = "BH`. This refers to 
+p-value adjustment that must be done following multiple hypothesis testing. 
+
+Multiple testing describes the process of separately testing each null hypothesis
+i.e., carrying out many statistical tests at a time each to test a different
+hypothesis. Here we have carried out `r nrow(limma_results`) hypothesis tests.
+If we were to use the typical p < 0.05 significance threshold for each test we 
+would accept a 5% chance of incorrectly rejecting the null hypothesis *per test*.
+Therefore, for every 100 tests that we carry out we expect an average of 5 false
+positives.
+
+If we do not account for the fact that we have carried out multiple hypothesis
+then we risk including false positives in our data. Many methods exist to 
+correct for multiple hypothesis testing and these mainly fall into two categories:
+
+1. Control of the Family-Wise Error Rate (FWER)
+2. Control of the False Discovery Rate (FDR)
+
+Above we used the "BH", or Benjamini-Hochberg procedure, to control the FDR. We
+will later use the FDR-adjusted p-value to define statistical significance in 
+our data.
+
 
 ### Diagnostic plots to verify suitability of our statistical model
 
 As with all statistical analysis, it is crucial to do some quality control and
 to check that the statistical test that has been applied was indeed appropriate
 for the data. As mentioned above, statistical tests typically come with several
-assumption. To check that these assumptions were met and that our model was
+assumptions. To check that these assumptions were met and that our model was
 suitable, we create some diagnostic plots.
 
+First we plot a histogram of the raw p-values (not the BH-adjusted p-values). 
+This can be done by passing our results data into standard `ggplot2` plotting
+functions.
 
 ```{r}
 limma_results %>%
@@ -220,6 +271,30 @@ limma_results %>%
   ggplot(aes(x = P.Value)) + 
   geom_histogram()
 ```
+
+The histogram we have plotted shows an anti-conservative distribution, which is
+good. The flat distribution across the bottom corresponds to null p-values which
+are distributed approximately uniformly between 0 and 1. The peak close to 0 
+contains our significantly changing proteins, a combination of true positives 
+and false positives.
+
+Other examples of how a p-value histogram could look are shown below. Whilst in
+some experiments a uniform p-value distribution may arise due to an absence of
+significant alternative hypotheses, other distribution shapes can indicate that
+something was wrong with the model design or statistical test. For more detail on
+how to interpret p-value histograms there is a great [blog](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/) 
+by David Robinson.
+
+
+```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
+knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
+```
+
+
+
+
+
+
 ```{r}
 plotSA(fit_contrasts,
        cex = 0.5,
@@ -232,19 +307,8 @@ plotSA(fit_contrasts,
 
 ### Interpreting the output of our statisical model
 
-```{r}
-for (i in colnames(contrasts)) {
-  
-  results <- topTable(fit_contrasts, coef = i, number = Inf, adjust.method = "BH")
-  
-  assign(paste0(i, "_results"), results)
-}
-```
-
-
-```{r}
-head(M_G1_results)
-```
+Having checked that the model we fitted was appropriate for the data, we can
+now take a look at the results of our test.
 
 ```{r}
 decideTests(fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
@@ -252,23 +316,89 @@ decideTests(fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
 ```
 
 
-#### Adding user-defined significance thresholds based on FDR and LFC
+For the remainder of the workshop we will focus on the statistical comparison 
+between M-phase and the desynchronised cells. We use the `topTable` function to
+get the results of the `"M_Des"` contrast.
+
 
 ```{r}
+M_Desynch_results <- topTable(fit_contrasts, coef = "M_Des", number = Inf, adjust.method = "BH") %>%
+  rownames_to_column("protein")
 
+## Verify
+head(M_Desynch_results)
 ```
 
+Interpreting the output of `topTable`:
 
-* Discussion about p-value correction and why it is needed -> FDR as a method for this
-* Discussion about whether a log2FC threshold should also be set -> mention MS2 TMT ratio compression
+* `logFC` = the fold change between the mean log abundance in group A and the mean log abundance in group B
+* `AveExpr` = the average log abundance of the protein across samples
+* `t` = eBayes moderated t-statistic. Interpreted in the same way as a normal t-statistic (see above).
+* `P.Value` = Unadjusted p-value
+* `adj.P.Val` = FDR-adjusted p-value 
+* `B` = B-statistic representing the log-odds that a protein is differentially abundant between conditions
 
+
+#### Adding user-defined significance thresholds 
+
+The output of out statistical test will provide us with key information for
+each protein, including its p-value, BH-adjusted p-value and logFC. However, it
+is up to us to decide what we consider to be significant. The first parameter 
+to consider is the `adj.P.Val` threshold that we wish to apply - 0.05 and 0.01 
+are both common in proteomics. The second parameter which is sometimes used to
+define significance is the `logFC`. This is mainly for the purpose of deciding
+on hits to follow-up, since it is easier to validate larger abundance changes
+than those which are consistent but subtle. 
+
+Here we are going to define significance based on an `adj.P.Val` < 0.01. We can
+add a column to our results to indicate significance as well as the direction of
+change. 
+
+
+```{r}
+## Add direction and significance information
+M_Desynch_results <- M_Desynch_results %>%
+  as_tibble() %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down"),
+        significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
+
+
+## Verify
+head(M_Desynch_results)
+```
+
+```{r, include=FALSE}
+## Save results
+save(M_Desynch_results, file = "output/lesson05.rda")
+```
 
 
 ### Visualising the results of our statistical model
 
-* Volcano plot
-* MA plot
-* Adding error bars to show confidence interval 
+The final step in any statistical analysis is to visualise the results. This is
+important for ourselves as it allows us to check that the data looks as 
+expected. 
+
+The most common visualisation used to display the results of expression
+proteomics experiments is a volcano plot. This is a scatterplot that shows
+statistical significance (p-values) against the magnitude of fold change.
+Of note, when we plot the statistical significance we use the raw unadjusted
+p-value (`-log10(P.Value)`). This is because it is better to plot the basic
+data in its raw form than any derived value (the adjusted p-value is derived
+from each p-value using the BH-method of correction). The process of FDR
+correction can result in some points that previously had distinct p-values 
+having the same adjusted p-value. Further, different methods of correction will
+generate different adjusted p-values, making the comparison and interpretation
+of values more difficult.
+
+
+```{r}
+M_Desynch_results %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+```
+
 
 ::: {.callout-tip}
 #### Key Points

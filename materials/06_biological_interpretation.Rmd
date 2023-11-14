@@ -11,6 +11,34 @@ title: Biological interpretation
 
 :::
 
+
+## Subset differentially abundant proteins
+
+Before we can look any further into the biological meaning of any protein 
+abundance changes we need to extract these proteins from our overall results.
+It is also useful to re-add information about the master protein descriptions
+since this is lost in the output of `limma` analysis.
+
+```{r}
+## Add master protein descriptions back
+M_G1_results$protein_description <- all_proteins %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Descriptions)
+
+## Extract proteins that have significant abundance changes in M vs. G1
+sig_changing <- M_G1_results %>% 
+  as_tibble() %>%
+  filter(significance == "sig")
+
+sig_up <- sig_changing %>%
+  filter(direction == "up")
+
+sig_down <- sig_changing %>%
+  filter(direction == "down")
+```
+
+
 ## Biological interpretation of differentially abundant proteins
 
 Our statistical analyses provided us with a list of proteins that are present
@@ -19,7 +47,10 @@ cycle. We can get an initial idea about what these proteins are and do by
 looking at the protein descriptions. 
 
 ```{r}
-
+## Look at descriptions of proteins upregulated in G1 relative to M
+sig_up %>%
+  select(protein_description) %>%
+  head()
 ```
 
 Whilst we may recognise some of the changing proteins, this might be the first
@@ -56,9 +87,12 @@ answer the question:
 
 Unfortunately, just looking at the GO terms associated with our differentially
 abundant proteins is insufficient to draw any solid conclusions. For example, if
-we find that **xx** of the **xx** proteins significantly upregulated in G1 phase
-are annotated with the GO term " xxx ", it may seem intuitive to conclude that 
-this biological process is important for the G1 phenotype. However, if 
+we find that `r (nrow(sig_up)/3` of the `r nrow(sig_up)` proteins significantly
+upregulated in G1 phase are annotated with the GO term "kinase activity", it may
+seem intuitive to conclude that this biological process is important for the G1 
+phenotype. However, if 90% of all proteins in the cell were kinases (an extreme
+example), then we might expect to discover a high representation of the "kinase
+activity" GO term in any protein list we end up with.
 
 This leads us to the concept of an over-representation analysis. We wish to ask 
 whether any GO terms are over-represented (i.e., present at a higher frequency 
@@ -67,10 +101,22 @@ other words, we need to know how many proteins with a GO term *could* have
 shown differential abundance in our experiment vs. how many proteins with this
 GO term *did* show differential abundance in our experiment. 
 
-```{r}
 
+```{r}
+ego_down <- enrichGO(gene = sig_down$protein,
+                   universe = M_G1_results$protein,
+                   OrgDb = org.Hs.eg.db,
+                   keyType = "UNIPROT",
+                   ont = "CC",
+                   pAdjustMethod = "BH",
+                   pvalueCutoff = 0.05,
+                   qvalueCutoff = 0.05,
+                   readable = TRUE)
 ```
 
+```{r}
+ego_down$Description
+```
 
 
 
