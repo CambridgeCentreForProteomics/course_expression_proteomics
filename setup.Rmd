@@ -1,5 +1,6 @@
 ---
 title: "Data & Setup"
+bibliography: course_refs.bib  
 number-sections: false
 ---
 
@@ -39,8 +40,10 @@ Bioconductor including the packages listed below.
 
 This lesson assumes that you have current versions of the following installed on 
 your computer:
+
 1. The [R software](https://cran.r-project.org/mirrors.html) itself, and
 2. [RStudio Desktop](https://www.rstudio.com/products/rstudio/download/#download).
+
 R and RStudio require separate downloads and installations. R itself refers to 
 the underlying language and computing environment required to write and read 
 this language. RStudio is a graphical integrated development environment which
@@ -119,7 +122,7 @@ After installation, each package must be loaded before it can be used in the R
 session. This is achieved via the `library` function. Here we load all packages 
 included in this course.
 
-```{r load_packages, message = FALSE, results = "hide"}
+```{r load_packages, message = FALSE, results = "hide", message=FALSE, warning=FALSE}
 library("QFeatures")
 library("ggplot2")
 library("stringr")
@@ -208,3 +211,5 @@ rm singularity.deb
 
 :::
  -->
+
+# References
