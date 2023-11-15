@@ -347,7 +347,7 @@ save(cc_qf, file = "output/lesson02.rda")
 ## Exercises
 
 :::{.callout-exercise}
-#### Accessing summary information
+#### Challenge 1: Accessing information
 {{< level 1 >}}
 
 Explore the `QFeatures` object you have just created. 
@@ -355,6 +355,9 @@ Explore the `QFeatures` object you have just created.
 1. How many assays do we currently have in the object? 
 
 2. How many PSMs have been quantified in the data?
+
+3. How do access and view the quantitation data?
+
 
 ::: {.callout-answer collapse=true}
 
@@ -389,59 +392,110 @@ cc_qf[["psms_raw"]] %>%
 
 ----
 
+**Task 3**
+
+We can use the `assay` accessor,
+
+```{r, eval=FALSE}
+cc_qf[["psms_raw"]] %>% 
+  assay()
+```
+
+or equivalently,
+
+```{r, eval=FALSE}
+assay(cc_qf[["psms_raw"]])
+```
+
+----
+
 :::
 :::
 
 
 
 :::{.callout-exercise}
-#### Calculating the number of peptides in our dataset
+#### Challenge 2: Calculating the number of peptides and proteins in our dataset
 {{< level 2 >}}
+
+Explore the information stored in the `rowData` from the Proteome Discoverer
+search. Look at the first few rows of this data matrix by using the `head`
+function and find a column that related to the peptide sequence information.
 
 1. How many peptides have been quantified in the dataset?
 
-<details><summary>Hint</summary> Convert the `rowData` to a `tibble` or `data.frame` and find a column that
-contains information that relates PSMs to peptides.</details>
+<details><summary>Hint 1</summary> Extract the `rowData` and convert it to a
+`tibble` or `data.frame`. Find a column that contains information that relates
+to the peptide sequence. The `unique` function may be helpful. </details>
 
 2. How many proteins have been identified in the dataset? 
+
+<details><summary>Hint</summary> Again, convert the `rowData` to a `tibble` or
+`data.frame` and find a column that contains information that relates to protein
+identification.</details>
 
 ::: {.callout-answer collapse=true}
 
 **Task 1**
 
-There are many ways to extract the number of peptides from our datasets. If we
-want to use pipes we first need to convert the `rowData` which is `DFrame` to
+There are many ways to extract the number of peptides from our datasets. The
+current data level shows the total number of PSMs (peptide spectrum matches).
+Although PSMs are fragments of identified peptide sequences, there can be many
+PSMs per unique peptide. The `rowData` is where we have stored information relating
+to our samples that are not quantitation data. 
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  rowData() %>% 
+  names()
+```
+
+We can extract the `rowdata` and store it in a new object,
+
+```{r}
+rd <- cc_qf[["psms_raw"]] %>% 
+  rowData()
+
+rd %>% head()
+```
+
+In the `rowData` we have information relating the PSM to the peptide sequence
+from which is is derived. This information is found in the `Sequence`. Note,
+there is also a column called `Annotated.Sequence`. 
+
+Q. What is the difference between `Sequence` and `Annotated.Sequence`?
+
+In the following code chunk we first convert the `rowData` which is `DFrame` to
 either a `data.frame` or `tibble`. We could use the `as.data.frame` or
-`as_tibble` functions, respectively. As PSMs constitute peptides and we can
-identify many PSMs per peptide we need to use the `unique` function to group
-together PSMs from the same peptide.
+`as_tibble` functions, respectively, to allow us to use pipes. We then extract
+the column `Sequence` and use the `unique`
+function to group together PSMs from the same peptide. Finally, we use the
+`length` command to count the number of peptides.
 
 ```{r}
 ## Using tidyr
-cc_qf[["psms_raw"]] %>%
-  rowData() %>%
+rd %>%
   as_tibble() %>%
   pull(Sequence) %>%
   unique() %>%
   length() 
 ```
 
-Alternative solution (among others)
+Alternative solution (among many others)
 
 ```{r}
-## Nested result
-rd <- rowData(cc_qf[["psms_raw"]])
-length(table(rd$Sequence))
+## Without pipes
+tbl <- table(rd$Sequence) 
+length(tbl)
 ```
 
-We have `r length(table(rowData(cc_qf[["psms_raw"]])$Sequence))` peptides.
+We have `r length(tbl)` peptides.
 
 ----
 
 **Task 2**
 
-Similarly, the object summary also tells us the number of PSMs. We can also
-extract the number of rows (PSMs in our case) for a given level (i.e. `psms_raw`)
+Information regarding the proteins is found in the `Master.Protein.Accessions` column. 
 
 ```{r}
 ## Using tidyr
@@ -453,7 +507,15 @@ cc_qf[["psms_raw"]] %>%
   length() 
 ```
 
-We have `r length(table(rowData(cc_qf[["psms_raw"]])$Master.Protein.Accessions))` proteins.
+Alternative solution (among many others)
+
+```{r}
+## Without pipes
+tbl <- table(rd$Master.Protein.Accessions) 
+length(tbl)
+```
+
+We have `r length(tbl)` proteins.
 
 ----
 
@@ -461,27 +523,27 @@ We have `r length(table(rowData(cc_qf[["psms_raw"]])$Master.Protein.Accessions))
 :::
 
 
-<!-- :::{.callout-exercise} -->
-<!-- #### Miscleavages -->
-<!-- {{< level 2 >}} -->
+:::{.callout-exercise}
+#### Challenge 3: Miscleavages
+{{< level 2 >}}
 
-<!-- Work out what the threshold for trypsin miscleavages was during the identification search. -->
+Work out what the threshold for trypsin miscleavages was during the identification search.
 
-<!-- ::: {.callout-answer collapse=true} -->
+::: {.callout-answer collapse=true}
 
-<!-- ```{r} -->
-<!-- cc_qf[["psms_raw"]] %>% -->
-<!--   rowData() %>% -->
-<!--   as_tibble() %>% -->
-<!--   pull(Number.of.Missed.Cleavages) %>% -->
-<!--   table() -->
-<!-- ``` -->
+```{r}
+cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Number.of.Missed.Cleavages) %>%
+  table()
+```
 
-<!-- We see that during the identification search missed cleavages were limited to a -->
-<!-- maximum of 2 missed cleavage sites. This is typical in bottom-up proteomics. -->
+We see that during the identification search missed cleavages were limited to a
+maximum of 2 missed cleavage sites. This is typical in bottom-up proteomics.
 
-<!-- ::: -->
-<!-- ::: -->
+:::
+:::
 
 
 ::: {.callout-tip}
