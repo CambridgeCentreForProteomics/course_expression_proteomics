@@ -1,8 +1,6 @@
 ---
 title: Import and infrastructure
 bibliography: course_refs.bib
-editor_options: 
-  chunk_output_type: console
 ---
 
 ::: {.callout-tip}
