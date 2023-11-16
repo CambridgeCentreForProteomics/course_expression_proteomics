@@ -833,7 +833,7 @@ We wish to aggregate from PSM to protein level so pass the argument `i =
 data, and then pass `fcol = "Master.Protein.Accessions"` to specify we wish to
 group by `"Master.Protein.Accessions"`. 
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, message=FALSE}
 cc_qf
 
 cc_qf <- aggregateFeatures(cc_qf, 
@@ -905,7 +905,7 @@ appropriate?
 
 ::: {.callout-answer collapse=true}
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 cc_qf <- aggregateFeatures(cc_qf,
                            i = "psms_imputed", 
                            fcol = "Master.Protein.Accessions",
@@ -945,6 +945,14 @@ cc_qf <- normalize(cc_qf,
                    method = "center.median")
 ```
 
+
+Let's verify the normalisation has worked in the next exercise and also by
+viewing the `QFeatures` object. We can call `@ExperimentList` to view all
+the assays we have created,
+
+```{r}
+cc_qf@ExperimentList
+```
 
 :::{.callout-exercise}
 #### Challenge 6: Visualising the data prior and post-normalisation
@@ -1006,9 +1014,78 @@ pre_norm + post_norm
 :::
 :::
 
-**Challenge**
+:::{.callout-exercise}
+#### Challenge 7: Final PSM, peptide and protein count
+{{< level 2 >}}
+
 Determine how many PSMs, peptides and proteins were lost during processing of
-raw data to our final protein list?
+the raw data to our final protein list?
+
+
+::: {.callout-answer collapse=true}
+
+We started with,
+
+```{r}
+psm_count <- cc_qf[["psms_raw"]] %>% nrow()
+
+peptide_count <- 
+  cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Sequence) %>%
+  unique() %>%
+  length() 
+
+prot_count <- 
+  cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length() 
+
+message(psm_count, " PSMs, ", 
+        peptide_count, " peptides and ", 
+        prot_count, " proteins")
+```
+
+After filtering we have,
+
+```{r}
+psm_final <- cc_qf[["psms_filtered"]] %>% nrow()
+
+peptide_final <- 
+  cc_qf[["psms_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Sequence) %>%
+  unique() %>%
+  length() 
+
+prot_final <- 
+  cc_qf[["psms_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length() 
+
+message(psm_final, " PSMs, ", 
+        peptide_final, " peptides and ", 
+        prot_final, " proteins")
+```
+
+During the course of data processing we have lost,
+
+```{r}
+message(psm_count - psm_final, " PSMs, ", 
+        peptide_count - peptide_final, " peptides and ", 
+        prot_count - prot_final, " proteins")
+```
+
+:::
+:::
 
 ```{r, include=FALSE}
 save(cc_qf, file = "output/lesson03.rda")
