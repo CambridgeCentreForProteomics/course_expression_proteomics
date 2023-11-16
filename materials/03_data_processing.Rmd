@@ -28,7 +28,7 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-load("output/lesson02.rda", verbose = TRUE)
+#load("output/lesson02.rda", verbose = TRUE)
 ```
 
 ## Data cleaning at the PSM-level

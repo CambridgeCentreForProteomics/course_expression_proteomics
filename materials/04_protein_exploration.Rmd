@@ -78,8 +78,8 @@ cc_qf[["log_norm_proteins"]] %>%
   names()
 ```
 
-This column is created during the aggregation process that is completed via the
-`aggregateFeatures` function. This column stores information about how many 
+The `.n` column is created during the aggregation process that is completed via 
+the `aggregateFeatures` function. This column stores information about how many 
 child features were aggregated into each parent feature. Since we aggregated
 directly from the PSMs to protein, the `.n` column tells us how many PSMs we 
 have in support of each protein in the final dataset.
@@ -164,9 +164,9 @@ we want to report how many PSMs or peptides were in support of a protein's
 *identification* rather than its *quantitation* then using the raw data is 
 more appropriate. 
 
-Look at the names of the `rowData` colums in the `"psms_raw"` assay. Determine
-how many PSMs, unique peptide sequences (i.e., sequences regardless of modification)
-and master protein accessions were identified from the raw data.
+Look at the names of the `rowData` colums in the `"psms_raw"` assay. Using the
+`unique()` function, determine how many PSMs, peptide sequences and master
+protein accessions were identified from the raw data.
 
 **Below is the solution! need to hide**
 
@@ -203,26 +203,137 @@ additional argument specifying one or more features of interest. The output is
 then a new `QFeatures` object with only data corresponding to the specified 
 features.
 
-Let's take a look at O43583
+Let's take a look at O43583.
 
 ```{r}
-subsetByFeature(cc_qf, "O43583")
+O43583 <- subsetByFeature(cc_qf, "O43583")
+
+O43583
 ```
 
+From this we can see that the O43583 protein is supported by 4 peptides derived
+from 5 PSMs.
+
+We can use our new `QFeatures` object to create a plot which displays how the
+PSM data was aggregated to protein for this particular feature. To do so, we
+extract the assays of interest from our `"O43583"` `QFeatures` object and pass
+to the `longFormat` function which will covert the subset `QFeatures` object
+to a long format `DataFrame`. We can then use the standard `ggplot2` functions
+to visualise the processing of this protein.
+
+```{r, warning = FALSE}
+O43583[, , c("log_imputed_psms", "log_peptides", "log_proteins")] %>%
+  longFormat() %>%
+  as_tibble() %>%
+  mutate(assay_order = factor(assay, levels = c("log_imputed_psms", "log_peptides", "log_proteins"))) %>%
+  ggplot(aes(x = colname, y = value, colour = assay)) + 
+  geom_point() +
+  geom_line(aes(group = rowname)) +
+  facet_wrap(~assay_order)
+```
+
+Other useful functions that we do not have time to cover today include
+`subsetByAssay`, `subsetByColData`, `subsetByColumn`, `subsetByFilter`, 
+`subsetByRow`, `subsetByOverlap`, and many more. To find out more about these 
+functions you can execute a single question mark (`?`) followed by the function name. 
+If you have the `QFeatures` package installed you should be able to access a help
+and information page for the function of interest.
+
+For example: 
+
+```{r, eval = FALSE}
+?subsetByAssay
+```
 
 
 ## Principal Component Analysis (PCA)
 
+The final protein level exploration that we will do is Principal Component
+Analysis (PCA).
+
+PCA is a statistical method that can be applied to condense complex data from
+large data tables into a smaller set of summary indices, termed principal 
+components. This process of dimensionality reduction makes it easier to 
+understand the variation observed in a dataset, both how much variation there is
+and what the primary factors driving the variation are. This is particularly 
+important for multivariate datasets in which experimental factors can contribute
+differentially or cumulatively to variation in the observed data. PCA allows us
+to observe any trends, clusters and outliers within the data thereby helping to
+uncover the relationships between observations and variables.
+
+
+### PCA uses eigendecomposition - eigenvalues and eigenvectors
+
+Eigendecomposition is a concept in linear algebra whereby a data matrix is 
+represented in terms of **eigenvalues** and **eigenvectors**. 
+
+
+
+
+### Completing PCA with `prcomp`
+
+To carry out PCA on our data we will use the `prcomp` function from the `stats`
+package. We first extract the quantitative matrix (assay) corresponding to the
+log normalised protein level data. To make this matrix compatible with `prcomp`
+we also need to transpose the data such that the samples become rows and 
+proteins become columns. This is easily achieved using the `t` function. 
+
+Our protein data does not contain due to the decision to impute. However, if
+there were any missing values in the data, these would need to be removed using 
+`filterNA` to facilitate compatibility with PCA.
+
+
+#### Scaling and centering
+
+When we *scale and center* a dataset we are centering a variable to a mean of 0
+and scaling its standard deviation to 1. It is generally advisable to both center
+and scale the data. 
 
 
 ```{r}
 protein_pca <- cc_qf[["log_norm_proteins"]] %>%
   assay() %>%
+# filterNA() %>%
   t() %>%
   prcomp(scale = TRUE, center = TRUE)
 
 summary(protein_pca)
 ```
+
+
+We now have a simplified representation of our quantitative data in the form
+of principle components (PC). The `prcomp` function outputs a list of 5 different
+information sources, each of which can be accessed using the `$` sign nomenclature.
+
+1. `sdev` - holds the standard deviation values for each of the principle components
+2. `rotation` - a matrix which contains each of our proteins as a row and the corresponding PC values as columns
+3. `x` - a matrix which contains each of our samples as a row and the corresponding PC values as columns
+4. `center` - if `center = TRUE` then contains the centering values, otherwise `FALSE`
+5. `scale` - if `scale = TRUE` then contains the scaling values, otherwise `FALSE`
+
+We now want to plot each of our samples in PCA space. To do this we will use the
+`protein_pca$x` data.
+
+```{r}
+head(protein_pca$x)
+```
+
+Typically a 2D PCA plot will display PC1 and PC2, since these are the PCs that
+explain the most variation within the dataset.
+
+```{r}
+protein_pca$x %>%
+  as_tibble() %>%
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_point(size = 3) + 
+  theme_bw()
+```
+
+It is generally advisable to colour each point based on all possible explanatory
+variables that may have contributed to the observed variation. In our case we
+only have one - the cell cycle stage. To colour the points based on this condition
+we can use the tidyverse `mutate` function to add a column defining the condition
+of each sample and then use `colour = condition` within our ggplot aesthetics.
 
 
 ```{r}
@@ -234,12 +345,25 @@ protein_pca$x %>%
   theme_bw()
 ```
 
+This PCA plot shows clear clustering of samples based on their condition, which
+is what we would hope to see. This indicates that the observed variation could 
+indeed be explained by cell cycle stage.
+
+For more complicated multivariate experiments all possible explanatory 
+variables should be visualised. For example, if multiple batches of samples 
+have been prepared separately or several TMTplexes were used, these factors
+should be visualised (e.g., by colour) on the PCA plot to see whether they 
+are contributing the the observed variation. If the samples do cluster based on
+unwanted factors such as batch or TMTplex, additional normalisation may be 
+required.
+
 
 ::: {.callout-tip}
 #### Key Points
 
 - The `.n` column created by `aggregateFeatures` is a useful way to trace how many child features have been aggregated into a single parent feature
-- The `subsetByFeature` function 
+- The `subsetByFeature` function can be used to generate a `QFeatures` object with all levels of data corresponding to one or more features of interest
+- Principal Component Analysis (PCA) is a dimensionality reduction method that can be used to visualise the relationship between explanatory variables and observed data. If samples cluster together based on a particular factor, this indicates that the factor
 
 :::
 
