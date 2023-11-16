@@ -118,6 +118,7 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
+library("patchwork")
 ```
 
 ### Working directory {-}
