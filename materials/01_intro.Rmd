@@ -17,7 +17,7 @@ and begin processing your data
 
 As a use case, we will analyse an expression proteomics dataset from @Queiroz2019.
 The aim of this experiment was to examine proteins involved in the cell cycle
-(see Figure \@ref(fig:experimental-method)). Briefly, cells from a human cell 
+(see @fig-experimental-method). Briefly, cells from a human cell 
 line (U-2 0S) were treated with Nocodazole to inhibit the polymerisation of
 microtubules and block the transition beyond the prometaphase stage of M-phase.
 After 18-hours of treatment, the cells were released from cell cycle inhibition 
@@ -27,7 +27,7 @@ desynchronised samples. A sample of cells was also taken prior to Nocodazole
 treatment as an additional control, thus giving a total of 10 samples. 
 
 
-```{r experimental-method, echo = FALSE, fig.cap = "A schematic summary of the experimental design used to generate the use case data.", fig.align = "center", out.width = "100%"}
+```{r fig-experimental-method, echo = FALSE, fig.cap = "A schematic summary of the experimental design used to generate the use case data.", fig.align = "center", out.width = "100%"}
 knitr::include_graphics("figs/experimental_plan_updated.png", error = FALSE)
 ```
 
@@ -39,10 +39,13 @@ adjacent proline residue). The same quantity of peptide from each sample was the
 labelled using Tandem Mass Tag (TMT) labels. This allows all of the samples to 
 be combined into a single pooled MS sample, thus reducing technical variability
 and MS time, as well as ensuring quantification of the same peptides in each 
-samples. The TMT labelling strategy is outlined below in Table \@ref(tab:table1).
+samples. The TMT labelling strategy is outlined below in @tbl-data-structure.
 
 
-```{r table1, echo = FALSE}
+```{r, echo = FALSE}
+#| label: tbl-data-structure
+#| tbl-cap: "Sample information and TMT labelling strategy in the use case experiment"
+
 tabl1 <- data.frame("Sample" = c("Control", "M_1", "M_2", "M_3", "G1_1", "G1_2",
                                  "G1_3", "DS_1", "DS_2", "DS_3"),
                     "Timepoint" = c("Pre-treatment", "0hrs", "0hrs", "0hrs",
@@ -53,9 +56,8 @@ tabl1 <- data.frame("Sample" = c("Control", "M_1", "M_2", "M_3", "G1_1", "G1_2",
                               "129C", "130N", "130C", "131"))
 
 knitr::kable(tabl1,
-             col.names = c("Sample Name", "Timepoint", "Replicate", "Tag"),
-             caption = "Sample information and TMT labelling strategy in the use case experiment")
-
+             col.names = c("Sample Name", "Timepoint", "Replicate", "Tag"))
+             # caption = "Sample information and TMT labelling strategy in the use case experiment")
 ```
 
 
@@ -70,10 +72,10 @@ or 18 (TMTpro 18plex^TM^) TMT labels. The isobaric nature of TMT reagents means
 that all of the labels within a TMTplex have the same overall mass. However, 
 they differ in how this mass is distributed between their two variable regions - 
 the **reporter** and **mass normaliser**. The structure of a TMT label is shown 
-below. 
+below in @fig-tmt-structure. 
 
 
-```{r}
+```{r, fig-tmt-structure, echo = FALSE, fig.cap = "The chemical structure of a TMT label.", fig.align = "center", out.width = "50%"}
 knitr::include_graphics("figs/tmt_structure.jpg")
 ```
 
