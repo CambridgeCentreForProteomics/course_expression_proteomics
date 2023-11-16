@@ -460,7 +460,8 @@ The management of missing data can be considered in three main steps:
 2. Removal of data with high levels of missingness - this could be features with missing values across too many samples or samples with an abnormally high proportion of missingness compared to the average
 3. Imputation (optional)
 
-**Note**  
+::: {.callout-note}
+#### Encoding of missing data
 Before we begin managing the missing data, we first need to know what missing data
 looks like. In our data, missing values are notated as `NA` values. Alternative 
 software may display missing values as being zero, or even infinite if 
@@ -470,29 +471,52 @@ notation. If we were dealing with a dataset that had an alternative encoding, we
 could apply the `zeroIsNA()` or `infIsNA()` functions to convert missing values
 into `NA` values.
 
+:::
+
 The main function that facilitates the exploration of missing data in `QFeatures`
 is `nNA`. Let's try to use this function. Again, we use the `i = ` argument to
-specify which assay within the `QFeatures` object that we wish to look at.
+specify which assay within the `QFeatures` object that we wish to look at. 
 
 ```{r}
 nNA(cc_qf, i = "psms_filtered")
 ```
 
-The output from this function is a list of three data frames. The first of these
-(called `nNA`) gives us information about missing data at the global level (i.e.,
-for the entire assay). We get information about the absolute number of missing
-values (`nNA`) and the proportion of the total data set that is missing values
-(`pNA`). The next two data frames also give us `nNA` and `pNA` but this time on 
-a per row/feature (`nNArows`) and per column/sample (`nNAcols`) basis.
+The output from this function is a `list` of three `DFrame`s. The first of
+these (called `nNA`) gives us information about missing data at the global level
+(i.e., for the entire assay). We get information about the absolute number of
+missing values (`nNA`) and the proportion of the total data set that is missing
+values (`pNA`). The next two data frames also give us `nNA` and `pNA` but this
+time on a per row/feature (`nNArows`) and per column/sample (`nNAcols`) basis.
+
+Let's direct the output of `nNA` on each `assay` to an object,
+
+```{r}
+mv_raw <- nNA(cc_qf, i = "psms_raw")
+mv_filtered <- nNA(cc_qf, i = "psms_filtered")
+```
 
 To access one `DataFrame` within a list we use the standard `$` operator, 
 followed by another `$` operator if we wish to access specific columns.
 
+**Missing values down columns (sample)**
+Print information regarding the number of missing values per column in
+the `"mv_raw"` data,
+
 ```{r}
-## Output the number of missing values (nNA) per column (nNAcols)
-nNA(cc_qf, i = "psms_filtered")$nNAcols$nNA
+mv_raw$nNAcols
 ```
 
+and after filtering,
+
+```{r}
+mv_filtered$nNAcols
+```
+
+Now, we can extract the percentage of NAs in each sample,
+
+```{r}
+mv_raw$nNAcols$pNA
+```
 
 We can also pass the output data from `nNA` to `ggplot` to visualise the missing
 data. This is particularly useful so that we can see whether any of our samples
@@ -501,21 +525,25 @@ could be the case if something had gone wrong during sample preparation. It is
 also useful to see whether there is any specific conditions that have a greater
 number of missing values.
 
+In the following code chunk we visualise the proportion of missing values per 
+sample and check for sample and condition bias. 
+
+In the raw data,
 
 ```{r}
-## Visualise the proportion of missing values per sample - check for sample and condition bias
-
-## Look at the raw PSMs
-nNA(cc_qf[["psms_raw"]])$nNAcols %>%
+mv_raw$nNAcols %>%
   as_tibble() %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
   geom_bar(stat = "identity") +
   labs(x = "Sample", y = "Missing values (%)") + 
   theme_bw()
+```
 
-## Look at the filtered PSMs
-nNA(cc_qf[["psms_filtered"]])$nNAcols %>%
+In the filtered data,
+
+```{r}
+mv_filtered$nNAcols %>%
   as_tibble() %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
@@ -525,7 +553,8 @@ nNA(cc_qf[["psms_filtered"]])$nNAcols %>%
 ```
 
 
-**note** **put into a box** 
+::: {.callout-note}
+#### Missing values expectations
 In this experiment we expect all samples to have a low proportion of missing 
 values due to the TMT labelling strategy. We also expect that all samples should
 have a similar proportion of missing values because we do not expect cell cycle
@@ -540,8 +569,54 @@ would be expected to have control samples with a large proportion of missing
 values and experimental samples with a much lower proportion. It is important to
 check that the data corresponds to the experimental setup.
 
+:::
 
-**Challenge**
+
+**Missing values across rows (PSMs)**
+Print information regarding the number of missing values per row (PSM):
+
+In the `"psms_raw"` data,
+
+```{r}
+mv_raw$nNArows
+```
+
+The `"psms_filtered"` data,
+
+```{r}
+mv_filtered$nNArows
+```
+
+
+:::{.callout-exercise}
+#### Challenge 3: Analysing missing values
+{{< level 2 >}}
+
+How many PSMs do we have with (i) 0 missing values, (ii) 1 missing value, (iii) 
+2 or more missing values, across samples, before and after filtering?
+
+::: {.callout-answer collapse=true}
+
+
+The `nNA` column gives information on the number missing values (or we can 
+use `pNA` which gives information on the percentage). Calling `table` on the
+output number of missing values we have across samples,
+
+On the raw data,
+```{r}
+mv_raw$nNArows$nNA %>% table()
+```
+
+On the filtered data,
+```{r}
+mv_filtered$nNArows$nNA %>% table()
+```
+
+:::
+:::
+
+
+**TODO - add second challenge or too tricky?**
 Ideas ...
 Something to do with missing data across rows - prior to filtering based on a 
 feature having >20% missing values. Ask them to work out how many this will be?
@@ -549,14 +624,6 @@ Ask them to work out the max and min number of missing values per feature?
 Ask them to create a plot looking at the number of missing values across the
 intensity distribution (are they intensity dependent or independent?)
 
-
-```{r}
-nNA(cc_qf[["psms_filtered"]])$nNArows$nNA %>%
-  max()
-
-nNA(cc_qf[["psms_filtered"]])$nNArows$pNA %>%
-  max()
-```
 
 
 ### Removing data with high levels of missingness
@@ -612,7 +679,7 @@ We only have `r nNA(cc_qf[["psms_filtered"]])$nNA$pNA`% missing values in our
 data, so imputation is not really necessary here. We could either remove the 
 PSMs that still have missing values or continue our analysis. The latter is 
 possible since missing values are often lost during aggregation and there are
-now aggregation methods that are able to deal with missing data.
+now aggregation methods that are able to deal with missing data @Goeminne2020 @Sticker2020.
 
 For demonstration purposes we will carry out imputation anyway. Since we are 
 only imputing `r nNA(cc_qf[["psms_filtered"]])$nNA$nNA` values we do not expect
@@ -622,22 +689,50 @@ Imputation within the `QFeatures` infrastructure is completed using the `impute`
 function. To see what imputation methods this function facilitates we can use
 `MsCoreUtils::imputeMethods()`
 
+To see what imputation methods are available,
 
 ```{r}
-## Check which imputation methods are available within the QFeatures impute function
 MsCoreUtils::imputeMethods()
 ```
 
 
-Here we will use a k-nearest neighbors (k-NN) method.
+Here we will use the baseline k-nearest neighbors (k-NN),
 
-
-```{r, results = "hide"}
+```{r, results = "hide", warning=FALSE, message=FALSE}
 cc_qf <- impute(object = cc_qf,
                 method = "knn", 
                 i = "psms_filtered",
                 name = "psms_imputed")
+
+cc_qf
 ```
+
+:::{.callout-exercise}
+#### Challenge 4: Imputation
+{{< level 2 >}}
+
+Use the `nNA` function to check that the `impute` function has worked.
+
+::: {.callout-answer collapse=true}
+
+Call `nNA` on the `"psms_imputed"` assay,
+
+```{r}
+mv_imputed <- nNA(cc_qf[["psms_imputed"]])
+```
+
+Examine the number of NAs across the rows (PSMs),
+```{r}
+mv_imputed$nNArows$nNA %>% table()
+```
+
+Now down the columns (samples)
+```{r}
+mv_imputed$nNAcols$nNA %>% table()
+```
+
+:::
+:::
 
 
 ## Logarithmic transformation
@@ -647,7 +742,7 @@ quantitative data. If we take a look at our current quantitative data we will
 see that our abundance values are dramatically skewed towards zero.
 
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, message=FALSE}
 ## Look at distribution of abundance values in untransformed data
 cc_qf[["psms_imputed"]] %>%
   assay() %>%
@@ -675,7 +770,7 @@ data) we can convert our skewed asymmetrical data distribution into a symmetrica
 Gaussian distribution, as visualised below.
 
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, message=FALSE}
 ## Look at distribution of abundance values in untransformed data
 cc_qf[["psms_imputed"]] %>%
   assay() %>%
@@ -721,15 +816,25 @@ art aggregation method that is able to aggregate effectively even in the
 presence of missing values @Sticker2020.
 
 
-**note** **potentially add to a box**
+::: {.callout-note}
+#### Protein groups
 Since we are aggregating all PSMs that are assigned to the same master protein
 accession, the downstream statistical analysis will be carried out at the 
 level of protein groups. This is important to consider since most people will 
 report "proteins" as displaying significantly different abundances across 
 conditions, when in reality they are referring to protein groups.
 
+:::
+
+In your console run the `aggregateFeatures` function on your `QFeatures` object.
+We wish to aggregate from PSM to protein level so pass the argument `i =
+"log_imputed_psms"` to specify we wish to aggregate the log transformed PSM
+data, and then pass `fcol = "Master.Protein.Accessions"` to specify we wish to
+group by `"Master.Protein.Accessions"`. 
 
 ```{r, warning = FALSE}
+cc_qf
+
 cc_qf <- aggregateFeatures(cc_qf, 
                            i = "log_imputed_psms", 
                            fcol = "Master.Protein.Accessions",
@@ -738,7 +843,14 @@ cc_qf <- aggregateFeatures(cc_qf,
                            na.rm = TRUE)
 ```
 
+::: {.callout-note}
+#### Intermediate step of peptide aggregation
+In this example we aggregate upwards from PSM to proteins. We could have 
+included an intermediate step of aggregating from PSM to peptides, and then
+peptides to proteins. To do this our first aggregation would have included
+passing `fcol = "Sequence"` instead of `"Master.Protein.Accessions"`.
 
+:::
 
 ## Normalisation of quantitative data 
 
