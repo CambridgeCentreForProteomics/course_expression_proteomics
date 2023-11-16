@@ -28,7 +28,8 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-#load("output/lesson02.rda", verbose = TRUE)
+library("patchwork")
+load("output/lesson02.rda", verbose = TRUE)
 ```
 
 
@@ -868,32 +869,71 @@ biological system. There are various methods that exist to normalise expression
 proteomics data and it is necessary to consider which of these to apply on a 
 case-by-case basis.
 
+Unfortunately, there is not currently a single normalization method which
+performs best for all quantitative proteomics datasets. Within the R Bioconductor
+packages, however, exists [`NormalyzerDE`](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html) @Willforss2018, a tool for evaluating different
+normalisation methods.
 
-**Challenge: apply Normalyzer to non-log protein data**
-Ask them to aggregate directly from psms_filtered to proteins and call the assay
-"raw_proteins". Use this assay as input to the Normalyzer. Look at report and
-determine most appropriate normalisation strategy for the data.
+:::{.callout-exercise}
+#### Challenge 5: Using NormalyzerDE
+{{< level 1 >}}
 
+The `NormalyzerDE` package provides a function called `normalyzer` which is 
+useful for getting an overview of how different normalisation methods perform
+on a dataset. The `normalyzer` function however requires a raw intenisty matrix
+as input, prior to any log transformation. 
 
-```{r, eval = FALSE, warning = FALSE}
-library(NormalyzerDE)
+1. Taking the your data from the `psms_imputed` level, create a new assay in
+your `QFeatures` object (`cc_qf`) that aggregates the data from this level 
+directly to protein level.
+
+2. Run the `normalyzer` function on the newly created (untransformed) 
+protein level data,
+
+```{r, eval=FALSE}
+normalyzer(jobName = "normalyzer",
+           experimentObj = cc_qf[["proteins_direct"]],
+           sampleColName = "sample",
+           groupColName = "condition",
+           outputDir = ".",
+           requireReplicates = FALSE)
+```
+
+If your job is successful a new folder will be created in your working directory
+called `normalyzer`. Take a look at the PDF report. What method do you think is
+appropriate?
+
+::: {.callout-answer collapse=true}
+
+```{r}
 cc_qf <- aggregateFeatures(cc_qf,
-                           i = "psms_imputed",
+                           i = "psms_imputed", 
                            fcol = "Master.Protein.Accessions",
-                           name = "raw_proteins", 
+                           name = "proteins_direct",
                            fun = MsCoreUtils::robustSummary,
                            na.rm = TRUE)
 
-normalyzer(jobName = "normalyzer",
-           experimentObj = cc_qf[["raw_proteins"]][,-1],
-           sampleColName = "sample",
-           groupColName = "condition",
-           outputDir = ".")
+## Verify
+cc_qf
 ```
 
+Run `normalyzer` note, we need to pass `requireReplicates = FALSE` as we have
+only one sample of the control. For more details on using the `NormalyzerDE`
+package take a look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
 
-To demonstrate the approach to normalisation within `QFeatures`, we here normalise 
-using a center median method. This is achieved using the `normalize` function.
+```{r, eval=FALSE}
+normalyzer(jobName = "normalyzer",
+           experimentObj = cc_qf[["proteins_direct"]],
+           sampleColName = "sample",
+           groupColName = "condition",
+           outputDir = ".",
+           requireReplicates = FALSE)
+```
+:::
+:::
+
+The `"center.median"` method looks reasonable so we proceed to normalise our
+data with this method. In `QFeatures` we can use the `normalize` function.
 To see which other normalisation methods are supported within this function,
 type `?normalize` to access the function's help page.
 
@@ -906,9 +946,65 @@ cc_qf <- normalize(cc_qf,
 ```
 
 
-**Challenge**
-Create two boxplots to visualise the process of normalisation?? 
+:::{.callout-exercise}
+#### Challenge 6: Visualising the data prior and post-normalisation
+{{< level 3 >}}
 
+1. Create two boxplots pre- and post-normalisation to visualise the effect it has
+had on the data.
+
+2. Colour code each boxplot by condition.
+
+::: {.callout-answer collapse=true}
+
+Using `ggplot2`,
+
+```{r}
+pre_norm <- cc_qf[["log_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") 
+
+post_norm <- cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
+
+pre_norm  + post_norm 
+```
+
+
+Colour coding by condition,
+
+```{r}
+pre_norm <- cc_qf[["log_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  mutate(Condition = strsplit(colname, split = "_") %>% 
+           sapply("[[", 1)) %>%
+  ggplot(aes(x = colname, y = value, fill = Condition))  +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") +
+  theme(legend.position = "none")
+
+post_norm <- cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  mutate(Condition = strsplit(colname, split = "_") %>% 
+           sapply("[[", 1)) %>% 
+  ggplot(aes(x = colname, y = value, fill = Condition))  +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
+
+pre_norm + post_norm 
+```
+
+:::
+:::
 
 **Challenge**
 Determine how many PSMs, peptides and proteins were lost during processing of
