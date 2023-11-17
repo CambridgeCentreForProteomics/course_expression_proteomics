@@ -25,6 +25,7 @@ library("corrplot")
 library("Biostrings")
 library("limma")
 library("statmod")
+library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
@@ -716,18 +717,20 @@ Use the `nNA` function to check that the `impute` function has worked.
 
 ::: {.callout-answer collapse=true}
 
-Call `nNA` on the `"psms_imputed"` assay,
+Call `nNA` on the `"psms_imputed"` assay.
 
 ```{r}
 mv_imputed <- nNA(cc_qf[["psms_imputed"]])
 ```
 
-Examine the number of NAs across the rows (PSMs),
+Examine the number of NAs across the rows (PSMs).
+
 ```{r}
 mv_imputed$nNArows$nNA %>% table()
 ```
 
-Now down the columns (samples)
+Now down the columns (samples).
+
 ```{r}
 mv_imputed$nNAcols$nNA %>% table()
 ```

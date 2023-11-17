@@ -28,6 +28,7 @@ library("corrplot")
 library("Biostrings")
 library("limma")
 library("statmod")
+library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
@@ -217,7 +218,7 @@ cc_qf[["log_norm_proteins"]] %>%
 From the above output we see the most common number of PSMs available to support
 a given protein is 1. Single peptide hits most frequently occur in the data. 
 
-We have one protein which has 413 PSMs for one given protein. 
+We have one instance which has 413 PSMs for one given protein. 
 
 :::
 :::
@@ -344,10 +345,9 @@ levels corresponding to a particular feature.
 
 The `subsetByFeature` function take a `QFeatures` object as its input and an 
 additional argument specifying one or more features of interest. The output is
-then a new `QFeatures` object with only data corresponding to the specified 
-features.
+a new `QFeatures` object with only data corresponding to the specified features.
 
-Let's take a look at O43583.
+Let's take a look at O43583, the human density-regulated protein.
 
 ```{r}
 O43583 <- subsetByFeature(cc_qf, "O43583")
@@ -364,6 +364,7 @@ extract the assays of interest from our `"O43583"` `QFeatures` object and pass
 to the `longFormat` function which will covert the subset `QFeatures` object
 to a long format `DataFrame`. We can then use the standard `ggplot2` functions
 to visualise the processing of this protein.
+
 
 ```{r, warning = FALSE}
 O43583[, , c("log_imputed_psms", "log_peptides", "log_proteins")] %>%
@@ -407,12 +408,67 @@ to observe any trends, clusters and outliers within the data thereby helping to
 uncover the relationships between observations and variables.
 
 
-### PCA uses eigendecomposition - eigenvalues and eigenvectors
+### The process of PCA
+
+The process of PCA can be considered in several parts:
+
+1. Scaling and centering the data
+
+Firstly, all continuous variables are standardized into the same range so that 
+they can contribute equally to the analysis. This is done by centering each
+variable to have a mean of 0 and scaling its standard deviation to 1.
+
+
+2. Generation of a covariance matrix
+
+After the data has been standardized, the next step is to calculate a covariance
+matrix. The term covariance refers to a measure of how much two variables vary
+together. For example, the height and weight of a person in a population will 
+be somewhat correlated, thereby resulting in covariance within the population.
+A covariance matrix is a square matrix of dimensions *p* x *p* (where *p* is 
+the number of dimensions in the original dataset i.e., the number of variables).
+The matrix contains an entry for every possible pair of variables and describes
+how the variables are varying with respect to each other.
+
+Overall, the covariance matrix is essentially a table which summarises the 
+correlation between all possible pairs of variables in the data. If the covariance
+of a pair is positive, the two variables are correlated in some direction (increase
+or decrease together). If the covariance is negative, the variables are inversely
+correlated with one increasing when the other decreases. If the covariance is 
+near-zero, the two variables are not expected to have any relationship.
+
+
+3. Eigendecomposition - calculating eigenvalues and eigenvectors
 
 Eigendecomposition is a concept in linear algebra whereby a data matrix is 
-represented in terms of **eigenvalues** and **eigenvectors**. 
+represented in terms of **eigenvalues** and **eigenvectors**. In this case, the
+the eigenvalues and eigenvectors are calculated based on the covariance matrix
+and will inform us about the magnitude and direction of our data. Each eigenvectoor
+represents a direction in the data with a corresponding eigenvalue telling us how 
+much variation in our data occurs in that direction.
+
+* Eigenvector = informs about the direction of variation
+* Eigenvalue = informs about the magnitude of variation 
+
+The number of eigenvectors and eigenvalues will always be the same as the 
+number of dimensions (variables) in the initial dataset. In our use-case, we 
+have 10 samples, so we will have a covariance matrix of dimensions 10 x 10, and
+this will give rise to 10 eigenvectors and 10 associated eigenvalues.
 
 
+4. The calculation of principal components
+
+Principal components are calculated by multiplying the original data by a 
+corresponding eigenvector. As a result, the principal components themselves
+represent directionality of data. The order of the principal components is
+determined by the corresponding eigenvector such that the first principal 
+component is that which explains the most variation in the data (i.e., has the
+largest eigenvalue).
+
+By having the first principal components explain the largest proportion of 
+variation in the data, the dimension of the data can be reduced by focusing
+on these principal components and ignoring those which explain very little in 
+the data.
 
 
 ### Completing PCA with `prcomp`
@@ -426,13 +482,6 @@ proteins become columns. This is easily achieved using the `t` function.
 Our protein data does not contain due to the decision to impute. However, if
 there were any missing values in the data, these would need to be removed using 
 `filterNA` to facilitate compatibility with PCA.
-
-
-#### Scaling and centering
-
-When we *scale and center* a dataset we are centering a variable to a mean of 0
-and scaling its standard deviation to 1. It is generally advisable to both center
-and scale the data. 
 
 
 ```{r}
@@ -456,15 +505,24 @@ information sources, each of which can be accessed using the `$` sign nomenclatu
 4. `center` - if `center = TRUE` then contains the centering values, otherwise `FALSE`
 5. `scale` - if `scale = TRUE` then contains the scaling values, otherwise `FALSE`
 
-We now want to plot each of our samples in PCA space. To do this we will use the
-`protein_pca$x` data.
+
+To visualise the resulting PCs and how much of the data variation they explain
+we can plot a scree plot using the `fviz_screeplot` function. The resulting plot
+displays the proportion of total data variation explained by each of PC.
+
 
 ```{r}
-head(protein_pca$x)
+fviz_screeplot(protein_pca)
 ```
 
-Typically a 2D PCA plot will display PC1 and PC2, since these are the PCs that
-explain the most variation within the dataset.
+
+Looking at a scree plot can be useful when deciding which principle components
+to plot and investigate further. We now want to plot each of our samples in PCA 
+space. To do this we will use the `protein_pca$x` data. Typically a 2D PCA plot
+will display PC1 and PC2, since these are the PCs that explain the most variation 
+within the dataset, but it can also be useful to plot later PCs if they also 
+explain a large proportion of variation.
+
 
 ```{r}
 protein_pca$x %>%
@@ -473,6 +531,7 @@ protein_pca$x %>%
   geom_point(size = 3) + 
   theme_bw()
 ```
+
 
 It is generally advisable to colour each point based on all possible explanatory
 variables that may have contributed to the observed variation. In our case we

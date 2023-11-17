@@ -115,6 +115,7 @@ library("corrplot")
 library("Biostrings")
 library("limma")
 library("statmod")
+library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
@@ -124,7 +125,7 @@ library("patchwork")
 ### Working directory {-}
 
 Set your working directory to xxx where you will find the `data` folder which
-conatins the material required for this course. This can be done by using the
+contains the material required for this course. This can be done by using the
 `setwd` function or by going to the menu Session -> Set Working Directory ->
 Choose Directory, in RStudio.
 

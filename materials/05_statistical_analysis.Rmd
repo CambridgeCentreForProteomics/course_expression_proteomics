@@ -9,8 +9,7 @@ bibliography: course_refs.bib
 * Acknowledge the availability of different R/Bioconductor packages for carrying out differential expression (abundance) analyses
 * Using the `Limma` package, design a statistical model to test for differentially abundant proteins between two conditions
 * Be able to interpret the output of a statistical model and annotate the results with user-defined significance thresholds
-* Produce volcano plots and MA plots to visualise the results of differential expression analyses
-* Export key results from R using `write_csv` and figures using `ggsave`
+* Produce volcano plots to visualise the results of differential expression analyses
 
 :::
 
@@ -179,8 +178,8 @@ matrix the contrasts are being applied to.
 ```{r}
 ## Specify contrasts of interest
 contrasts <- makeContrasts(M_G1 = G1 - M, 
-                           M_Des = Desynch - M, 
-                           G1_Des = Desynch - G1,
+                           M_Des = M - Desynch, 
+                           G1_Des = G1 - Desynch,
                            levels = m_design)
 
 ## Verify
@@ -291,10 +290,9 @@ by David Robinson.
 knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
 ```
 
-
-
-
-
+The second plot that we generate is an SA plot to display the residual standard
+deviation (sigma) versus log abundance for each protein to which our model was
+fitted. We can use the `plotSA` function to do this.
 
 ```{r}
 plotSA(fit_contrasts,
@@ -302,14 +300,23 @@ plotSA(fit_contrasts,
        xlab = "Average log2 abundance")
 ```
 
-* p-value histogram 
-* SA plot
+It is recommended that an SA plot be used as a routine diagnostic plot when
+applying a limma-trend pipeline. From the SA plot we can visualise the intensity-
+dependent trend that has been incorporated into our linear model. It is important
+to verify that the trend line fits the data well. If we had not included the
+`trend = TRUE` argument in our `eBayes` function, then we would instead see a 
+straight horizontal line that does not follow the trend of the data. Further, 
+the plot also colours any outliers in red. These are the outliers that are only
+detected and excluded when using the `robust = TRUE` argument.
 
 
 ### Interpreting the output of our statisical model
 
 Having checked that the model we fitted was appropriate for the data, we can
-now take a look at the results of our test.
+now take a look at the results of our test using the `decideTests` function. 
+Specifically, if we look at a `summary` of the output by `decideTests` we can 
+see how many proteins were found to be significantly up and downregulated in 
+each comparison. 
 
 ```{r}
 decideTests(fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
@@ -404,7 +411,13 @@ M_Desynch_results %>%
 ::: {.callout-tip}
 #### Key Points
 
-- Last section of the page is a bulleted summary of the key points
+- The `limma` package provides a statistical pipeline for the analysis of differential expression (abundance) experiments
+- Empirical Bayes moderation involves borrowing information across proteins to squeeze the per-protein variance estimates towards an expected value based on the behaviour of other proteins with similar abundances. This method increases the statistical power and reduces the number of false positives. 
+- Since proteomics data typically shows an intensity-dependent trend, it is recommended to apply empirical Bayes moderation with `trend = TRUE` and `robust = TRUE`. This approach can be validated by plotting an SA plot.
+- Significance thresholds are somewhat arbitary and must be selected by the user. However, correction must be carried out for multiple hypothesis testing so significance thresholds should be based on adjusted p-values rather than raw p-values. Users may also threshold significance based on a log fold-change value too.
+- The results of differential expression and abundance analyses are often summarised on volcano plots.
 :::
+
+
 
 ## References {-}
