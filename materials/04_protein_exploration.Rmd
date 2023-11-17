@@ -1,6 +1,8 @@
 ---
 title: Exploration and visualisation of protein data
 bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ::: {.callout-tip}
@@ -29,6 +31,7 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
+library("patchwork")
 load("output/lesson03.rda", verbose = TRUE)
 ```
 
@@ -48,24 +51,94 @@ data we have left. We may want to know how many PSMs, peptides and proteins
 the `log_norm_proteins` assay contains, given that this is the data to which
 statistical analysis will be applied.
 
-We can easily find the number of master proteins in the assay by looking at the 
-number of rows.
+We can easily find the number master proteins by printing our `QFeatures` object
 
 ```{r}
 cc_qf
 ```
 
-We have `r nrow(cc_qf[["log_norm_proteins"]])` master proteins, each representing
-a protein group.
-
+We can see we have `r nrow(cc_qf[["log_norm_proteins"]])` master proteins, each
+representing a protein group.
 
 ```{r}
-protein_groups <- cc_qf[["log_norm_proteins"]] %>%
+cc_qf[["log_norm_proteins"]] %>%
   nrow()
 ```
 
 
-### The `.n` column created by `aggregateFeatures`
+:::{.callout-exercise}
+#### Challenge 1: Final PSM, peptide and protein count
+{{< level 2 >}}
+
+Determine how many PSMs, peptides and proteins were lost during processing of
+the raw data to our final protein list?
+
+::: {.callout-answer collapse=true}
+
+We started with,
+
+```{r}
+psm_count <- cc_qf[["psms_raw"]] %>% nrow()
+
+peptide_count <- 
+  cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Sequence) %>%
+  unique() %>%
+  length() 
+
+prot_count <- 
+  cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length() 
+
+message(psm_count, " PSMs, ", 
+        peptide_count, " peptides and ", 
+        prot_count, " proteins")
+```
+
+After filtering we have,
+
+```{r}
+psm_final <- cc_qf[["psms_filtered"]] %>% nrow()
+
+peptide_final <- 
+  cc_qf[["psms_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Sequence) %>%
+  unique() %>%
+  length() 
+
+prot_final <- 
+  cc_qf[["psms_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length() 
+
+message(psm_final, " PSMs, ", 
+        peptide_final, " peptides and ", 
+        prot_final, " proteins")
+```
+
+During the course of data processing we have lost,
+
+```{r}
+message(psm_count - psm_final, " PSMs, ", 
+        peptide_count - peptide_final, " peptides and ", 
+        prot_count - prot_final, " proteins")
+```
+
+:::
+:::
+
+## The `.n` column created by `aggregateFeatures`
 
 If we look at the names of the columns within our `"log_proteins"` and 
 `"log_norm_proteins"` assays we see that there is a column called `.n`. This 
@@ -78,11 +151,11 @@ cc_qf[["log_norm_proteins"]] %>%
   names()
 ```
 
-The `.n` column is created during the aggregation process that is completed via 
-the `aggregateFeatures` function. This column stores information about how many 
+The `.n` column is created during the aggregation process that is completed via
+the `aggregateFeatures` function. This column stores information about how many
 child features were aggregated into each parent feature. Since we aggregated
-directly from the PSMs to protein, the `.n` column tells us how many PSMs we 
-have in support of each protein in the final dataset.
+directly from the PSMs (child) to protein (parent), the `.n` column tells us how
+many PSMs we have in support of each protein in the final dataset.
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -92,8 +165,34 @@ cc_qf[["log_norm_proteins"]] %>%
   table()
 ```
 
-From this information we can derive the average PSM support per protein or plot
-a histogram to visualise the distribution of PSM support.
+```{r, eval=TRUE, include=FALSE}
+.support <- 
+  cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  table()
+```
+
+The output tells us that we have `r .support[1]` proteins with `r names(.support[1])` 
+PSMs (single peptide hits), `r .support[2]` proteins with support from 
+`r names(.support[2])` PSMs, and so forth.
+
+:::{.callout-exercise}
+#### Challenge 2: Visualisation of PSM support
+{{< level 2 >}}
+
+1. Using the information we have in the `.n` column create a graph to visualise
+PSM support. 
+
+2. What is the maximum number of PSMs we have available for one given protein? 
+What is the most common number of PSMs available for supporting a given protein?
+
+::: {.callout-answer collapse=true}
+
+**Task 1: Graph to visualise PSM support**
+
+Several answers,
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -103,8 +202,32 @@ cc_qf[["log_norm_proteins"]] %>%
   geom_histogram(binwidth = 1)
 ```
 
-We can also calculate the sum of all values in the `.n` column to find out how
-many PSMs contribute to our protein level data.
+NOTE: Could also visualise with a lollipop or bar plot?
+
+**Task 2: PSM support extremes**
+
+```{r}
+cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(.n) %>%
+  table()  
+```
+
+From the above output we see the most common number of PSMs available to support
+a given protein is 1. Single peptide hits most frequently occur in the data. 
+
+We have one protein which has 413 PSMs for one given protein. 
+
+:::
+:::
+
+
+We can check the sum of the PSMs which contribute to the protein level data
+add up to the total number of PSMs used in aggreagtion. We can see from printing
+the object summary `cc_qf` we have `r nrow(cc_qf)[["log_imputed_psms]])` PSMs. 
+
+Let's sum the PSMs from `.n`,
 
 ```{r}
 psms <- cc_qf[["log_norm_proteins"]] %>%
@@ -114,83 +237,104 @@ psms <- cc_qf[["log_norm_proteins"]] %>%
   sum()
 ```
 
+NOTE: add challenge back in here where we get users to aggregate PSMs to 
+peptides and then get them to verify the number of peptides we have. We need
+this assay later on when we subset by feature.
 
-**Challenge**
-Now we know how many master proteins are in our final dataset and how many PSMs
-support the quantification of these proteins. Determine how many peptide 
-sequences are in support of the final master proteins.
 
-1. Use the `aggregateFeatures` function to aggregate from log imputed PSM level to log peptide and then log peptide to log protein
-2. Calculate the sum of the `.n` column in the log peptide and log protein assays - think about what these values mean in each instance
-
-**Below is the solution - change to eval=TRUE, include=FALSE**
-
-```{r, warning = FALSE}
-## Aggregate from PSM to peptide
-cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_imputed_psms", 
+```{r}
+cc_qf <- aggregateFeatures(cc_qf,
+                           i = "log_imputed_psms",
                            fcol = "Sequence",
                            name = "log_peptides",
                            fun = MsCoreUtils::robustSummary,
                            na.rm = TRUE)
 
-## Aggregate from peptide to protein
 cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_peptides", 
+                           i = "log_peptides",
                            fcol = "Master.Protein.Accessions",
                            name = "log_proteins_2",
                            fun = MsCoreUtils::robustSummary,
                            na.rm = TRUE)
-
-## Sum of .n in peptide-level (i.e., total PSMs)
-cc_qf[["log_peptides"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(.n) %>%
-  sum()
-
-## Sum of .n in protein level (i.e., total peptides)
-cc_qf[["log_proteins_2"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(.n) %>%
-  sum()
 ```
 
 
-**Challenge** 
-Sometimes we also want to know the dimensions of the raw data. For example, if 
-we want to report how many PSMs or peptides were in support of a protein's
-*identification* rather than its *quantitation* then using the raw data is 
-more appropriate. 
+<!-- **Challenge** -->
+<!-- Now we know how many master proteins are in our final dataset and how many PSMs -->
+<!-- support the quantification of these proteins. Determine how many peptide  -->
+<!-- sequences are in support of the final master proteins. -->
 
-Look at the names of the `rowData` colums in the `"psms_raw"` assay. Using the
-`unique()` function, determine how many PSMs, peptide sequences and master
-protein accessions were identified from the raw data.
+<!-- 1. Use the `aggregateFeatures` function to aggregate from log imputed PSM level to log peptide and then log peptide to log protein -->
+<!-- 2. Calculate the sum of the `.n` column in the log peptide and log protein assays - think about what these values mean in each instance -->
 
-**Below is the solution! need to hide**
+<!-- **Below is the solution - change to eval=TRUE, include=FALSE** -->
 
-```{r}
-cc_qf[["psms_raw"]] %>% 
-  nrow()
+<!-- ```{r, warning = FALSE} -->
+<!-- ## Aggregate from PSM to peptide -->
+<!-- cc_qf <- aggregateFeatures(cc_qf,  -->
+<!--                            i = "log_imputed_psms",  -->
+<!--                            fcol = "Sequence", -->
+<!--                            name = "log_peptides", -->
+<!--                            fun = MsCoreUtils::robustSummary, -->
+<!--                            na.rm = TRUE) -->
 
-cc_qf[["psms_raw"]] %>% 
-  rowData() %>%
-  as_tibble() %>%
-  pull(Sequence) %>%
-  unique() %>%
-  length()
+<!-- ## Aggregate from peptide to protein -->
+<!-- cc_qf <- aggregateFeatures(cc_qf,  -->
+<!--                            i = "log_peptides",  -->
+<!--                            fcol = "Master.Protein.Accessions", -->
+<!--                            name = "log_proteins_2", -->
+<!--                            fun = MsCoreUtils::robustSummary, -->
+<!--                            na.rm = TRUE) -->
 
-cc_qf[["psms_raw"]] %>% 
-  rowData() %>%
-  as_tibble() %>%
-  pull(Master.Protein.Accessions) %>%
-  unique() %>%
-  length()
-```
+<!-- ## Sum of .n in peptide-level (i.e., total PSMs) -->
+<!-- cc_qf[["log_peptides"]] %>% -->
+<!--   rowData() %>% -->
+<!--   as_tibble() %>% -->
+<!--   pull(.n) %>% -->
+<!--   sum() -->
+
+<!-- ## Sum of .n in protein level (i.e., total peptides) -->
+<!-- cc_qf[["log_proteins_2"]] %>% -->
+<!--   rowData() %>% -->
+<!--   as_tibble() %>% -->
+<!--   pull(.n) %>% -->
+<!--   sum() -->
+<!-- ``` -->
 
 
-## Extracting information about a specific feature using `subsetByFeature`
+<!-- **Challenge**  -->
+<!-- Sometimes we also want to know the dimensions of the raw data. For example, if  -->
+<!-- we want to report how many PSMs or peptides were in support of a protein's -->
+<!-- *identification* rather than its *quantitation* then using the raw data is  -->
+<!-- more appropriate.  -->
+
+<!-- Look at the names of the `rowData` colums in the `"psms_raw"` assay. Using the -->
+<!-- `unique()` function, determine how many PSMs, peptide sequences and master -->
+<!-- protein accessions were identified from the raw data. -->
+
+<!-- **Below is the solution! need to hide** -->
+
+<!-- ```{r} -->
+<!-- cc_qf[["psms_raw"]] %>%  -->
+<!--   nrow() -->
+
+<!-- cc_qf[["psms_raw"]] %>%  -->
+<!--   rowData() %>% -->
+<!--   as_tibble() %>% -->
+<!--   pull(Sequence) %>% -->
+<!--   unique() %>% -->
+<!--   length() -->
+
+<!-- cc_qf[["psms_raw"]] %>%  -->
+<!--   rowData() %>% -->
+<!--   as_tibble() %>% -->
+<!--   pull(Master.Protein.Accessions) %>% -->
+<!--   unique() %>% -->
+<!--   length() -->
+<!-- ``` -->
+
+
+## The `subsetByFeature` function
 
 As well as determining the dimensions of our entire dataset, both in its raw
 state and its final state, sometimes we may wish to find out information about 
@@ -225,7 +369,8 @@ to visualise the processing of this protein.
 O43583[, , c("log_imputed_psms", "log_peptides", "log_proteins")] %>%
   longFormat() %>%
   as_tibble() %>%
-  mutate(assay_order = factor(assay, levels = c("log_imputed_psms", "log_peptides", "log_proteins"))) %>%
+  mutate(assay_order = factor(assay, 
+                              levels = c("log_imputed_psms", "log_peptides", "log_proteins"))) %>%
   ggplot(aes(x = colname, y = value, colour = assay)) + 
   geom_point() +
   geom_line(aes(group = rowname)) +
