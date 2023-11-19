@@ -226,7 +226,7 @@ We have one instance which has 413 PSMs for one given protein.
 
 We can check the sum of the PSMs which contribute to the protein level data
 add up to the total number of PSMs used in aggreagtion. We can see from printing
-the object summary `cc_qf` we have `r nrow(cc_qf)[["log_imputed_psms]])` PSMs. 
+the object summary `cc_qf` we have `r nrow(cc_qf[["log_imputed_psms"]])` PSMs. 
 
 Let's sum the PSMs from `.n`,
 
