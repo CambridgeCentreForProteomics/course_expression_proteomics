@@ -143,7 +143,7 @@ message(psm_count - psm_final, " PSMs, ",
 
 If we look at the names of the columns within our `"log_proteins"` and 
 `"log_norm_proteins"` assays we see that there is a column called `.n`. This 
-column was not present in the `"log_imputed_psms"`.
+column was not present in the PSM level assays.
 
 ```{r}
 ## Check columns in the log normalised protein assay
@@ -154,8 +154,8 @@ cc_qf[["log_norm_proteins"]] %>%
 
 The `.n` column is created during the aggregation process that is completed via
 the `aggregateFeatures` function. This column stores information about how many
-child features were aggregated into each parent feature. Since we aggregated
-directly from the PSMs (child) to protein (parent), the `.n` column tells us how
+child features (PSMs) were aggregated into each parent (protein) feature. Since we aggregated
+directly from the PSMs to protein, the `.n` column tells us how
 many PSMs we have in support of each protein in the final dataset.
 
 ```{r}
@@ -193,7 +193,9 @@ What is the most common number of PSMs available for supporting a given protein?
 
 **Task 1: Graph to visualise PSM support**
 
-Several answers,
+There are many ways we can visualise PSM support.
+
+As a histogram,
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -203,7 +205,23 @@ cc_qf[["log_norm_proteins"]] %>%
   geom_histogram(binwidth = 1)
 ```
 
-NOTE: Could also visualise with a lollipop or bar plot?
+A lollipop,
+
+```{r}
+## Summarise the number of PSMs per protein if we have greater than 8  
+psm_df <- cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  select(.n) %>% 
+  mutate(psm_n = ifelse(.n <= 7, .n, "8+")) %>% 
+  count(psm_n) 
+
+  
+ggplot(psm_df, aes(x = psm_n, y = n)) +
+  geom_segment(aes(x=psm_n, xend=psm_n, y=0, yend=n)) +
+  geom_point(color="red", size=4) +
+  theme_light() 
+```
 
 **Task 2: PSM support extremes**
 
@@ -243,7 +261,7 @@ peptides and then get them to verify the number of peptides we have. We need
 this assay later on when we subset by feature.
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 cc_qf <- aggregateFeatures(cc_qf,
                            i = "log_imputed_psms",
                            fcol = "Sequence",
