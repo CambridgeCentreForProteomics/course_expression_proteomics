@@ -1,6 +1,8 @@
 ---
 title: Biological interpretation
 bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ::: {.callout-tip}
@@ -30,21 +32,69 @@ library("enrichplot")
 load("output/lesson05.rda", verbose = TRUE)
 ```
 
-## Subset differentially abundant proteins
+
+## Adding metadata to our results using `dplyr`
 
 Before we can look any further into the biological meaning of any protein 
 abundance changes we need to extract these proteins from our overall results.
 It is also useful to re-add information about the master protein descriptions
-since this is lost in the output of `limma` analysis.
+since this is lost in the output of `limma` analysis. 
+
+It is important to note that the results table we have generated from `limma`
+is not the same as the input data. In order to add information from our
+original data e.g., from the `rowData` such as the `Master.Protein.Descriptions`
+we must match the protein names between them. 
+
+To do this, let's extract information the `Master.Protein.Descriptions` from the original
+data we have created calle `all_proteins`. 
+
+Recall that `all_protiens` is `SummarizedExperiment` object,
+
+```{r}
+all_proteins
+```
+
+We wish to extract information from the `rowData` regarding the
+`Master.Protein.Descriptions`,
 
 ```{r}
 ## Add master protein descriptions back
-M_Desynch_results$protein_description <- all_proteins %>%
+protein_info <- all_proteins %>%
   rowData() %>%
   as_tibble() %>%
-  pull(Master.Protein.Descriptions)
+  select(protein = Master.Protein.Accessions, 
+         protein_description = Master.Protein.Descriptions)
 
-## Extract proteins that have significant abundance changes in M vs. Desynch
+protein_info %>% head
+```
+
+Note, we also extract the `Master.Protein.Accessions` column so we can use
+this to match to the `protein` column in our `limma` results.
+
+Now we can use the `left_join` function from `dplyr` to match the protein
+descriptions to the protein IDs,
+
+```{r, message=FALSE, warning=FALSE}
+M_Desynch_results <- M_Desynch_results %>% left_join(protein_info)
+
+# Verify
+M_Desynch_results
+```
+
+::: {.callout-note}
+#### Manipulating data with `dplyr` and `tidyverse`
+There is lots of information online about getting started with `dplyr` and
+using the `tidyverse`. We really like [this lesson from the Data Carpentry](https://datacarpentry.org/R-ecology-lesson/03-dplyr.html) if
+you are new to the `tidyverse`.
+
+:::
+
+## Subset differentially abundant proteins
+
+Let's subset our results and only keep proteins which have been flagged as 
+exhibiting significant abundance changes, 
+
+```{r}
 sig_changing <- M_Desynch_results %>% 
   as_tibble() %>%
   filter(significance == "sig")
