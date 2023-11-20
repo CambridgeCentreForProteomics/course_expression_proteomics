@@ -130,26 +130,26 @@ we can infer the potential effects of their abundance changes.
 There are many functional analyses that could be done on the proteins with
 differential abundance:
 
-* Investigate the biological pathways that the proteins function within (KEGG etc.)
-* Identify potential interacting partners (IntAct, String.dc etc.)
+* Investigate the biological pathways that the proteins function within ([KEGG](https://www.genome.jp/kegg/) etc.)
+* Identify potential interacting partners ([IntAct](https://www.ebi.ac.uk/intact/), (STRING)[https://string-db.org] etc.)
 * Determine the subcellular localisation in which the changing proteins are found 
-* Understand the co-regulation of their mRNAs (Expression Atlas)
+* Understand the co-regulation of their mRNAs ([Expression Atlas](https://www.ebi.ac.uk/gxa))
 * Compare our changing proteins to those previously identified in other proteomic
 studies of the cell cycle
 
 ### Gene Ontology (GO) enrichment analysis 
 
-One of the common methods used to probe the biological relevance of proteins with
-significant changes in abundance between conditions is to carry out Gene Ontology 
-(GO) enrichment, or over-representation, analysis. 
+One of the common methods used to probe the biological relevance of proteins
+with significant changes in abundance between conditions is to carry out Gene
+Ontology (GO) enrichment, or over-representation, analysis.
 
-The Gene Ontology consortium have defined a set of hierarchical descriptions to 
+The Gene Ontology consortium have defined a set of hierarchical descriptions to
 be assigned to genes and their resulting proteins. These descriptions are split
 into three categories: cellular components (CC), biological processes (BP) and
 molecular function (MF). The idea is to provide information about a protein's
 subcellular localisation, functionality and which processes it contributes to
-within the cell. Hence, the overarching aim of GO enrichment analysis is to 
-answer the question: 
+within the cell. Hence, the overarching aim of GO enrichment analysis is to
+answer the question:
 
 *"Given a list of proteins found to be differentially abundant in my phenotype of interest, what are the cellular components, molecular functions and biological processes involved in this phenotype?".*
 
@@ -169,12 +169,29 @@ other words, we need to know how many proteins with a GO term *could* have
 shown differential abundance in our experiment vs. how many proteins with this
 GO term *did* show differential abundance in our experiment. 
 
+We are going to use a function in R called `enrichGO` from the the
+[`clusterProfiler`](https://bioconductor.org/packages/release/bioc/html/clusterProfiler.html)
+@Yu2012 Bioconductor R package to perform GO enrichment analysis. The package vignette 
+can be found
+[here](https://bioconductor.org/packages/release/bioc/vignettes/clusterProfiler/inst/doc/clusterProfiler.html).
+and full tutorials for using the package [here](https://yulab-smu.top/biomedical-knowledge-mining-book/index.html)
+
+::: {.callout-note}
+#### Annotation packages in Bioconductor
+The `enrichGO` function uses the [`org.Hs.eg.db`](https://bioconductor.org/packages/release/data/annotation/html/org.Hs.eg.db.html) Bioconductor package that has
+genome wide annotation for human, primarily based on mapping using Entrez Gene
+identifiers. It also uses the [`GO.db`](`https://bioconductor.org/packages/release/data/annotation/html/GO.db.html`) package
+which is a set of annotation maps describing the entire Gene Ontology assembled using data from GO.
+
+:::
+
+In the next code chunk we call the `enrichGO` function,
 
 ```{r} 
-ego_up <- enrichGO(gene = sig_up$protein, 
-                   universe = M_Desynch_results$protein, 
-                   OrgDb = org.Hs.eg.db, 
-                   keyType = "UNIPROT", 
+ego_up <- enrichGO(gene = sig_up$protein,                 # list of up proteins
+                   universe = M_Desynch_results$protein,  # all proteins 
+                   OrgDb = org.Hs.eg.db,                  # database to query
+                   keyType = "UNIPROT",                   # protein ID encoding
                    pvalueCutoff = 0.05, 
                    qvalueCutoff = 0.05, 
                    readable = TRUE)
