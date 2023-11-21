@@ -87,7 +87,7 @@ Please cite these materials if:
 
 You can cite these materials as:
 
-> Hutchings C, Breckels LM (2023) "CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R", https://cambridgecentreforproteomics.github.io/course_expression_proteomics/setup.html
+> Hutchings C, Breckels LM (2023) "CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R", https://cambridgecentreforproteomics.github.io/course_expression_proteomics
 
 Or in BibTeX format:
 
@@ -97,7 +97,7 @@ Or in BibTeX format:
   title = {CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R},
   month = {November},
   year = {2023},
-  url = {https://cambridgecentreforproteomics.github.io/course_expression_proteomics/setup.html}
+  url = {https://cambridgecentreforproteomics.github.io/course_expression_proteomics}
 }
 ```
 

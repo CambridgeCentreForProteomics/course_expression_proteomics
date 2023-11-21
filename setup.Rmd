@@ -115,7 +115,9 @@ BiocManager::install(c("QFeatures",
                        "tibble",
                        "org.Hs.eg.db",
                        "clusterProfiler",
-                       "enrichplot"))
+                       "enrichplot",
+                       "patchwork",
+                       "factoextra"))
 ```
 
 After installation, each package must be loaded before it can be used in the R
@@ -135,6 +137,8 @@ library("limma")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
+library("pacthwork")
+library("factoextra")
 ```
 
 
