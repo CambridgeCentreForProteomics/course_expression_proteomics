@@ -180,22 +180,34 @@ PSMs (single peptide hits), `r .support[2]` proteins with support from
 `r names(.support[2])` PSMs, and so forth.
 
 :::{.callout-exercise}
-#### Challenge 2: Visualisation of PSM support
+#### Challenge 2: Examining PSM support
 {{< level 2 >}}
 
 1. Using the information we have in the `.n` column create a graph to visualise
 PSM support. 
 
-2. What is the maximum number of PSMs we have available for one given protein? 
-What is the most common number of PSMs available for supporting a given protein?
+<details><summary>Inspiration</summary> The ["from Data to Viz project"](https://www.data-to-viz.com)
+provides some great ideas for visualisation in R and a brilliant platform for 
+exploring your data. The [R Graph Gallery](https://r-graph-gallery.com/ggplot2-package.html)
+is another great source of inspiration with coded examples to follow.</details>
+
+2. What is,
+
+(i) the *maximum* number of PSMs we have available for one given protein? 
+(ii) the *most common* number of PSMs available for any given protein?
+(iii) the *median* number of PSMs available for any given protein?
+
+<details><summary>Hint</summary> The functions `frequency` and `summary`
+may help. </details>
+
 
 ::: {.callout-answer collapse=true}
 
 **Task 1: Graph to visualise PSM support**
 
-There are many ways we can visualise PSM support.
+There are many ways we can visualise PSM support. The first thing we could do
+is plot a histogram. 
 
-As a histogram,
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -205,11 +217,15 @@ cc_qf[["log_norm_proteins"]] %>%
   geom_histogram(binwidth = 1)
 ```
 
-Is this a good visualisation for our dataset?
+Is this a good visualisation for our dataset? It is perhaps not the easiest
+plot to read if the aim is to get an overview of how many PSMs are available per 
+protein group. 
 
-As we have fewer proteins with a larger number of PSMs what we might want to
-do to helpo visualise the PSM
+Let's bin PSMs with > 8 PSMs per protein group into one category and then plot
+the data.
 
+In the next code chunk we create a new `tibble` which tells us how many
+proteins we have which have `n` number of PSMs,
 ```{r}
 ## Summarise the number of PSMs per protein if we have greater than 8  
 psm_df <- cc_qf[["log_norm_proteins"]] %>%
@@ -219,49 +235,75 @@ psm_df <- cc_qf[["log_norm_proteins"]] %>%
   mutate(psm_n = ifelse(.n <= 7, .n, "8+")) %>% 
   count(psm_n) 
 
-  
+psm_df
+```
+
+Now let's plot this data,
+
+```{r}
+## Plot the data using a lollipop
 ggplot(psm_df, aes(x = psm_n, y = n)) +
   geom_segment(aes(x=psm_n, xend=psm_n, y=0, yend=n)) +
   geom_point(color="red", size=4) +
+  ylab("Frequency") +
+  xlab("Number of PSMs per protein group") +
   theme_light() 
+```
+
+We can also plot as a percentage,
+
+```{r}
+## Plot the data using a lollipop
+psm_df %>% 
+  mutate(n, n_percent = n/sum(n)*100) %>% 
+  ggplot(aes(x = psm_n, y = n_percent)) +
+  geom_segment(aes(x=psm_n, xend=psm_n, y=0, yend=n_percent)) +
+  geom_point(color="red", size=4) +
+  ylab("Frequency (%)") +
+  xlab("Number of PSMs per protein group") +
+  theme_light()
 ```
 
 **Task 2: PSM support extremes**
 
 ```{r}
-cc_qf[["log_norm_proteins"]] %>%
+psm_df <- cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
-  pull(.n) %>%
-  table()  
+  select(.n) %>% 
+  frequency()
+
+psm_df <- cc_qf[["log_norm_proteins"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  select(.n) %>% 
+  summary()
 ```
 
-From the above output we see the most common number of PSMs available to support
+* (i) We have one instance which has 413 PSMs for one given protein.
+* (ii) From the above output we see the most common number of PSMs available to support
 a given protein is 1. Single peptide hits most frequently occur in the data. 
-
-We have one instance which has 413 PSMs for one given protein. 
+* (iii) The median number of PSMs is 3.
 
 :::
 :::
 
 
-We can check the sum of the PSMs which contribute to the protein level data
-add up to the total number of PSMs used in aggreagtion. We can see from printing
-the object summary `cc_qf` we have `r nrow(cc_qf[["log_imputed_psms"]])` PSMs. 
+We may wish to examine PSM support in the context of peptides, and peptide
+support for protein groups. Let's do the intermediate step of aggreagting
+to peptides before aggregating to PSMs.
 
-Let's sum the PSMs from `.n`,
+:::{.callout-exercise}
+#### Challenge 3: Peptide aggregation
+{{< level 1 >}}
 
-```{r}
-psms <- cc_qf[["log_norm_proteins"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(.n) %>%
-  sum()
-```
+(i) Use the `aggregateFeatures` function to aggregate the logged and imputed PSMs to
+peptides. Create a new `assay` in the your `QFeatures` data called
+`"log_peptides"`.
 
-NOTE: add challenge back in here where we get users to aggregate PSMs to 
-peptides and then get them to verify the number of peptides we have. We need
-this assay later on when we subset by feature.
+(ii) Aggregate your new peptide assay to proteins and call this assay `"log_proteins_2"`.
+
+::: {.callout-answer collapse=true}
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -280,6 +322,8 @@ cc_qf <- aggregateFeatures(cc_qf,
                            na.rm = TRUE)
 ```
 
+:::
+:::
 
 <!-- **Challenge** -->
 <!-- Now we know how many master proteins are in our final dataset and how many PSMs -->
