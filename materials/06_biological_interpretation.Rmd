@@ -29,7 +29,7 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-load("materials/output/lesson05.rda", verbose = TRUE)
+load("output/lesson05.rda", verbose = TRUE)
 ```
 
 

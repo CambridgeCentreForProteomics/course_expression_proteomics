@@ -341,7 +341,7 @@ colData(cc_qf[["psms_raw"]])
 ```
 
 ```{r, include=FALSE, eval=TRUE}
-save(cc_qf, file = "materials/output/lesson02.rda")
+save(cc_qf, file = "output/lesson02.rda")
 ```
 
 ## Exercises

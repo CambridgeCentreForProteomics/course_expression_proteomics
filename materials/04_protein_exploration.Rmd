@@ -33,7 +33,7 @@ library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
-load("materials/output/lesson03.rda", verbose = TRUE)
+load("output/lesson03.rda", verbose = TRUE)
 ```
 
 
@@ -205,7 +205,10 @@ cc_qf[["log_norm_proteins"]] %>%
   geom_histogram(binwidth = 1)
 ```
 
-A lollipop,
+Is this a good visualisation for our dataset?
+
+As we have fewer proteins with a larger number of PSMs what we might want to
+do to helpo visualise the PSM
 
 ```{r}
 ## Summarise the number of PSMs per protein if we have greater than 8  
