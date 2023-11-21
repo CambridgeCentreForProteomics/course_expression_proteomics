@@ -1,5 +1,5 @@
 ---
-title: Data processing
+title: Data cleaning
 bibliography: course_refs.bib
 ---
 
@@ -8,9 +8,9 @@ bibliography: course_refs.bib
 
 * Be aware of key data cleaning steps which should or could be completed during the processing of expression proteomics data
 * Make use of the `filterFeatures` function to conditionally remove data from (i) an entire `QFeatures` object or (ii) specified assays of a `QFeatures` object
+* Understand the difference between non-specific and data-dependent filtering  
+* Be able to explore the metadata stored in the `rowData` and get a feel for how to make your own data-dependent decisions regarding data cleaning
 * Understand the importance of dealing with missing values in expression proteomics datasets and be aware of different approaches to doing so
-* Be able to aggregate peptide-level information to protein-level using the `aggregateFeatures` function in the `QFeatures` infrastructure
-* Recognise the importance of log transformation (`logTransform`) and normalisation (`normalize`) during the processing of expression proteomics data 
 
 :::
 
@@ -30,7 +30,7 @@ library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
-load("output/lesson02.rda", verbose = TRUE)
+load("output/lesson_1-4.rda", verbose = TRUE)
 ```
 
 
@@ -150,7 +150,7 @@ output of our identification search, hence is present in the `rowData` of our
 ::: {.callout-note}
 #### Third party software
 The use-case data was searched using the [Proteome Discoverer software](https://www.thermofisher.com/uk/en/home/industrial/mass-spectrometry/liquid-chromatography-mass-spectrometry-lc-ms/lc-ms-software/multi-omics-data-analysis/proteome-discoverer-software.html) (Thermo Fisher Scientific). 
-This is one among several third party software available for protein
+This is one among several third party softwares available for protein
 identification. Each software has it's own naming conventions, formatting and
 metrics for quantitation and associated metadata. As such, users following
 this course with their own data should be mindful of this and adapt the 
@@ -162,7 +162,7 @@ proposed filters and steps accordingly.
 ### Non-specific filtering
 
 To remove features based on variables within our `rowData` we make use of the
-`filterFeatures` function. This function takes a `QFeatures` object as its input
+**`filterFeatures` function**. This function takes a `QFeatures` object as its input
 and then filters this object against (indicated by the `~` operator) a condition
 based on the `rowData`. If the condition is met and returns TRUE for a feature,
 this feature will be kept.
@@ -170,8 +170,8 @@ this feature will be kept.
 The `filterFeatures` function provides the option to apply our filter (i) to the
 whole `QFeatures` object and all of its `assays`, or (ii) to specific assays
 within the `QFeatures` object. We wish to only filter on the data in our
-`QFeatures` object called `psms_filtered` so in the following code chunks we
-always pass the argument `i = "psms_filtered"`.
+`QFeatures` object called `psms_filtered` (and not every assay) so in the
+following code chunks we always pass the argument `i = "psms_filtered"`.
 
 Let's begin by filtering out any PSMs that **do not have a master protein**.
 
@@ -207,7 +207,7 @@ object.
 #### Challenge 1: Contaminants 
 {{< level 1 >}}
 
-Use the `filterFeatures` function filter out common contaminants that have 
+Use the `filterFeatures` function to filter out common contaminants that have 
 been flagged during the identification search. How many PSMs are left after
 this step?
 
@@ -556,7 +556,7 @@ mv_filtered$nNAcols %>%
 
 
 ::: {.callout-note}
-#### Missing values expectations
+#### Missing values - expectations
 In this experiment we expect all samples to have a low proportion of missing 
 values due to the TMT labelling strategy. We also expect that all samples should
 have a similar proportion of missing values because we do not expect cell cycle
@@ -618,13 +618,13 @@ mv_filtered$nNArows$nNA %>% table()
 :::
 
 
-**TODO - add second challenge or too tricky?**
-Ideas ...
-Something to do with missing data across rows - prior to filtering based on a 
-feature having >20% missing values. Ask them to work out how many this will be?
-Ask them to work out the max and min number of missing values per feature?
-Ask them to create a plot looking at the number of missing values across the
-intensity distribution (are they intensity dependent or independent?)
+<!-- **TODO - add second challenge or too tricky?** -->
+<!-- Ideas ... -->
+<!-- Something to do with missing data across rows - prior to filtering based on a  -->
+<!-- feature having >20% missing values. Ask them to work out how many this will be? -->
+<!-- Ask them to work out the max and min number of missing values per feature? -->
+<!-- Ask them to create a plot looking at the number of missing values across the -->
+<!-- intensity distribution (are they intensity dependent or independent?) -->
 
 
 
@@ -721,6 +721,9 @@ Call `nNA` on the `"psms_imputed"` assay.
 
 ```{r}
 mv_imputed <- nNA(cc_qf[["psms_imputed"]])
+
+## View object
+mv_imputed
 ```
 
 Examine the number of NAs across the rows (PSMs).
@@ -739,287 +742,9 @@ mv_imputed$nNAcols$nNA %>% table()
 :::
 
 
-## Logarithmic transformation
-
-Now that we are satisfied with our PSM quality, we need to log2 transform the
-quantitative data. If we take a look at our current quantitative data we will 
-see that our abundance values are dramatically skewed towards zero.
-
-
-```{r, warning = FALSE, message=FALSE}
-## Look at distribution of abundance values in untransformed data
-cc_qf[["psms_imputed"]] %>%
-  assay() %>%
-  longFormat() %>%
-  ggplot(aes(x = value)) +
-  geom_histogram() + 
-  theme_bw()
-```
-
-
-This is to be expected since the majority of proteins exist at low abundances
-within the cell and only a few proteins are highly abundant. However, if we 
-leave the quantitative data in a non-Gaussian distribution then we will not be
-able to apply parametric statistical tests later on. Consider the case where
-we have a protein with abundance values across three samples A, B and C. If the
-abundance values were 0.1, 1 and 10, we can tell from just looking at the numbers
-that the protein is 10-fold more abundant in sample B compared to sample A, and
-10-fold more abundant in sample C than sample B. However, even though the fold-
-changes are equal, the abundance values in A and B are much closer together on 
-a linear scale than those of B and C. A parametric test would not account for 
-this bias and would not consider A and B to be as equally different as B and C.
-
-By applying a logarithmic transformation (log2 is the standard for proteomics
-data) we can convert our skewed asymmetrical data distribution into a symmetrical,
-Gaussian distribution, as visualised below.
-
-
-```{r, warning = FALSE, message=FALSE}
-## Look at distribution of abundance values in untransformed data
-cc_qf[["psms_imputed"]] %>%
-  assay() %>%
-  longFormat() %>%
-  ggplot(aes(x = log2(value))) +
-  geom_histogram() + 
-  theme_bw()
-```
-
-
-To apply this log2 transformation to our data we use the `logTransform` function
-and specify `base = 2`.
-
-
-```{r}
-cc_qf <- logTransform(object = cc_qf, 
-                      base = 2, 
-                      i = "psms_imputed", 
-                      name = "log_imputed_psms")
-```
-
-
-## Aggregation of PSMs to proteins
-
-We have now reached the point where we are ready to aggregate our PSM level data
-upward to the protein level. In a bottom-up MS experiment we initially identify
-and quantify peptides. Further, each peptide can be identified and quantified on 
-the basis of multiple matched spectra (the peptide spectrum matches, PSMs). We 
-now want to group information from all PSMs that correspond to the same master
-protein accession. 
-
-We are going to aggregate all PSMs from our `"log_imputed_psms"` assay that have
-the same value in the `"Master.Protein.Accessions"` column of the `rowData`.
-There are many ways in which we can combine the quantitative values from each of
-the contributing PSMs into a single consensus protein quantitation. Simple methods
-for doing this include calculating the master protein quantitation based on the 
-mean, median or sum PSM quantitation. Although the use of these simple 
-mathematical functions can be effective, using `colMeans` or `colMedians` can
-become difficult for data sets that still contain missing values. Similarly, 
-using `colSums` can result in protein quantitation values being biased by the
-presence of missing values. Here we will use `robustSummary`, a state-of-the
-art aggregation method that is able to aggregate effectively even in the 
-presence of missing values @Sticker2020.
-
-
-::: {.callout-note}
-#### Protein groups
-Since we are aggregating all PSMs that are assigned to the same master protein
-accession, the downstream statistical analysis will be carried out at the 
-level of protein groups. This is important to consider since most people will 
-report "proteins" as displaying significantly different abundances across 
-conditions, when in reality they are referring to protein groups.
-
-:::
-
-In your console run the `aggregateFeatures` function on your `QFeatures` object.
-We wish to aggregate from PSM to protein level so pass the argument `i =
-"log_imputed_psms"` to specify we wish to aggregate the log transformed PSM
-data, and then pass `fcol = "Master.Protein.Accessions"` to specify we wish to
-group by `"Master.Protein.Accessions"`. 
-
-```{r, warning = FALSE, message=FALSE}
-cc_qf
-
-cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_imputed_psms", 
-                           fcol = "Master.Protein.Accessions",
-                           name = "log_proteins",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
-```
-
-::: {.callout-note}
-#### Intermediate step of peptide aggregation
-In this example we aggregate upwards from PSM to proteins. We could have 
-included an intermediate step of aggregating from PSM to peptides, and then
-peptides to proteins. To do this our first aggregation would have included
-passing `fcol = "Sequence"` instead of `"Master.Protein.Accessions"`.
-
-:::
-
-## Normalisation of quantitative data 
-
-We now have log protein level abundance data to which we could apply a parametric
-statistical test. However, to perform a statistical test and discover whether any 
-proteins differ in abundance between conditions (here cell cycle stages), we first
-need to account for non-biological variance that may contribute to any differential
-abundance. Such variance can arise from experimental error or technical variation,
-although the latter is much more prominent when dealing with label-free DDA data.
-
-Normalisation is the process by which we account for non-biological variation in
-protein abundance between samples and attempt to return our quantitative data 
-back to its 'normal' condition i.e., representative of how it was in the original
-biological system. There are various methods that exist to normalise expression
-proteomics data and it is necessary to consider which of these to apply on a 
-case-by-case basis.
-
-Unfortunately, there is not currently a single normalization method which
-performs best for all quantitative proteomics datasets. Within the R Bioconductor
-packages, however, exists [`NormalyzerDE`](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html) @Willforss2018, a tool for evaluating different
-normalisation methods.
-
-:::{.callout-exercise}
-#### Challenge 5: Using NormalyzerDE
-{{< level 1 >}}
-
-The `NormalyzerDE` package provides a function called `normalyzer` which is 
-useful for getting an overview of how different normalisation methods perform
-on a dataset. The `normalyzer` function however requires a raw intenisty matrix
-as input, prior to any log transformation. 
-
-1. Taking the your data from the `psms_imputed` level, create a new assay in
-your `QFeatures` object (`cc_qf`) that aggregates the data from this level 
-directly to protein level.
-
-2. Run the `normalyzer` function on the newly created (untransformed) 
-protein level data,
-
-```{r, eval=FALSE}
-normalyzer(jobName = "normalyzer",
-           experimentObj = cc_qf[["proteins_direct"]],
-           sampleColName = "sample",
-           groupColName = "condition",
-           outputDir = ".",
-           requireReplicates = FALSE)
-```
-
-If your job is successful a new folder will be created in your working directory
-called `normalyzer`. Take a look at the PDF report. What method do you think is
-appropriate?
-
-::: {.callout-answer collapse=true}
-
-```{r, message=FALSE, warning=FALSE}
-cc_qf <- aggregateFeatures(cc_qf,
-                           i = "psms_imputed", 
-                           fcol = "Master.Protein.Accessions",
-                           name = "proteins_direct",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
-
-## Verify
-cc_qf
-```
-
-Run `normalyzer` note, we need to pass `requireReplicates = FALSE` as we have
-only one sample of the control. For more details on using the `NormalyzerDE`
-package take a look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
-
-```{r, eval=FALSE}
-normalyzer(jobName = "normalyzer",
-           experimentObj = cc_qf[["proteins_direct"]],
-           sampleColName = "sample",
-           groupColName = "condition",
-           outputDir = ".",
-           requireReplicates = FALSE)
-```
-:::
-:::
-
-The `"center.median"` method looks reasonable so we proceed to normalise our
-data with this method. In `QFeatures` we can use the `normalize` function.
-To see which other normalisation methods are supported within this function,
-type `?normalize` to access the function's help page.
-
-
-```{r}
-cc_qf <- normalize(cc_qf, 
-                   i = "log_proteins", 
-                   name = "log_norm_proteins",
-                   method = "center.median")
-```
-
-
-Let's verify the normalisation has worked in the next exercise and also by
-viewing the `QFeatures` object. We can call `@ExperimentList` to view all
-the assays we have created,
-
-```{r}
-cc_qf@ExperimentList
-```
-
-:::{.callout-exercise}
-#### Challenge 6: Visualising the data prior and post-normalisation
-{{< level 3 >}}
-
-1. Create two boxplots pre- and post-normalisation to visualise the effect it has
-had on the data.
-
-2. Colour code each boxplot by condition.
-
-::: {.callout-answer collapse=true}
-
-Using `ggplot2`,
-
-```{r}
-pre_norm <- cc_qf[["log_proteins"]] %>%
-  assay() %>%
-  longFormat() %>%
-  ggplot(aes(x = colname, y = value)) +
-  geom_boxplot() +
-  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") 
-
-post_norm <- cc_qf[["log_norm_proteins"]] %>%
-  assay() %>%
-  longFormat() %>%
-  ggplot(aes(x = colname, y = value)) +
-  geom_boxplot() +
-  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
-
-pre_norm  + post_norm 
-```
-
-
-Colour coding by condition,
-
-```{r}
-pre_norm <- cc_qf[["log_proteins"]] %>%
-  assay() %>%
-  longFormat() %>%
-  mutate(Condition = strsplit(colname, split = "_") %>% 
-           sapply("[[", 1)) %>%
-  ggplot(aes(x = colname, y = value, fill = Condition))  +
-  geom_boxplot() +
-  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") +
-  theme(legend.position = "none")
-
-post_norm <- cc_qf[["log_norm_proteins"]] %>%
-  assay() %>%
-  longFormat() %>%
-  mutate(Condition = strsplit(colname, split = "_") %>% 
-           sapply("[[", 1)) %>% 
-  ggplot(aes(x = colname, y = value, fill = Condition))  +
-  geom_boxplot() +
-  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
-
-pre_norm + post_norm 
-```
-
-:::
-:::
-
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson03.rda")
+save(cc_qf, file = "output/lesson_5.rda")
 ```
 
 ::: {.callout-tip}
@@ -1028,9 +753,6 @@ save(cc_qf, file = "output/lesson03.rda")
 - The `filterFeatures` function can be used to remove data from a `QFeatures` object (or an `assay` within a `QFeatures` object) based on filtering parameters within the `rowData`.
 - Data processing includes (i) standard proteomics data cleaning steps e.g., removal of contaminants, and (ii) data-specific quality control filtering e.g., co-isolation interference thresholding for TMT data.
 - The management of missing quantitative data in expression proteomics data is complex. The `nNA` function can be used to explore missing data and the `filterNA` function can be used to remove features with undesirably high levels of missing data. Where imputation is absolutely necessary, the `impute` function exists within the `QFeatures` infrastructure.
-- Expression proteomics data should be log2 transformed to generate a Gaussian distribution which is suitable for parametric statistical testing. This is done using the `logTransform` function.
-- Aggregation from lower level data (e.g., PSM) to high level identification and quantification (e.g., protein) is achieved using the `aggregateFeatures` function, which also creates explicit links between the original and newly created `assays`.
-- To remove non-biological variation, data normalisation should be completed using the `normalize` function. To help users decide which normalisation method is appropriate for their data we recommend using the `normalyzer` function to create a report containing a comparison of methods.
 
 :::
 

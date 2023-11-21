@@ -25,7 +25,7 @@ each data level (e.g., PSM, peptide, peptide groups, protein groups).
 ### The structure of a `SummarizedExperiment`
 
 A commonly used representation of these matrices in R is the `SummarizedExperiment`
-structure (as shown in Figure \@ref(fig:summarized-experiment)). To simplify the
+structure (as shown in @fig-summarized-experiment). To simplify the
 storage of such complex data, `SummarizedExperiment` objects can be conceptualised
 as data containers made up of three different parts:
 
@@ -49,7 +49,7 @@ Finally, there is also the `metadata` slot which is a place for users to store
 experimental metadata for example which instrument the samples were run on, the
 operators name, the date the samples were run and so forth.
 
-```{r summarized-experiment, echo = FALSE, fig.cap = "Diagramatic representation of the structure of a `SummarizedExperiment` object in R", fig.align = "center", out.width = "100%"}
+```{r fig-summarized-experiment, echo = FALSE, fig.cap = "Diagramatic representation of the structure of a `SummarizedExperiment` object in R", fig.align = "center", out.width = "100%"}
 knitr::include_graphics("figs/summarized-experiment.png", error = FALSE)
 ```
 
@@ -72,10 +72,10 @@ level as an independent `SummarizedExperiment` is that the `QFeatures`
 infrastructure maintains explicit links between the `SummarizedExperiment`s that 
 it stores. This allows for maximum traceability when processing data across 
 multiple levels e.g., tracking which PSMs contribute to each peptide and which 
-peptides contribute to a protein.
+peptides contribute to a protein (@fig-qfeatures).
 
 
-```{r qfeatures, echo = FALSE, fig.cap = "Graphic representation of the explicit links between data levels when stored in a `QFeatures` object.", fig.align = "center", out.width = "100%"}
+```{r fig-qfeatures, echo = FALSE, fig.cap = "Graphic representation of the explicit links between data levels when stored in a `QFeatures` object.", fig.align = "center", out.width = "100%"}
 knitr::include_graphics("figs/qfeatures.png", error = FALSE)
 ```
 
@@ -341,7 +341,7 @@ colData(cc_qf[["psms_raw"]])
 ```
 
 ```{r, include=FALSE, eval=TRUE}
-save(cc_qf, file = "output/lesson02.rda")
+save(cc_qf, file = "output/lesson1-4.rda")
 ```
 
 ## Exercises
