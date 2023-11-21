@@ -33,7 +33,7 @@ library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
-load("output/lesson03.rda", verbose = TRUE)
+load("materials/output/lesson03.rda", verbose = TRUE)
 ```
 
 

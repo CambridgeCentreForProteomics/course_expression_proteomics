@@ -30,7 +30,7 @@ library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
-load("output/lesson02.rda", verbose = TRUE)
+load("materials/output/lesson02.rda", verbose = TRUE)
 ```
 
 
@@ -1019,7 +1019,7 @@ pre_norm + post_norm
 
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson03.rda")
+save(cc_qf, file = "materials/output/lesson03.rda")
 ```
 
 ::: {.callout-tip}

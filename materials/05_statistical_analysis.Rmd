@@ -29,7 +29,7 @@ library("statmod")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-load("output/lesson03.rda", verbose = TRUE)
+load("materials/output/lesson03.rda", verbose = TRUE)
 ```
 
 
@@ -394,7 +394,7 @@ head(M_Desynch_results)
 
 ```{r, include=FALSE}
 ## Save results
-save(M_Desynch_results, all_proteins, file = "output/lesson05.rda")
+save(M_Desynch_results, all_proteins, file = "materials/output/lesson05.rda")
 ```
 
 
