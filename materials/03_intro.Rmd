@@ -146,7 +146,9 @@ Having analysed the pooled TMT sample via MS, the raw MS were processed using
 Proteome Discoverer v3.0 (Thermo Fisher Scientific). This software is one of 
 several that can be used to carry out a database search to identify and 
 quantify peptide sequences, and therefore proteins, from raw MS data. Others 
-include MaxQuant, FragPipe and PEAKS. 
+include [MaxQuant](https://www.maxquant.org), 
+[FragPipe](https://fragpipe.nesvilab.org) and
+[PEAKS](https://www.bioinfor.com/peaks-online/) among others.
 
 Briefly, database searching of MS data involves comparing the observed MS spectra
 to expected MS spectra generated via in silico digestion of a selected protein 
