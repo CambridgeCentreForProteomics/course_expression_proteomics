@@ -117,7 +117,7 @@ looking at the protein descriptions.
 ```{r}
 ## Look at descriptions of proteins upregulated in M relative to deysnchronized cells
 sig_up %>%
-  select(protein_description) %>%
+  pull(protein_description) %>%
   head()
 ```
 

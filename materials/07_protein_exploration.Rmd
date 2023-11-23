@@ -270,13 +270,13 @@ psm_df %>%
 psm_df <- cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
-  select(.n) %>% 
+  pull(.n) %>% 
   frequency()
 
 psm_df <- cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
-  select(.n) %>% 
+  pull(.n) %>% 
   summary()
 ```
 

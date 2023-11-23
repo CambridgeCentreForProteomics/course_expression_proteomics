@@ -477,7 +477,7 @@ Let's double check that we only have high confidence PSMs.
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   as_tibble() %>%
-  select(Confidence) %>%
+  pull(Confidence) %>%
   table()
 ```
 
@@ -514,7 +514,7 @@ Let's check the dimensions of the protein level output,
 dim(protein_data_PD)
 ```
 
-The output contains `r dim(protein_data)` proteins. Let's compare this to the
+The output contains `r nrow(protein_data_PD)` proteins. Let's compare this to the
 number of master protein accessions in our raw and imputed filtered PSM data,
 
 ```{r}
@@ -545,7 +545,8 @@ co-isolation interference, reporter ion S/N ratio or SPS-MM during the search.
 Now let's look to see where information about the protein level FDR is stored.
 
 ```{r}
-names(protein_data_PD)
+names(protein_data_PD) %>% 
+  head(10)
 ```
 
 We have a column called `"Protein.FDR.Confidence.Combined"`. Let's add this 
@@ -600,7 +601,7 @@ to have a high confidence after protein level FDR calculations.
 cc_qf[["psms_filtered"]] %>%
   rowData() %>% 
   as_tibble() %>% 
-  select(Protein.FDR.Confidence) %>%
+  pull(Protein.FDR.Confidence) %>%
   table()
 ```
 
@@ -626,7 +627,7 @@ as such no filter was applied to the raw data. This is correct and expected.
 cc_qf[["psms_filtered"]] %>%
   rowData %>%
   as_tibble %>%
-  select(Protein.FDR.Confidence) %>%
+  pull(Protein.FDR.Confidence) %>%
   table()
 ```
 
