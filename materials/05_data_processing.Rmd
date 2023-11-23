@@ -417,6 +417,221 @@ carry out a more stringent or exploratory analyses, these thresholds can be
 altered accordingly. For code and more information please see @Hutchings2023.
 
 
+
+### Controlling false discovery rate (FDR)
+
+The data cleaning steps that we have carried out so far have mainly been 
+concerned with achieving high quality quantitation. However, we also want to be
+confident in our PSMs and their corresponding peptide and protein identifications.
+
+To identify the peptides present in each of our samples we used a third party 
+software to carry out a database search. Raw MS spectra are matched to theoretical 
+spectra that are generated via *in silico* digestion of our desired protein 
+database. The initial result of this search is a list of peptide spectrum matches,
+PSMs. A database search will identify PSMs for the majority of MS spectra, but
+only a minority of these will be true positives. In the same way that experiments 
+must be conducted with controls, database search identifications need to be 
+statistically validated to avoid false positives. The most widely used method
+for reducing the number of false positive identifications is to control the
+false discovery rate (FDR).
+
+
+#### Target-decoy approach to FDR control {-}
+
+The most common approach to FDR control is the target-decoy approach. This 
+involves searching the raw MS spectra against both a target and decoy database.
+The target database contains all protein sequences which could be in our sample
+(the human proteome and potential contaminants). The decoy database contains 
+fake proteins that should not be present in the sample. For example, a decoy
+database may contain reversed or re-shuffled sequences. The main principle is 
+that by carrying out these two searches we are able to estimate the the 
+proportion of total PSMs that are false (matched to the decoy sequences) and
+apply score-based thresholding to shift this false discovery rate to a 
+desired maximum. Typically expression proteomics utilises a maximum FDR of 0.01 
+or 0.05, that is to say 1% or 5% of PSMs are accepted false positives. 
+
+
+#### PSM level local FDR {-}
+
+The first FDR to be calculated is that for the PSMs themselves, often referred to
+as **local FDR**. As mentioned previously, each PSM is given a score indicating
+how likely it is to be correct or incorrect, depending on the search engine used.
+Based on these scores, each candidate PSM is ranked such that rank 1 PSMs have
+the highest probability of being correct or lowest probability of being incorrect.
+To calculate the local FDR for a PSM, the score for that PSM is taken as a 
+threshold, and all PSMs with a score equal to or better than that PSM are extracted.
+The proportion of false positives within this population of PSMs is taken as its
+local FDR. In this way, the FDR can be thought of as the proportion of false 
+positives above the critical score threshold.
+
+In the parameters for our identification search using Proteome Discoverer we
+specified a PSM level FDR threshold. We did this by allocating PSM confidence
+levels as 'high', 'medium' or 'low' depending on whether their FDR was < 0.01, 
+< 0.05 or > 0.05. We then told Proteome Discoverer to only retain high 
+confidence PSMs, those with a local FDR < 0.01. The local FDR indirectly tells
+us the probability of a PSM being a false positive, given the score it has.
+
+Let's double check that we only have high confidence PSMs.
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  select(Confidence) %>%
+  table()
+```
+
+As expected, all of the PSMs in our data are of high confidence. 
+
+#### Protein level FDR thresholding is still required {-}
+
+Although we have already applied a PSM level FDR threshold to the data (during
+the identification search), it is highly recommended to set a protein level FDR
+threshold. This is because each peptide can have multiple PSMs and each protein
+can be supported by multiple peptides, thus resulting in the potential for
+amplification of the FDR during data aggregation. At a given PSM level score
+threshold, the peptide level FDR is greater than the PSM level FDR. Similarly,
+the protein level FDR is greater than the peptide level FDR.
+
+To be absolutely confident in our final protein data we need to apply a protein
+level FDR. Unfortunately, third party software typically generates output tables
+in a sequential manner and there is currently no way to include information
+about the protein level FDR in the PSM level output. Therefore, we have to
+import the protein level output to get this information. The file is called
+`cell_cycle_total_proteome_analysis_Proteins.txt`. 
+
+We begin by using the `read.delim` function to read in the data,
+
+
+```{r}
+## Import protein level output from database search
+protein_data_PD <- read.delim(file = "data/cell_cycle_total_proteome_analysis_Proteins.txt")
+```
+
+Let's check the dimensions of the protein level output,
+
+```{r}
+dim(protein_data_PD)
+```
+
+The output contains `r dim(protein_data)` proteins. Let's compare this to the
+number of master protein accessions in our raw and imputed filtered PSM data,
+
+```{r}
+## Number of master proteins in our raw data
+cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length()
+
+## Number of master proteins in our filtered data
+cc_qf[["psms_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Master.Protein.Accessions) %>%
+  unique() %>%
+  length()
+```
+
+It looks like the protein level output has fewer proteins than the raw PSM file
+but more proteins than our filtered PSM data. This tells us that Proteome 
+Discoverer has done some filtering throughout the process of aggregating from 
+PSM to peptide to protein, but not as much filtering as we have done manually in 
+R. This makes sense because we did not set any quality control thresholds on 
+co-isolation interference, reporter ion S/N ratio or SPS-MM during the search.
+
+Now let's look to see where information about the protein level FDR is stored.
+
+```{r}
+names(protein_data_PD)
+```
+
+We have a column called `"Protein.FDR.Confidence.Combined"`. Let's add this 
+information to our `rowData` of the `psms_filtered` assay of our `QFeatures` 
+object. 
+
+First let's extract the `rowData` and convert it to a `data.frame` so we can 
+make use of `dplyr`,
+
+```{r}
+psm_data_QF <- cc_qf[["psms_filtered"]] %>% 
+  rowData() %>% 
+  as.data.frame()
+```
+
+Now let's subset the `protein_data_PD` data to keep only accession and 
+FDR information,
+
+```{r}
+protein_data_PD <- protein_data_PD %>% 
+  select(Accession, Protein.FDR.Confidence.Combined)
+```
+
+Now let's use `dplyr` and the `left_join` function to do the matching
+between the protein PD data and our PSM data for us. We need to specify how
+we join them so we need to specify the argument 
+`by = c("Master.Protein.Accessions" = "Accession")` to tell R we wish to 
+join the two datasets by their protein Accessions. Note, in the `rowData` of
+the `QFeatures` object we have `"Master.Protein.Accessions"` and in the PD 
+protein data the column is just called `"Accessions"`. Check with your own data
+the explicit naming of your data files as this will differ between third party 
+softwares.
+
+```{r}
+fdr_confidence <- left_join(
+  x = psm_data_QF, 
+  y = protein_data_PD,
+  by = c("Master.Protein.Accessions" = "Accession")) %>% 
+  pull("Protein.FDR.Confidence.Combined")
+```
+
+Now let's add the FDR information back to the `QFeatures` object,
+
+```{r}
+rowData(cc_qf[["psms_filtered"]])$Protein.FDR.Confidence <- fdr_confidence
+```
+
+Now we can print a table to see how many of the PSMs in our data were found
+to have a high confidence after protein level FDR calculations.
+
+```{r}
+cc_qf[["psms_filtered"]] %>%
+  rowData() %>% 
+  as_tibble() %>% 
+  select(Protein.FDR.Confidence) %>%
+  table()
+```
+
+Most of the PSMs in our data were found to originate from proteins with high confidence (FDR < 0.01,
+at protein level), but there are a few that are medium or low confidence. Even
+though we set a PSM level FDR threshold of 0.01, some of the resulting proteins
+still exceed this FDR due to amplification of error during aggregation. 
+
+We can now use the `filterFeatures` function to remove PSMs that do not have a
+`Protein_Confidence` of 'High'.
+
+```{r}
+cc_qf <- cc_qf %>%
+  filterFeatures(~ Protein.FDR.Confidence == "High", 
+                 i = "psms_filtered")
+```
+
+Notice, we see a message output to the terminal after running the function that 
+telling us that `Protein.FDR.Confidence` was only found in 1 of our assays and 
+as such no filter was applied to the raw data. This is correct and expected.
+
+```{r}
+cc_qf[["psms_filtered"]] %>%
+  rowData %>%
+  as_tibble %>%
+  select(Protein.FDR.Confidence) %>%
+  table()
+```
+
+For more information about how FDR values are calculated and used see @Prieto2019.
+
 ## Management of missing data 
 
 Having cleaned our data, the next step is to deal with missing values. It is 
@@ -749,211 +964,6 @@ mv_imputed$nNAcols$nNA %>% table()
 
 :::
 :::
-
-
-## Controlling false discovery rate (FDR)
-
-The data cleaning steps that we have carried out so far have mainly been 
-concerned with achieving high quality quantitation. However, we also want to be
-confident in our PSMs and their corresponding peptide and protein identifications.
-
-To identify the peptides present in each of our samples we used a third party 
-software to carry out a database search. Raw MS spectra are matched to theoretical 
-spectra that are generated via *in silico* digestion of our desired protein 
-database. The initial result of this search is a list of peptide spectrum matches,
-PSMs. A database search will identify PSMs for the majority of MS spectra, but
-only a minority of these will be true positives. In the same way that experiments 
-must be conducted with controls, database search identifications need to be 
-statistically validated to avoid false positives. The most widely used method
-for reducing the number of false positive identifications is to control the
-false discovery rate (FDR).
-
-
-### Target-decoy approach to FDR control 
-
-The most common approach to FDR control is the target-decoy approach. This 
-involves searching the raw MS spectra against both a target and decoy database.
-The target database contains all protein sequences which could be in our sample
-(the human proteome and potential contaminants). The decoy database contains 
-fake proteins that should not be present in the sample. For example, a decoy
-database may contain reversed or re-shuffled sequences. The main principle is 
-that by carrying out these two searches we are able to estimate the the 
-proportion of total PSMs that are false (matched to the decoy sequences) and
-apply score-based thresholding to shift this false discovery rate to a 
-desired maximum. Typically expression proteomics utilises a maximum FDR of 0.01 
-or 0.05, that is to say 1% or 5% of PSMs are accepted false positives. 
-
-
-### PSM level local FDR 
-
-The first FDR to be calculated is that for the PSMs themselves, often referred to
-as **local FDR**. As mentioned previously, each PSM is given a score indicating
-how likely it is to be correct or incorrect, depending on the search engine used.
-Based on these scores, each candidate PSM is ranked such that rank 1 PSMs have
-the highest probability of being correct or lowest probability of being incorrect.
-To calculate the local FDR for a PSM, the score for that PSM is taken as a 
-threshold and all PSMs with a score equal to or better than that PSM are extracted.
-The proportion of false positives within this population of PSMs is taken as its
-local FDR. In this way, the FDR can be thought of as the proportion of false 
-positives above the critical score threshold.
-
-In the parameters for our identification search using Proteome Discoverer we
-specified a PSM level FDR threshold. We did this by allocating PSM confidence
-levels as 'high', 'medium' or 'low' depending on whether their FDR was < 0.01, 
-< 0.05 or > 0.05. We then told Proteome Discoverer to only retain high 
-confidence PSMs, those with a local FDR < 0.01. The local FDR indirectly tells
-us the probability of a PSM being a false positive, given the score it has.
-
-Let's double check that we only have high confidence PSMs.
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Confidence) %>%
-  table()
-```
-
-As expected, all of the PSMs in our data were of high confidence. 
-
-### Protein level FDR thresholding is still required
-
-Although we have already applied a PSM level FDR threshold to the data (during
-the identification search), it is highly recommended to set a protein level 
-FDR threshold. This is because each peptide can have multiple PSMs and each
-protein can be supported by multiple peptides, thus resulting in the potential 
-for amplification of the FDR during data aggregation. At a given PSM level score
-threshold, the peptide level FDR is greater than the PSM level FDR. Similarly, 
-the protein level FDR is greater than the peptide level FDR.
-
-To be absolutely confident in our final protein data we need to apply a protein
-level FDR. Unfortunately, third party software typically generates output tables
-in a sequential manner and there is currently no way to include information
-about the protein level FDR in the PSM level output. Therefore, we have to import
-the protein level output to get this information. The file is called
-`cell_cycle_total_proteome_analysis_Proteins.txt` and we will load it in as a 
-`tibble` using the tidyverse `read_delim` function.
-
-
-```{r}
-## Import protein level output from database search
-protein_data <- read_delim(file = "data/cell_cycle_total_proteome_analysis_Proteins.txt")
-```
-
-Let's check the dimensions of the protein level output.
-
-```{r}
-dim(protein_data)
-```
-
-The output contains `r dim(protein_data)` proteins. Let's compare this to the
-number of master protein accessions in our raw and imputed filtered PSM data.
-
-```{r}
-## Number of master proteins in our filtered data
-cc_qf[["psms_raw"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Master.Protein.Accessions) %>%
-  unique() %>%
-  length()
-
-## Number of master proteins in our filtered data
-cc_qf[["psms_imputed"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Master.Protein.Accessions) %>%
-  unique() %>%
-  length()
-```
-
-It looks like the protein level output has fewer proteins than the raw PSM file
-but more proteins than our filtered PSM data. This tells us that Proteome 
-Discoverer has done some filtering throughout the process of aggregating from 
-PSM to peptide to protein, but not as much filtering as we have done manually in 
-R. This makes sense because we did not set any quality control thresholds on 
-co-isolation interference, reporter ion S/N ratio or SPS-MM during the search.
-
-Now let's look to see where information about the protein level FDR is stored.
-
-```{r}
-names(protein_data)
-```
-
-We have a column called `Protein FDR Confidence Combined`. Since we are only
-interested in the proteins that are found in our data, let's subset these from
-the protein level output table. 
-
-```{r}
-## Subset proteins that are found in our filtered PSMs
-our_proteins <- cc_qf[["psms_imputed"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Master.Protein.Accessions) %>%
-  unique()
-
-protein_data <- protein_data %>%
-  filter(Accession %in% our_proteins) %>%
-  select(Accession, `Protein FDR Confidence Combined`)
-```
-
-Now we can print a table to see how many of the proteins in our data were found
-to have a high confidence after protein level FDR calculations.
-
-```{r}
-protein_data %>%
-  pull(`Protein FDR Confidence Combined`) %>%
-  table()
-```
-
-Most of the proteins in our data were found to have high confidence (FDR < 0.01)
-at protein level, but there are a few that are medium or low confidence. Even
-though we set a PSM level FDR threshold of 0.01, some of the resulting proteins
-still exceed this FDR due to amplification of error during aggregation. 
-
-To remove the medium and low confidence proteins from our `psms_filtered` data,
-we can add the corresponding protein confidence level to annotate each PSM in 
-the `rowData`. This will then allow us to apply the `filterFeatures` function as
-before.
-
-```{r}
-## Subset the accessions of proteins that correspond to each confidence level
-high_conf <- protein_data %>%
-  filter(`Protein FDR Confidence Combined` == "High") %>%
-  pull(Accession)
-
-med_conf <- protein_data %>%
-  filter(`Protein FDR Confidence Combined` == "Medium") %>%
-  pull(Accession)
-
-low_conf <- protein_data %>%
-  filter(`Protein FDR Confidence Combined` == "Low") %>%
-  pull(Accession)
-
-
-## Add this information to our rowData
-rowData(cc_qf[["psms_imputed"]])$Protein_Confidence <- ifelse(rowData(cc_qf[["psms_imputed"]])$Master.Protein.Accessions %in% high_conf, "High", 
-                                                               ifelse(rowData(cc_qf[["imputed"]])$Master.Protein.Accessions %in% med_conf, "Medium", "Low"))
-```
-
-We can now use the `filterFeatures` function to remove PSMs that do not have a
-`Protein_Confidence` of 'High'.
-
-```{r}
-cc_qf <- cc_qf %>%
-  filterFeatures(~ Protein_Confidence == "High", 
-                 i = "psms_imputed")
-```
-
-```{r}
-cc_qf[["psms_imputed"]] %>%
-  rowData %>%
-  as_tibble %>%
-  pull(Protein_Confidence) %>%
-  table()
-```
-
-For more information about how FDR values are calculated and used see @Prieto2019.
 
 
 ```{r, include=FALSE}
