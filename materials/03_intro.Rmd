@@ -92,11 +92,12 @@ labels due to differences in the distribution of isotopes (C^13^ and N^15^)
 between the **mass reporter** and **mass normalizer** regions. As a result, the 
 spectra of fragment ions will contain one peak per reporter ion and the relative 
 intensity of these ions can be used to calculate the relative abundance of the 
-identified peptide across the labelled samples.
+identified peptide across the labelled samples. This is summarised below in 
+@tmt_quant_fig.
 
 
-```{r}
-## Add graphic showing TMT MS1 and MS2
+```{r, tmt_quant_fig, echo = FALSE, fig.cap = "Relative peptide quantitation using TMT labels. Image modified from Thermo Fisher Scientific.", fig.align = "center", out.width = "50%"}
+knitr::include_graphics("figs/tmt_quant.png")
 ```
 
 

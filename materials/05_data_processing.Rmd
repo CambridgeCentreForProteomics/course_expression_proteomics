@@ -462,7 +462,13 @@ To calculate the local FDR for a PSM, the score for that PSM is taken as a
 threshold, and all PSMs with a score equal to or better than that PSM are extracted.
 The proportion of false positives within this population of PSMs is taken as its
 local FDR. In this way, the FDR can be thought of as the proportion of false 
-positives above the critical score threshold.
+positives above the critical score threshold. 
+
+
+```{r fdr_figure, eccho = FALSE, fig.align = "center", out.width = "50%", fig.cap = "An illustration of the local FDR calculation used to assign each PSM an FDR."}
+knitr::include_graphics("figs/local_fdr.png")
+```
+
 
 In the parameters for our identification search using Proteome Discoverer we
 specified a PSM level FDR threshold. We did this by allocating PSM confidence
@@ -605,10 +611,11 @@ cc_qf[["psms_filtered"]] %>%
   table()
 ```
 
-Most of the PSMs in our data were found to originate from proteins with high confidence (FDR < 0.01,
-at protein level), but there are a few that are medium or low confidence. Even
-though we set a PSM level FDR threshold of 0.01, some of the resulting proteins
-still exceed this FDR due to amplification of error during aggregation. 
+Most of the PSMs in our data were found to originate from proteins with high 
+confidence (FDR < 0.01 at protein level), but there are a few that are medium 
+or low confidence. Even though we set a PSM level FDR threshold of 0.01, some
+of the resulting proteins still exceed this FDR due to amplification of error
+during aggregation. 
 
 We can now use the `filterFeatures` function to remove PSMs that do not have a
 `Protein_Confidence` of 'High'.
