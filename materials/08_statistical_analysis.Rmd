@@ -202,8 +202,8 @@ next step is to apply the statistical model.
 
 ```{r}
 ## Fit linear model using the design matrix and desired contrasts
-fit_model <- lmFit(assay(all_proteins), m_design)
-fit_contrasts <- contrasts.fit(fit_model, contrasts)
+fit_model <- lmFit(object = assay(all_proteins), design = m_design)
+fit_contrasts <- contrasts.fit(fit = fit_model, contrasts = contrasts)
 ```
 
 The initial model has now been applied to each of the proteins in our data. 
@@ -222,7 +222,7 @@ variances.
 
 ```{r}
 ## Update the model using the limma eBayes algorithm
-fit_contrasts <- eBayes(fit_contrasts, 
+fit_contrasts <- eBayes(fit = fit_contrasts, 
                         trend = TRUE,
                         robust = TRUE)
 ```
@@ -233,7 +233,7 @@ This includes a result of the test for each individual protein.
 
 ```{r}
 ## Format results
-limma_results <- topTable(fit_contrasts,
+limma_results <- topTable(fit = fit_contrasts,
                           adjust.method = "BH",
                           number = Inf) %>%
   rownames_to_column("Protein") 
@@ -241,6 +241,7 @@ limma_results <- topTable(fit_contrasts,
 ## Verify
 head(limma_results)
 ```
+
 
 ### Multiple hypothesis testing and correction
 
@@ -310,7 +311,7 @@ deviation (sigma) versus log abundance for each protein to which our model was
 fitted. We can use the `plotSA` function to do this.
 
 ```{r}
-plotSA(fit_contrasts,
+plotSA(fit = fit_contrasts,
        cex = 0.5,
        xlab = "Average log2 abundance")
 ```
@@ -325,7 +326,7 @@ data. Further, the plot also colours any outliers in red. These are the outliers
 that are only detected and excluded when using the `robust = TRUE` argument.
 
 
-### Interpreting the output of our statisical model
+### Interpreting the output of our statistical model
 
 Having checked that the model we fitted was appropriate for the data, we can now
 take a look at the results of our test using the `decideTests` function.
@@ -334,7 +335,7 @@ see how many proteins were found to be significantly up and downregulated in
 each comparison.
 
 ```{r}
-decideTests(fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
+decideTests(fit = fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
   summary()
 ```
 
@@ -345,7 +346,7 @@ get the results of the `"M_Des"` contrast.
 
 
 ```{r}
-M_Desynch_results <- topTable(fit_contrasts, coef = "M_Des", 
+M_Desynch_results <- topTable(fit = fit_contrasts, coef = "M_Des", 
                               number = Inf, adjust.method = "BH") %>%
   rownames_to_column("protein")
 

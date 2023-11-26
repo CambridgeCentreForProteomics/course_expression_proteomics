@@ -169,9 +169,15 @@ cc_qf <- readQFeatures(table = "data/cell_cycle_total_proteome_analysis_PSMs.txt
 #### Finding help files
 During this course we see many new functions. For more information on any R
 function type `?` and the name of the function in the R console to bring up
-the relavent documentation. Or go to the Help menu in RStudio and 
+the relevant documentation. Or go to the Help menu in RStudio and 
 Help -> Search R Help. For example, to see the help files and documentation for
-the `readQFeatures` function type `?readQFeatures` in your RStudio console.
+the `readQFeatures` function type `?readQFeatures` in your RStudio console. The
+help documentation highlights what structure the input data should be (a vector,
+dataframe or matrix etc.) as well as which arguments are required or optional. 
+When using more complex functions, such as those which we will use for statistical
+analysis, it is advisable to consult the help documentation to ensure that you 
+understand what the function's default parameters are. This will help you to
+make sure that the function does what you are expecting it to do.
 
 :::
 

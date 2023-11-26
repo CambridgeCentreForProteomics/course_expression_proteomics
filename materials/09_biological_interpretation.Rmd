@@ -46,7 +46,7 @@ original data e.g., from the `rowData` such as the `Master.Protein.Descriptions`
 we must match the protein names between them. 
 
 To do this, let's extract information the `Master.Protein.Descriptions` from the original
-data we have created calle `all_proteins`. 
+data we have created called `all_proteins`. 
 
 Recall that `all_protiens` is `SummarizedExperiment` object,
 
@@ -65,7 +65,7 @@ protein_info <- all_proteins %>%
   select(protein = Master.Protein.Accessions, 
          protein_description = Master.Protein.Descriptions)
 
-protein_info %>% head
+protein_info %>% head()
 ```
 
 Note, we also extract the `Master.Protein.Accessions` column so we can use
@@ -75,7 +75,7 @@ Now we can use the `left_join` function from `dplyr` to match the protein
 descriptions to the protein IDs,
 
 ```{r, message=FALSE, warning=FALSE}
-M_Desynch_results <- M_Desynch_results %>% left_join(protein_info)
+M_Desynch_results <- M_Desynch_results %>% left_join(protein_info, by = "protein")
 
 # Verify
 M_Desynch_results
