@@ -243,8 +243,8 @@ Now let's plot this data,
 ```{r}
 ## Plot the data using a lollipop
 ggplot(psm_df, aes(x = psm_n, y = n)) +
-  geom_segment(aes(x=psm_n, xend=psm_n, y=0, yend=n)) +
-  geom_point(color="red", size=4) +
+  geom_segment(aes(x = psm_n, xend = psm_n, y=0, yend = n)) +
+  geom_point(color = "red", size = 4) +
   ylab("Frequency") +
   xlab("Number of PSMs per protein group") +
   theme_light() 
@@ -257,7 +257,7 @@ We can also plot as a percentage,
 psm_df %>% 
   mutate(n, n_percent = n/sum(n)*100) %>% 
   ggplot(aes(x = psm_n, y = n_percent)) +
-  geom_segment(aes(x=psm_n, xend=psm_n, y=0, yend=n_percent)) +
+  geom_segment(aes(x = psm_n, xend = psm_n, y = 0, yend = n_percent)) +
   geom_point(color="red", size=4) +
   ylab("Frequency (%)") +
   xlab("Number of PSMs per protein group") +
@@ -408,7 +408,8 @@ O43583[, , c("log_psms_imputed", "log_peptides", "log_proteins")] %>%
   ggplot(aes(x = colname, y = value, colour = assay)) + 
   geom_point() +
   geom_line(aes(group = rowname)) +
-  facet_wrap(~assay_order)
+  theme(axis.text.x = element_text(angle = 45, size = 7)) +
+  facet_wrap(~ assay_order)
 ```
 
 Other useful functions that we do not have time to cover today include

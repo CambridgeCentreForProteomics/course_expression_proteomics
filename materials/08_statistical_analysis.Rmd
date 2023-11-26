@@ -229,13 +229,13 @@ fit_contrasts <- eBayes(fit = fit_contrasts,
 
 Finally, we can take a look out the output of our differential abundance testing.
 The `topTable` function allows us to look at the results of our linear model. 
-This includes a result of the test for each individual protein.
+This includes a result of the test for each individual protein. 
 
 ```{r}
 ## Format results
-limma_results <- topTable(fit = fit_contrasts,
-                          adjust.method = "BH",
-                          number = Inf) %>%
+limma_results <- topTable(fit = fit_contrasts,      
+                          adjust.method = "BH",    # Method for multiple hypothesis testing
+                          number = Inf) %>%        # Print results for all proteins
   rownames_to_column("Protein") 
 
 ## Verify
@@ -342,12 +342,16 @@ decideTests(fit = fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
 
 For the remainder of the workshop we will focus on the statistical comparison 
 between M-phase and the desynchronised cells. We use the `topTable` function to
-get the results of the `"M_Des"` contrast.
+get the results of the `"M_Des"` contrast. We use the argument `confint = TRUE`
+so that the our output reports the 95% confidence interval of the calculated 
+log2FC. Whilst 95% is the default interval, a numeric value between 0 and 1 can 
+also be passed if an alternative confidence interval is required.
 
 
 ```{r}
 M_Desynch_results <- topTable(fit = fit_contrasts, coef = "M_Des", 
-                              number = Inf, adjust.method = "BH") %>%
+                              number = Inf, adjust.method = "BH",
+                              confint = TRUE) %>%
   rownames_to_column("protein")
 
 ## Verify
@@ -357,6 +361,8 @@ head(M_Desynch_results)
 Interpreting the output of `topTable`:
 
 * `logFC` = the fold change between the mean log abundance in group A and the mean log abundance in group B
+* `CI.L` = the left limit of the 95% confidence interval for the reported log2FC
+* `CI.R` = the right limit of the 95% confidence interval for the reported log2FC
 * `AveExpr` = the average log abundance of the protein across samples
 * `t` = eBayes moderated t-statistic. Interpreted in the same way as a normal t-statistic (see above).
 * `P.Value` = Unadjusted p-value
@@ -420,6 +426,18 @@ M_Desynch_results %>%
   theme_bw()
 ```
 
+There are several ways in which we can export this volcano plot from R. One
+option is to use the `ggsave` function immediately after our plotting code. The 
+default for this function is to save the last plot displayed.
+
+```{r, eval = FALSE}
+my_results %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = result)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+ggsave(filename = "volcano_M_vs_Desynch.png", device = "png")
+```
+
 
 :::{.callout-exercise}
 #### Challenge: Volcano plots
@@ -450,6 +468,7 @@ my_results %>%
   geom_point(shape = 21, stroke = 0.25, size = 3) +
   theme_bw()
 ```
+
 
 :::
 :::
