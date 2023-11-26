@@ -225,7 +225,8 @@ Let's bin PSMs with > 8 PSMs per protein group into one category and then plot
 the data.
 
 In the next code chunk we create a new `tibble` which tells us how many
-proteins we have which have `n` number of PSMs,
+proteins we have which have `n` number of PSMs.
+
 ```{r}
 ## Summarise the number of PSMs per protein if we have greater than 8  
 psm_df <- cc_qf[["log_norm_proteins"]] %>%
@@ -238,7 +239,7 @@ psm_df <- cc_qf[["log_norm_proteins"]] %>%
 psm_df
 ```
 
-Now let's plot this data,
+Now let's plot this data.
 
 ```{r}
 ## Plot the data using a lollipop
@@ -250,7 +251,7 @@ ggplot(psm_df, aes(x = psm_n, y = n)) +
   theme_light() 
 ```
 
-We can also plot as a percentage,
+We can also plot as a percentage.
 
 ```{r}
 ## Plot the data using a lollipop
