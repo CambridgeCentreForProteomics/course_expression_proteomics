@@ -9,7 +9,7 @@ editor_options:
 #### Learning Objectives
 
 * Acknowledge the availability of different R/Bioconductor packages for carrying out differential expression (abundance) analyses
-* Using the `limma` package, design a statistical model to test for differentially abundant proteins between two conditions
+* Using the `limma` package, design a statistical model to test for differentially abundant proteins between two or more conditions
 * Be able to interpret the output of a statistical model and annotate the results with user-defined significance thresholds
 * Produce volcano plots to visualise the results of differential expression analyses
 
@@ -74,8 +74,13 @@ will use a form of t-test since we know that these assumptions have been met.
 Many different R packages can be used to carry out differential expression
 (abundance) analysis on proteomics data. Here we will use `limma`, a package
 that is widely used for omics analysis and has several models that allow
-differential abundance to be assessed in multifactorial experiments.
-Specifically, we are going to apply `limma`'s **empirical Bayes moderated t-test**.
+differential abundance to be assessed in multifactorial experiments. For single 
+comparison analyses (i.e., comparing protein abundance between two groups) we 
+recommend `limma`'s **empirical Bayes moderated t-test**. A simple example of
+the empirical Bayes moderated t-test is provided in @Hutchings2023. For analyses
+considering multiple group comparisons an **empirical Bayes moderated ANOVA test**
+can be applied. Limma will automatically select a t-test or ANOVA test depending
+upon how many groups (i.e., conditions) we pass to our model.
 
 
 ### What is a t-test?
@@ -88,9 +93,23 @@ greater than 0. The output of such a test includes several parameters:
 * **degrees of freedom** = the number of observations minus the number of independent variables (*n* - 1)
 * **p-value** = the probability of achieving the t-value under the null hypothesis i.e., by chance
 
-Here, we will apply a  t-test to each of our proteins to ask whether the
+
+### What is an Analysis of Variance (ANOVA) test? 
+
+An Analysis of Variance (ANOVA) test is also a parametric test used to compare
+mean values, but ANOVA considers whether means significantly differ between 
+three or more groups. Essentially, ANOVA tests are the multi-comparison 
+equivalent of a t-test. The output of an ANOVA test includes several parameters:
+
+* **F-value** = provides a ratio of the variation between sample means (of different conditions) and the variation within the samples (of a single condition). The higher the F-value, the more likely it is that the protein has a significantly different mean abundance (large variation between means in different conditions, small variation within conditions)
+* **degrees of freedom** = the number of observations minus the number of independent variables (*n* - 1)
+* **p-value** = the probability of achieving the F-value under the null hypothesis i.e., by chance
+
+Here, we will apply an ANOVA test to each of our proteins to ask whether the
 difference in the mean abundance of a protein between cell cycle stages is 
-significantly different from 0.
+significantly different from 0. We use an ANOVA rather than a t-test because we
+have three different conditions of interest: cells in M-phase, G1-phase and 
+desynchronised cells.
 
 
 ### What does the empirical Bayes part mean?
@@ -120,8 +139,8 @@ reduce false positives within our differential abundance analysis.
 
 ## Defining the statistical model 
 
-Before we apply our empirical Bayes moderated t-test, we first need to set up a
-model. To define the model design we use `model.matrix`. A **model matrix**,
+Before we apply our empirical Bayes moderated ANOVA test, we first need to set
+up a model. To define the model design we use `model.matrix`. A **model matrix**,
 also called a design matrix, is a matrix in which rows represent individual
 samples and columns correspond to explanatory variables, in our case the cell
 cycle stages. Simply put, the model design is determined by how samples are
@@ -180,7 +199,7 @@ in these parameter (mean) estimates *between* groups. The `makeContrasts` functi
 is used by passing the name we wish to give each contrast and how this contrast
 should be calculated using column names from the design matrix. We also pass the
 `levels` argument to tell R where the column names come from i.e., which design
-matrix the contrasts are being applied to.
+matrix the contrasts are being applied to. 
 
 
 ```{r}
@@ -195,7 +214,7 @@ contrasts
 ```
 
 
-## Running an empirical Bayes moderated t-test using `limma`
+## Running an empirical Bayes moderated test using `limma`
 
 After we have specified the design matrix and contrasts we wish to make, the 
 next step is to apply the statistical model. 
@@ -227,9 +246,15 @@ fit_contrasts <- eBayes(fit = fit_contrasts,
                         robust = TRUE)
 ```
 
-Finally, we can take a look out the output of our differential abundance testing.
-The `topTable` function allows us to look at the results of our linear model. 
-This includes a result of the test for each individual protein. 
+
+### Accessing the model results
+
+The `topTable` function extracts a table of the top-ranked proteins from our 
+fitted linear model. By default, `topTable` outputs a table of the top 10 ranked 
+proteins, that is the 10 proteins with the highest log-odds of being differentially 
+abundant. To get the results for all of our proteins we use the `number = Inf` 
+argument. Let's give this a go.
+
 
 ```{r}
 ## Format results
@@ -241,6 +266,9 @@ limma_results <- topTable(fit = fit_contrasts,
 ## Verify
 head(limma_results)
 ```
+
+As expected, we see the two key parameters of an ANOVA output - the *F-value* 
+(`F`) and *p-value* (`P.Value`). 
 
 
 ### Multiple hypothesis testing and correction
@@ -266,7 +294,7 @@ categories:
 
 Above we used the "BH", or Benjamini-Hochberg procedure, to control the FDR. We
 will later use the FDR-adjusted p-value to define statistical significance in
-our data.
+our data. 
 
 
 ### Diagnostic plots to verify suitability of our statistical model
@@ -277,7 +305,7 @@ for the data. As mentioned above, statistical tests typically come with several
 assumptions. To check that these assumptions were met and that our model was
 suitable, we create some diagnostic plots.
 
-First we plot a histogram of the raw p-values (not the BH-adjusted p-values).
+First we plot a histogram of the raw p-values (not BH-adjusted p-values).
 This can be done by passing our results data into standard `ggplot2` plotting
 functions.
 
@@ -329,13 +357,92 @@ that are only detected and excluded when using the `robust = TRUE` argument.
 ### Interpreting the output of our statistical model
 
 Having checked that the model we fitted was appropriate for the data, we can now
-take a look at the results of our test using the `decideTests` function.
+take a look at the results of our test using the `topTable` and `decideTests` 
+functions.
+
+As we saw above, `topTable` will give us the output of our ANOVA model. We 
+previously used this function to generate our `limma_results` without specifying
+any value for the `coef` argument. 
+
+```{r}
+head(limma_results)
+```
+
+When we do not pass a `coef` argument the `topTable` function carries out an 
+ANOVA test in which the null hypothesis is that each individual null hypothesis
+is true. In other words, the null hypothesis for each protein is that the 
+mean abundance in M-phase = the mean abundance in G1-phase = the mean abundance
+in desynchronised cells. The three pairwise comparisons are all combined into
+a single *F*-test resulting in an ANOVA output for each protein. This ANOVA test
+not only involves multiple hypothesis testing down the proteins but also across
+the contrasts for a protein. 
+
+Interpreting the output of `topTable` for a multi-contrast model:
+
+* `M_G1`, `M_Des` and `G1_Des` = the estimated log2FC for each model contrast
+* `AveExpr` = the average log abundance of the protein across samples
+* `F` = eBayes moderated F-value. Interpreted in the same way as a normal F-value (see above).
+* `P.Value` = Unadjusted p-value
+* `adj.P.Val` = FDR-adjusted p-value 
+
+
+From this output we can see that some of our proteins have high F-values and 
+low adjusted p-values (below any likely threshold of significance). These 
+adjusted p-values may tell us that a protein has a significantly different 
+abundance across cell cycle stages. However, we cannot tell from this output
+from which contrast this significance is derived. Does a protein have a
+significantly different abundance between M- and G1-phase, or M-phase and 
+desynchronised cells, or G1-phase and desynchronised cells, or even multiple of
+these comparisons? 
+
+We can look at individual contrasts by passing the contrast name to the `coef`
+argument in the `topTable` function. For example, let's look at the pairwise
+comparison between M-phase and desynchronised cells. We use the `topTable` 
+function to get the results of the `"M_Des"` contrast. We use the argument 
+`confint = TRUE` so that the our output reports the 95% confidence interval of
+the calculated log2FC. 
+
+```{r}
+M_Desynch_results <- topTable(fit = fit_contrasts, coef = "M_Des", 
+                              number = Inf, adjust.method = "BH",
+                              confint = TRUE) %>%
+  rownames_to_column("protein")
+
+## Verify
+head(M_Desynch_results)
+```
+
+Interpreting the output of `topTable` for a contrast:
+
+* `logFC` = the fold change between the mean log abundance in group A and the mean log abundance in group B
+* `CI.L` = the left limit of the 95% confidence interval for the reported log2FC
+* `CI.R` = the right limit of the 95% confidence interval for the reported log2FC
+* `AveExpr` = the average log abundance of the protein across samples
+* `t` = eBayes moderated t-statistic. Interpreted in the same way as a normal t-statistic (see above).
+* `P.Value` = Unadjusted p-value
+* `adj.P.Val` = FDR-adjusted p-value 
+* `B` = B-statistic representing the log-odds that a protein is differentially abundant between conditions
+
+This time the output of `topTable` contains a t-statistic rather than an F-value.
+This is because we only told the function to compare two conditions, so a t-test
+was carried out rather than an ANOVA test. Importantly, however, when a t-test
+is completed there is no additional adjustment made for the multiple contrasts
+of each protein. 
+
+
+
+
+
+
+
+`decideTests` function.
 Specifically, if we look at a `summary` of the output by `decideTests` we can
 see how many proteins were found to be significantly up and downregulated in
 each comparison.
 
 ```{r}
-decideTests(fit = fit_contrasts, adjust.method = "BH", p.value = 0.01) %>%
+decideTests(fit = fit_contrasts, adjust.method = "BH", 
+            p.value = 0.01, method = "separate") %>%
   summary()
 ```
 
@@ -358,16 +465,6 @@ M_Desynch_results <- topTable(fit = fit_contrasts, coef = "M_Des",
 head(M_Desynch_results)
 ```
 
-Interpreting the output of `topTable`:
-
-* `logFC` = the fold change between the mean log abundance in group A and the mean log abundance in group B
-* `CI.L` = the left limit of the 95% confidence interval for the reported log2FC
-* `CI.R` = the right limit of the 95% confidence interval for the reported log2FC
-* `AveExpr` = the average log abundance of the protein across samples
-* `t` = eBayes moderated t-statistic. Interpreted in the same way as a normal t-statistic (see above).
-* `P.Value` = Unadjusted p-value
-* `adj.P.Val` = FDR-adjusted p-value 
-* `B` = B-statistic representing the log-odds that a protein is differentially abundant between conditions
 
 
 #### Adding user-defined significance thresholds 
