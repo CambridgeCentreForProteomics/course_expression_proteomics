@@ -429,21 +429,14 @@ was carried out rather than an ANOVA test. Importantly, however, when a t-test
 is completed there is no additional adjustment made for the multiple contrasts
 of each protein. 
 
-
-
-
-
-
-
-`decideTests` function.
 Specifically, if we look at a `summary` of the output by `decideTests` we can
 see how many proteins were found to be significantly up and downregulated in
 each comparison.
 
 ```{r}
-decideTests(fit = fit_contrasts, adjust.method = "BH", 
-            p.value = 0.01, method = "separate") %>%
-  summary()
+# decideTests(fit = fit_contrasts, adjust.method = "BH", 
+#             p.value = 0.01, method = "separate") %>%
+#   summary()
 ```
 
 
