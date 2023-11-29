@@ -14,6 +14,10 @@ editor_options:
 
 :::
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.012.png", error = FALSE)
+```
+
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")

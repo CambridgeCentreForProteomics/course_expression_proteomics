@@ -15,6 +15,11 @@ editor_options:
 
 :::
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
+```
+
+
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
 library("ggplot2")
@@ -560,6 +565,11 @@ head(M_Desynch_results)
 
 
 ### Visualising the results of our statistical model
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.011.png", error = FALSE)
+```
+
 
 The final step in any statistical analysis is to visualise the results. This is
 important for ourselves as it allows us to check that the data looks as 

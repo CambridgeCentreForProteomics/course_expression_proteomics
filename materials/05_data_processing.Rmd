@@ -14,6 +14,11 @@ bibliography: course_refs.bib
 
 :::
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.002.png", error = FALSE)
+```
+
+
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
 library("ggplot2")
@@ -351,6 +356,11 @@ cc_qf
 
 ### Addititional quality control filters available for TMT data
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.003.png", error = FALSE)
+```
+
+
 As well as the completion of standard data cleaning steps which are common to 
 all quantitative proteomics experiments (see above), different experimental 
 methods are accompanied by additional data processing considerations. Although
@@ -419,6 +429,11 @@ altered accordingly. For code and more information please see @Hutchings2023.
 
 
 ### Controlling false discovery rate (FDR)
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.004.png", error = FALSE)
+```
+
 
 The data cleaning steps that we have carried out so far have mainly been 
 concerned with achieving high quality quantitation. However, we also want to be
@@ -656,6 +671,11 @@ cc_qf[["psms_filtered"]] %>%
 For more information about how FDR values are calculated and used see @Prieto2019.
 
 ## Management of missing data 
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.005.png", error = FALSE)
+```
+
 
 Having cleaned our data, the next step is to deal with missing values. It is 
 important to be aware that missing values can arise for different reasons in 

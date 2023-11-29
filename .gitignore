@@ -17,6 +17,7 @@ _site
 *.utf8.md
 *.knit.md
 .Renviron
+.DS_Store
 
 # Jupyter cache
 .jupyter_cache

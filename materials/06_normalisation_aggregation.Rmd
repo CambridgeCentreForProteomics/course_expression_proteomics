@@ -14,6 +14,7 @@ editor_options:
 :::
 
 
+
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
 library("ggplot2")
@@ -43,6 +44,11 @@ quantitative proteomics data. In the previous two lessons we have so far learnt,
 In this next lesson we will continue processing the PSM level data, explore log
 transformation, normalisation and then aggregate our data to protein-level
 intensities.
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
+```
+
 
 ## Logarithmic transformation
 
@@ -124,6 +130,11 @@ cc_qf
 
 ## Aggregation of PSMs to peptides to proteins
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.007.png", error = FALSE)
+```
+
+
 We have now reached the point where we are ready to aggregate our PSM level data
 upward to the protein level. In a bottom-up MS experiment we initially identify
 and quantify peptides. Further, each peptide can be identified and quantified on 
@@ -201,6 +212,11 @@ conditions, when in reality they are referring to protein groups.
 :::
 
 ## Normalisation of quantitative data 
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
+```
+
 
 We now have log protein level abundance data to which we could apply a parametric
 statistical test. However, to perform a statistical test and discover whether any 

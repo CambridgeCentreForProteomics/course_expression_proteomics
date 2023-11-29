@@ -43,6 +43,10 @@ we first want to do some exploration of the protein level data. This includes
 determining some information that may be required for reporting and publication
 purposes as well as information corresponding to quality control.
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.009.png", error = FALSE)
+```
+
 
 ## Determining the dimensions of our final protein data
 

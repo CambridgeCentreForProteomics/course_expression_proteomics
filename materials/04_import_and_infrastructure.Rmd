@@ -12,6 +12,10 @@ bibliography: course_refs.bib
 
 :::
 
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.001.png", error = FALSE)
+```
+
 ## The infrastructure
 
 MS-based quantitative proteomics data is typically represented as a matrix in 
@@ -50,7 +54,7 @@ experimental metadata for example which instrument the samples were run on, the
 operators name, the date the samples were run and so forth.
 
 ```{r fig-summarized-experiment, echo = FALSE, fig.cap = "Diagramatic representation of the structure of a `SummarizedExperiment` object in R", fig.align = "center", out.width = "100%"}
-knitr::include_graphics("figs/summarized-experiment.png", error = FALSE)
+knitr::include_graphics("figs/summarized-experiment-modified.png", error = FALSE)
 ```
 
 Data stored in these three main areas can be easily accessed using the `assay()`, 
