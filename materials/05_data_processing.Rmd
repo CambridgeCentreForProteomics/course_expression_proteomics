@@ -510,7 +510,7 @@ We begin by using the `read.delim` function to read in the data,
 
 
 ```{r}
-## Import protein level output from database search
+## Applying protein level FDR - import protein output from database search
 protein_data_PD <- read.delim(file = "data/cell_cycle_total_proteome_analysis_Proteins.txt")
 ```
 
@@ -563,7 +563,9 @@ First let's extract the `rowData` and convert it to a `data.frame` so we can
 make use of `dplyr`,
 
 ```{r}
-psm_data_QF <- cc_qf[["psms_filtered"]] %>% 
+## Extract the rowData and convert to a data.frame
+psm_data_QF <- 
+  cc_qf[["psms_filtered"]] %>% 
   rowData() %>% 
   as.data.frame()
 ```
@@ -572,7 +574,9 @@ Now let's subset the `protein_data_PD` data to keep only accession and
 FDR information,
 
 ```{r}
-protein_data_PD <- protein_data_PD %>% 
+## Select only the Accession and FDR info
+protein_data_PD <- 
+  protein_data_PD %>% 
   select(Accession, Protein.FDR.Confidence.Combined)
 ```
 
@@ -587,16 +591,27 @@ the explicit naming of your data files as this will differ between third party
 softwares.
 
 ```{r}
-fdr_confidence <- left_join(
-  x = psm_data_QF, 
-  y = protein_data_PD,
-  by = c("Master.Protein.Accessions" = "Accession")) %>% 
+## Use left.join from dplyr to add the FDR data to PSM rowData data.frame 
+fdr_confidence <- left_join(x = psm_data_QF,  
+                            y = protein_data_PD,
+                            by = c("Master.Protein.Accessions" = "Accession")) %>% 
   pull("Protein.FDR.Confidence.Combined")
 ```
+
+::: {.callout-note}
+#### Joining data.frames
+Note: when using `left_join` we specify the argument `by =
+c("Master.Protein.Accessions" = "Accession"))` (note the = equals sign between
+the names). This tells `left_join` we want to match join the two `data.frames`
+by matching accession numbers between the the `Master.Protein.Accessions` column
+in `psm_data_QF` and the column called `Accession` in the `protein_data_PD`
+data.
+:::
 
 Now let's add the FDR information back to the `QFeatures` object,
 
 ```{r}
+## Now add this data to the QF object
 rowData(cc_qf[["psms_filtered"]])$Protein.FDR.Confidence <- fdr_confidence
 ```
 
