@@ -105,7 +105,7 @@ if (!require("BiocManager", quietly = TRUE)) {
 
 BiocManager::install(c("QFeatures",
                        "ggplot2",
-                       "stringr"
+                       "stringr",
                        "NormalyzerDE",
                        "corrplot",
                        "Biostrings",
