@@ -80,19 +80,19 @@ knitr::include_graphics("figs/tmt_structure.jpg")
 ```
 
 
-After TMT labelling each sample with a different TMT reagent the same peptide
-will have an identical mass but be differentially labelled across samples. The 
+After labelling each sample with a different TMT reagent, the same peptide will
+have an identical mass but be differentially labelled across samples. The
 samples are then pooled together and run on the MS as a single **multiplexed**
 sample. In the MS1 spectra it is not possible to distinguish how much of each
 peptide (peak) was derived from each sample because all of the labelled peptides
-still have the same overall mass. During fragmentation, however, a cleavable linker
-within the TMT label is broken, thereby releasing a section of the label called
-the **reporter ion**. The mass of this reporter ion is different between TMT 
-labels due to differences in the distribution of isotopes (C^13^ and N^15^)
-between the **mass reporter** and **mass normalizer** regions. As a result, the 
-spectra of fragment ions will contain one peak per reporter ion and the relative 
-intensity of these ions can be used to calculate the relative abundance of the 
-identified peptide across the labelled samples. This is summarised below in 
+still have the same overall mass. During fragmentation, however, a cleavable
+linker within the TMT label is broken, thereby releasing a section of the label
+called the **reporter ion**. The mass of this reporter ion is different between
+TMT labels due to differences in the distribution of isotopes (C^13^ and N^15^)
+between the **mass reporter** and **mass normalizer** regions. As a result, the
+spectra of fragment ions will contain one peak per reporter ion and the relative
+intensity of these ions can be used to calculate the relative abundance of the
+identified peptide across the labelled samples. This is summarised below in
 @tmt_quant_fig.
 
 
