@@ -113,20 +113,14 @@ environment.
 
 ```{r load_packages, message = FALSE, results = "hide", warning=FALSE}
 library("QFeatures")
-library("ggplot2")
-library("stringr")
 library("NormalyzerDE")
-library("corrplot")
-library("Biostrings")
 library("limma")
-library("statmod")
 library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
-library("tibble")
-library("dplyr")
+library("tidyverse")
 ```
 
 ### Working directory {-}

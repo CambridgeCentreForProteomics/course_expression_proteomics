@@ -17,20 +17,14 @@ editor_options:
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("ggplot2")
-library("stringr")
-library("dplyr")
-library("tibble")
 library("NormalyzerDE")
-library("corrplot")
-library("Biostrings")
 library("limma")
-library("statmod")
 library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
+library("tidyverse")
 load("output/lesson_5.rda", verbose = TRUE)
 ```
 
@@ -424,5 +418,3 @@ save(cc_qf, file = "output/lesson_6.rda")
 :::
 
 ## References {-}
-
-
