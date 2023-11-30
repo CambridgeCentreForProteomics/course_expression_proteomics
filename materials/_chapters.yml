@@ -6,11 +6,11 @@ book:
     #     - materials/00_setup.Rmd
     - part: "Expression proteomics"
       chapters:
-        - materials/03_intro.Rmd
-        - materials/04_import_and_infrastructure.Rmd
-        - materials/05_data_processing.Rmd
-        - materials/06_normalisation_aggregation.Rmd
-        - materials/07_protein_exploration.Rmd
-        - materials/08_statistical_analysis.Rmd
-        - materials/09_biological_interpretation.Rmd
+        - materials/01_intro.Rmd
+        - materials/02_import_and_infrastructure.Rmd
+        - materials/03_data_processing.Rmd
+        - materials/04_normalisation_aggregation.Rmd
+        - materials/05_protein_exploration.Rmd
+        - materials/06_statistical_analysis.Rmd
+        - materials/07_biological_interpretation.Rmd
     

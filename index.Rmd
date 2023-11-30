@@ -1,9 +1,10 @@
 ---
-title: "Analysis of expression proteomics data in R"
 author: "Charlotte Hutchings, Lisa Breckels"
 date: today
 number-sections: false
 ---
+
+# Analysis of expression proteomics data in R {.unnumbered}
 
 ## Overview 
 
