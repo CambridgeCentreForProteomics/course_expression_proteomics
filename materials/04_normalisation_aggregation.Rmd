@@ -11,6 +11,7 @@ editor_options:
 * Be able to aggregate peptide-level information to protein-level using the `aggregateFeatures` function in the `QFeatures` infrastructure
 * Recognise the importance of log transformation (`logTransform`) 
 * Know how to normalise your data (using `normalize`) and explore the most appropriate methods for expression proteomics data 
+
 :::
 
 
@@ -25,7 +26,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson_5.rda", verbose = TRUE)
+load("output/lesson03.rda", verbose = TRUE)
 ```
 
 Let's start by recapping which stage we have reached in the processing of our 
@@ -308,7 +309,8 @@ data complete the following exercise,
 
 For this biological question we are not interested in peptide level data and
 wish to avoid the intermediate summarisation step of aggreagting PSMs to
-peptides. Take the log PSM data and aggregate the data straight to the protein level. 
+peptides. Take the log PSM data and aggregate the data straight to the protein 
+level. Give the newly created data level the name "log_proteins_direct".
 
 ::: {.callout-answer collapse=true}
 
@@ -404,7 +406,7 @@ pre_norm + post_norm
 :::
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson_6.rda")
+save(cc_qf, file = "output/lesson04.rda")
 ```
 
 

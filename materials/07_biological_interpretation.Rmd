@@ -29,7 +29,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson_7.rda", verbose = TRUE)
+load("output/lesson06.rda", verbose = TRUE)
 ```
 
 

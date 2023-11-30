@@ -27,7 +27,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson_6.rda", verbose = TRUE)
+load("output/lesson04.rda", verbose = TRUE)
 ```
 
 
@@ -279,10 +279,10 @@ psm_df <- cc_qf[["log_norm_proteins"]] %>%
   summary()
 ```
 
-* (i) We have one instance which has 413 PSMs for one given protein.
-* (ii) From the above output we see the most common number of PSMs available to support
+(i) We have one instance which has 413 PSMs for one given protein.
+(ii) From the above output we see the most common number of PSMs available to support
 a given protein is 1. Single peptide hits most frequently occur in the data. 
-* (iii) The median number of PSMs is 3.
+(iii) The median number of PSMs is 3.
 
 :::
 :::
@@ -396,7 +396,7 @@ to a long format `DataFrame`. We can then use the standard `ggplot2` functions
 to visualise the processing of this protein.
 
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, message=FALSE}
 O43583[, , c("log_psms_imputed", "log_peptides", "log_proteins")] %>%
   longFormat() %>%
   as_tibble() %>%
@@ -568,10 +568,26 @@ protein_pca$x %>%
 
 It is generally advisable to colour each point based on all possible explanatory
 variables that may have contributed to the observed variation. In our case we
-only have one - the cell cycle stage. To colour the points based on this condition
-we can use the tidyverse `mutate` function to add a column defining the condition
-of each sample and then use `colour = condition` within our ggplot aesthetics.
+only have one - the cell cycle stage. 
 
+
+
+:::{.callout-exercise}
+#### Challenge 3: PCA plot
+{{< level 2 >}}
+
+1. Generate a PCA plot of the data and colour by condition.
+
+<details><summary>Hint</summary>To colour the points based on this condition
+we can use the tidyverse `mutate` function to add a column defining the condition
+of each sample and then use `colour = condition` within our ggplot aesthetics.</details>
+
+2. What does this plot tell us?
+
+
+::: {.callout-answer collapse=true}
+
+**Task 1**
 
 ```{r}
 protein_pca$x %>%
@@ -582,9 +598,18 @@ protein_pca$x %>%
   theme_bw()
 ```
 
+
+---
+
+**Task 2**
+
 This PCA plot shows clear clustering of samples based on their condition, which
 is what we would hope to see. This indicates that the observed variation could 
 indeed be explained by cell cycle stage.
+:::
+:::
+
+
 
 For more complicated multivariate experiments all possible explanatory 
 variables should be visualised. For example, if multiple batches of samples 

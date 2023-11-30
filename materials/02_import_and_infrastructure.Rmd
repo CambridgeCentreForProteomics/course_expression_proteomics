@@ -247,7 +247,7 @@ Let's use these functions to explore the data structure further.
 
 - How has our data been organised within the `QFeatures` object? 
 
-## The `assay` container
+### The `assay` container
 
 Let's start with the quantitation data of our SE called `psms_raw`. This is
 stored in the `assay` slot.
@@ -366,7 +366,7 @@ As expected, the `assay` slot contains 10 quantitative columns corresponding to
 the 10 samples in our experiment. We see some quantitative values and some 
 missing values, here denotated `NA`.
 
-## The `rowData` container
+### The `rowData` container
 
 Now let's examine the the `rowData` slot,
 
@@ -512,7 +512,7 @@ We have `r length(tbl)` proteins.
 :::
 :::
 
-## The `colData` container
+### The `colData` container
 
 The final slot within our `SummarizedExperiment` is the `colData`.
 
@@ -543,7 +543,7 @@ cc_qf[["psms_raw"]] %>%
   rownames()
 ```
 
-## Annotating samples by adding meta-data
+### Annotating samples by adding meta-data
 
 The `colData` contains information about the samples. We can create a
 `data.frame` in R with information regarding the samples, replicates, conditions
@@ -598,7 +598,7 @@ colData(cc_qf[["psms_raw"]])
 ```
 
 ```{r, include=FALSE, eval=TRUE}
-save(cc_qf, file = "output/lesson1-4.rda")
+save(cc_qf, file = "output/lesson02.rda")
 ```
 
 

@@ -28,7 +28,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson_1-4.rda", verbose = TRUE)
+load("output/lesson02.rda", verbose = TRUE)
 ```
 
 
@@ -39,7 +39,7 @@ back to it later.
 
 ## Creating a copy of the raw data 
 
-To create a copy of the `psms_raw` data we can first extract the `assay` (data)
+To create a copy of the `psms_raw` data we can first extract the `experiment assay`
 and then add it back to our `QFeatures` object using the `addAssay` function.
 When we do this, we give the second `assay` (our copy) a new name. Here we will
 call it `psms_filtered` as by the end of our data cleaning and filtering, this
@@ -58,10 +58,11 @@ cc_qf <- addAssay(x = cc_qf,
 cc_qf
 ```
 
-We now see that a second `assay` has been added to the `QFeatures` object. When
-we use `addAssay` to add to a `QFeatures` object, the newly created `assay` does
-not automatically have links to the pre-existing `assay`s. We can use the
-`assayLink()` function to check which links exist for the `psms_filtered` assay.
+We now see that a second `experiment assay` has been added to the `QFeatures`
+object. When we use `addAssay` to add to a `QFeatures` object, the newly created
+`assay` does not automatically have links to the pre-existing `experiment
+assay`s. We can use the `assayLink()` function to check which links exist for
+the `psms_filtered` assay.
 
 
 ```{r}
@@ -71,7 +72,7 @@ assayLink(x = cc_qf,
 ```
 
 As we expected, no links exist. If we wanted to explicitly add links between two
-assays we could do so using the `addAssayLink` function, as demonstrated below.
+data we could do so using the `addAssayLink` function, as demonstrated below.
 
 ```{r}
 ## Create assay link
@@ -86,8 +87,8 @@ assayLink(x = cc_qf,
           i = "psms_raw")
 ```
 
-Adding a relation between these two assays ensure traceability. Will will
-learn more about assay links as we progress through this course.
+Adding a relation between these two `experiment assays` ensure traceability. We
+will learn more about assay links as we progress through this course.
 
 ::: {.callout-note}
 #### Assay links
@@ -126,7 +127,7 @@ features which:
 
 Since each spectrum can have multiple potential matches (PSMs), the software 
 used for our identification search provides some parameters to help us decide
-how confident we are in a match. Firstly, each PSM is give a rank based on the
+how confident we are in a match. Firstly, each PSM is given a rank based on the
 probability of it being incorrect - the PSM with the lowest probability of being 
 wrong is allocated rank 1. Secondly, each PSM is assigned a level of ambiguity
 to tell us whether it was easy to assign with no other options (unambiguous), 
@@ -172,6 +173,7 @@ within the `QFeatures` object. We wish to only filter on the data in our
 following code chunks we always pass the argument `i = "psms_filtered"`.
 
 Let's begin by filtering out any PSMs that **do not have a master protein**.
+These instances are characterised by an empty `character` i.e. `""`.
 
 ```{r}
 ## Before filtering
@@ -202,12 +204,38 @@ object.
 
 
 :::{.callout-exercise}
-#### Challenge 1: Contaminants 
-{{< level 1 >}}
+#### Challenge 1: Filtering for contaminants 
+{{< level 2 >}}
 
-Use the `filterFeatures` function to filter out common contaminants that have 
-been flagged during the identification search. How many PSMs are left after
-this step?
+The Proteome Discoverer software flags a potential contaminant in the
+`Contaminants` column found in the `rowData` of the `experiment assay`.
+
+we can count how many contaminants there are using,
+
+```{r}
+cc_qf[["psms_filtered"]] %>%  
+  rowData() %>% 
+  as_tibble() %>% 
+  count(Contaminant)
+```
+
+Examine the `class` of this column,
+
+```{r}
+cc_qf[["psms_filtered"]] %>%  
+  rowData() %>% 
+  as_tibble() %>% 
+  pull(Contaminant) %>% 
+  class()
+```
+
+Careful: it is not a `logical` TRUE or FALSE. It is a `character` and takes
+two values, `"True"` or `"False"`. 
+
+1. Use the `filterFeatures` function on the `psms_filtered` experiment assay 
+and filter out any contaminants which have been flagged as `"True"`.
+
+2. How many PSMs are left after this step?
 
 ::: {.callout-answer collapse=true}
 
@@ -295,14 +323,32 @@ Let's examine the columns `Rank` and `Search.Engine.Rank`,
 cc_qf[["psms_filtered"]] %>%
   rowData() %>% 
   as_tibble() %>%
-  pull(Rank) %>%
-  table()
+  count(Rank)
 
 cc_qf[["psms_filtered"]] %>%
   rowData() %>% 
   as_tibble() %>%
-  pull(Search.Engine.Rank) %>%
-  table()
+  count(Search.Engine.Rank)
+```
+
+We can also visualise this by piping the results to `ggplot`
+
+```{r}
+cc_qf[["psms_filtered"]] %>%
+  rowData() %>% 
+  as_tibble() %>%
+  count(Rank) %>% 
+  ggplot(aes(Rank, n)) + 
+  geom_col() + 
+  scale_y_log10() 
+
+cc_qf[["psms_filtered"]] %>%
+  rowData() %>% 
+  as_tibble() %>%
+  count(Search.Engine.Rank) %>% 
+  ggplot(aes(Search.Engine.Rank, n)) + 
+  geom_col() + 
+  scale_y_log10() 
 ```
 
 **Part 2**
@@ -1003,7 +1049,7 @@ mv_imputed$nNAcols$nNA %>% table()
 
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson_5.rda")
+save(cc_qf, file = "output/lesson03.rda")
 ```
 
 ::: {.callout-tip}

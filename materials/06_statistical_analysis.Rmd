@@ -30,7 +30,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson_6.rda", verbose = TRUE)
+load("output/lesson04.rda", verbose = TRUE)
 ```
 
 
@@ -283,11 +283,12 @@ comparisons. We have three comparisons made per protein, of which we have
 
 Multiple testing describes the process of separately testing each null
 hypothesis i.e., carrying out many statistical tests at a time each to test a
-different hypothesis. Here we have carried out `r nrow(limma_results) * 3`
-hypothesis tests. If we were to use the typical p < 0.05 significance threshold
-for each test we would accept a 5% chance of incorrectly rejecting the null
-hypothesis *per test*. Therefore, for every 100 tests that we carry out we
-expect an average of 5 false positives.
+different hypothesis. Here we have carried out 
+`r format(nrow(limma_results) * 3, scientific=FALSE)` hypothesis tests. If we 
+were to use the typical p < 0.05 significance threshold for each test we would
+accept a 5% chance of incorrectly rejecting the null hypothesis *per test*.
+Therefore, for every 100 tests that we carry out we expect an average of 5 false
+positives.
 
 If we do not account for the fact that we have carried out multiple hypothesis
 then we risk including false positives in our data. Many methods exist to
@@ -560,7 +561,7 @@ head(M_Desynch_results)
 ```
 
 
-### Visualising the results of our statistical model
+## Visualising the results of our statistical model
 
 ```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
 knitr::include_graphics("figs/flow_chart/flow_chart.011.png", error = FALSE)
@@ -640,7 +641,7 @@ my_results %>%
 
 ```{r, include=FALSE}
 ## Save results
-save(M_Desynch_results, all_proteins, file = "output/lesson_7.rda")
+save(M_Desynch_results, all_proteins, file = "output/lesson06.rda")
 ```
 
 
