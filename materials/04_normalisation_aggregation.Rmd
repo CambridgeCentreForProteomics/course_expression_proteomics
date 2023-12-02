@@ -245,6 +245,18 @@ as input, prior to any log transformation.**
 your `QFeatures` object (`cc_qf`) that aggregates the data from this level 
 directly to protein level. Call this assay `"proteins_direct"`.
 
+```{r, message=FALSE, warning=FALSE, include=FALSE, eval=TRUE}
+cc_qf <- aggregateFeatures(cc_qf,
+                           i = "psms_imputed", 
+                           fcol = "Master.Protein.Accessions",
+                           name = "proteins_direct",
+                           fun = MsCoreUtils::robustSummary,
+                           na.rm = TRUE)
+
+## Verify
+experiments(cc_qf)
+```
+
 2. Run the `normalyzer` function on the newly created (un-transformed) 
 protein level data using the below code,
 
@@ -253,20 +265,20 @@ normalyzer(jobName = "normalyzer",
            experimentObj = cc_qf[["proteins_direct"]],
            sampleColName = "sample",
            groupColName = "condition",
-           outputDir = ".",
+           outputDir = "outputs",
            requireReplicates = FALSE)
 ```
 
 If your job is successful a new folder will be created in your working directory
-called `normalyzer`. Take a look at the PDF report. What method do you think is
-appropriate?
+under `outputs` called `normalyzer`. Take a look at the PDF report. What method
+do you think is appropriate?
 
 ::: {.callout-answer collapse=true}
 
 **Task 1** Create a new protein level assay that takes the imputed PSMs and 
 aggregates directly to protein level.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
 cc_qf <- aggregateFeatures(cc_qf,
                            i = "psms_imputed", 
                            fcol = "Master.Protein.Accessions",
@@ -285,19 +297,19 @@ normalyzer(jobName = "normalyzer",
            experimentObj = cc_qf[["proteins_direct"]],
            sampleColName = "sample",
            groupColName = "condition",
-           outputDir = ".",
+           outputDir = "output",
            requireReplicates = FALSE)
 ```
 
-Note: To run `normalyzer` on this data we need to pass `requireReplicates =
-FALSE` as we have only one sample of the control. For more details on using the
+Note: To run `normalyzer` on this data we need to pass `requireReplicates = FALSE` 
+as we have only one sample of the control. For more details on using the
 `NormalyzerDE` package take a look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
 
 
 :::
 :::
 
-The `"center.median"` method looks reasonable so we proceed to normalise our
+The median method looks reasonable so we proceed to normalise our
 data with this method. In `QFeatures` we can use the `normalize` function.
 To see which other normalisation methods are supported within this function,
 type `?normalize` to access the function's help page. Before normalising the 
@@ -309,21 +321,22 @@ data complete the following exercise,
 
 For this biological question we are not interested in peptide level data and
 wish to avoid the intermediate summarisation step of aggreagting PSMs to
-peptides. Take the log PSM data and aggregate the data straight to the protein 
-level. Give the newly created data level the name "log_proteins_direct".
+peptides. This time take the logged PSM data and aggregate upwards straight to
+the protein level. Give the newly created data level the name
+"log_proteins_direct".
 
 ::: {.callout-answer collapse=true}
 
 ```{r, message=FALSE, warning=FALSE}
 cc_qf <- aggregateFeatures(cc_qf,
-                           i = "psms_imputed", 
+                           i = "log_psms_imputed", 
                            fcol = "Master.Protein.Accessions",
                            name = "log_proteins_direct",
                            fun = MsCoreUtils::robustSummary,
                            na.rm = TRUE)
 
 ## Verify
-cc_qf@ExperimentList
+experiments(cc_qf)
 ```
 
 :::
@@ -331,7 +344,7 @@ cc_qf@ExperimentList
 
 
 Now let's normalise the protein level data that has been directly aggregated
-from PSMs, 
+from PSMs using the median method.
 
 ```{r}
 cc_qf <- normalize(cc_qf, 
@@ -341,10 +354,10 @@ cc_qf <- normalize(cc_qf,
 ```
 
 Let's verify the normalisation  by viewing the `QFeatures` object. We can call
-`@ExperimentList` to view all the assays we have created,
+`experiments` to view all the assays we have created,
 
 ```{r}
-cc_qf@ExperimentList
+experiments(cc_qf)
 ```
 
 

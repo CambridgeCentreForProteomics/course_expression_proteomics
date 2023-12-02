@@ -266,23 +266,23 @@ psm_df %>%
 **Task 2: PSM support extremes**
 
 ```{r}
-psm_df <- cc_qf[["log_norm_proteins"]] %>%
+cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
   pull(.n) %>% 
   frequency()
 
-psm_df <- cc_qf[["log_norm_proteins"]] %>%
+cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
   pull(.n) %>% 
   summary()
 ```
 
-(i) We have one instance which has 413 PSMs for one given protein.
+(i) We have one instance which has 223 PSMs for one given protein.
 (ii) From the above output we see the most common number of PSMs available to support
 a given protein is 1. Single peptide hits most frequently occur in the data. 
-(iii) The median number of PSMs is 3.
+(iii) The median number of PSMs is 2.
 
 :::
 :::

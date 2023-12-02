@@ -155,8 +155,8 @@ can be created using either `model.matrix(~variable)` or `model.matrix(~0 + vari
 The difference between these two options is that the first will create a model 
 that includes an intercept term whilst the second will exclude any intercept
 term. If the explantory variable is a factor, both models with and without an
-intercept are equivalent. If, however, the explanatory variable is a covariate, 
-the two models are then fundamentally different. 
+intercept are equivalent. If, however, the explanatory variable is a continuous
+variable, the two models are then fundamentally different.
 
 In this experiment we consider our explanatory variable (cell cycle stage) to 
 be categorical, making it of `factor` class in R. When modelling factor
@@ -302,7 +302,14 @@ Above we used the "BH", or Benjamini-Hochberg procedure, to control the FDR.
 This accounts for multiple hypothesis testing *per protein* and *per contrast*
 to give us an overall view of the data.
 
-
+::: {.callout-tip}
+#### The False Discovery Rate
+The False Discovery Rate (FDR) defines the fraction of false discoveries that we
+are willing to tolerate in our list of differential proteins. For example, an
+FDR threshold of 0.05 means that around 5% of the differential proteins will be
+false positives. It is up to you to decide what this threshold should be, but
+conventionally people use 0.01 or 0.05.
+:::
 
 ### Diagnostic plots to verify suitability of our statistical model
 

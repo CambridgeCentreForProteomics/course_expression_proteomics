@@ -257,7 +257,7 @@ It is also possible to filter against your own contaminants list uploaded into
 R. It may be that you have a second list or newer list you'd like to search
 against, or you perhaps did not add a contaminants list to filter against in the
 identification search (which was performed in third party software). Full
-details including code can be found in Hutchings et al 2023 @Hutchings2023.
+details including code can be found in @Hutchings2023.
 
 Note: Filtering on “Protein.Accessions”, rather than "Master.Protein.Accessions"
 ensures the removal of PSMs which matched to a protein group containing a
