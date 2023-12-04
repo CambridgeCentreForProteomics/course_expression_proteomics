@@ -66,11 +66,11 @@ cc_qf <- logTransform(object = cc_qf,
 
 ## Aggregating PSM to peptides
 cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_psms_imputed", 
-                           fcol = "Sequence",
-                           name = "log_peptides",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
+                           i = "log_psms_imputed",            # data 
+                           fcol = "Sequence",                 # how do we want to aggregate?
+                           name = "log_peptides",             # new assay name
+                           fun = MsCoreUtils::robustSummary,  # robust method (NAs excluded before fit)
+                           na.rm = TRUE)                      # ignore NA values when summarising 
 
 
 ## Aggregating peptides to proteins
@@ -132,7 +132,7 @@ cc_qf <- aggregateFeatures(cc_qf,
 ## ---------------------------------------------------------------------------------------------------------
 
 cc_qf <- normalize(cc_qf, 
-                   i = "log_proteins", 
+                   i = "log_proteins_direct", 
                    name = "log_norm_proteins",
                    method = "center.median")
 

@@ -348,7 +348,7 @@ from PSMs using the median method.
 
 ```{r}
 cc_qf <- normalize(cc_qf, 
-                   i = "log_proteins", 
+                   i = "log_proteins_direct", 
                    name = "log_norm_proteins",
                    method = "center.median")
 ```
@@ -373,7 +373,7 @@ had on the data and add colour to distinguish between conditions.
 Using `ggplot2`,
 
 ```{r}
-pre_norm <- cc_qf[["log_proteins"]] %>%
+pre_norm <- cc_qf[["log_proteins_direct"]] %>%
   assay() %>%
   longFormat() %>%
   ggplot(aes(x = colname, y = value)) +
@@ -393,7 +393,7 @@ pre_norm  + post_norm
 Colour coding by condition,
 
 ```{r}
-pre_norm <- cc_qf[["log_proteins"]] %>%
+pre_norm <- cc_qf[["log_proteins_direct"]] %>%
   assay() %>%
   longFormat() %>%
   mutate(Condition = strsplit(colname, split = "_") %>% 
