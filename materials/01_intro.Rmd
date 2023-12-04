@@ -7,7 +7,7 @@ bibliography: course_refs.bib
 #### Learning Objectives
 
 * Understand the aim and design of a common expression proteomics experiment
-* Know the difference between MS2- and MS3-based quantitation
+* Know how relative quantitation can be achieved using Tandem Mass Tag (TMT) labelling
 * Know what a database/identification search is and what data level to output 
 and begin processing your data
 
@@ -107,8 +107,7 @@ reporter ion intensity of our TMT labels to compare abundance between samples
 taken throughout the cell cycle. If we wanted to carry out absolute quantification 
 of proteins, TMT labelling would not be an appropriate method.
 
-**Note** **put in box** **relative vs. abusolute quant**
-
+:::{.callout-note}
 ## MS2- vs. MS3-based TMT quantitaion
 
 Originally the reporter ion of a TMT reagent was released by fragmentation of 
@@ -139,7 +138,7 @@ The specific MS3 data acquisition approach used to generate our data was
 synchronous precursor selection (SPS)-MS3. In simple terms, the SPS method 
 allows us to select multiple MS2 fragments for additional fragmentation to the
 MS3 level, rather than just one @McAlister2014.
-
+:::
 
 ## Identification search of the raw MS data
 
@@ -156,13 +155,15 @@ to expected MS spectra generated via in silico digestion of a selected protein
 database. Since the use-case data used human cells, we provided the human proteome
 to Proteome Discoverer as the database for searching. We also provided a 
 database of common contaminants that could be present in our sample due to (i)
-human contamination (e.g., keratin from nails, hair or skin), or (ii) sample 
+human contamination (e.g., keratin from nails, hair or skin), or (ii) sample
 preparation (e.g., enzymes used for protein digestion). These two databases are
-provided... **give link/reference to github**. The result of such a database 
-search is a list of **peptide spectrum matches (PSMs)**, that is a list of matches
-between observed and expected spectra. Most software will also aggregate the 
-PSM level data upward and provide output files at all data levels (PSM, peptide
-and protein). It is up to the user which output file to use for further analysis.
+can be found in the course materials and also at
+[https://zenodo.org/records/7837375](https://zenodo.org/records/7837375). The
+result of such a database search is a list of **peptide spectrum matches
+(PSMs)**, that is a list of matches between observed and expected spectra. Most
+software will also aggregate the PSM level data upward and provide output files
+at all data levels (PSM, peptide and protein). It is up to the user which output
+file to use for further analysis.
 
 The starting point for this workshop and data processing workflow in R is an 
 output file from the identification search. Proteome Discoverer provides each 
