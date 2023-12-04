@@ -96,34 +96,46 @@ cc_qf <- aggregateFeatures(cc_qf,
 ## CHALLENGE 1
 ## ---------------------------------------------------------------------------------------------------------
 
-# Taking the your data from the psms_imputed level, create a new assay in your 
-# QFeatures object (cc_qf) that aggregates the data from this level directly to 
-# protein level. Call this assay "proteins_direct".
-# 
-# Run the normalyzer function on the newly created (un-transformed) protein 
-# level data using the below code,
 
-# normalyzer(jobName = "normalyzer",
-#            experimentObj = cc_qf[["proteins_direct"]],
-#            sampleColName = "sample",
-#            groupColName = "condition",
-#            outputDir = ".",
-#            requireReplicates = FALSE)
+# The `NormalyzerDE` package provides a function called `normalyzer` which is 
+# useful for getting an overview of how different normalisation methods perform
+# on a dataset. The `normalyzer` function however **requires a raw intensity matrix
+# as input, prior to any log transformation.** 
+#   
+#   1. Create a copy of your `cc_qf` dataset for testing normalisation methods.
+#.    Let's call this `norm_qf`
+norm_qf <- cc_qf
+
+norm_qf
+
+# 2. Take the your data from the `psms_imputed` level and create a new assay in
+# your `QFeatures` object (`norm_qf`) that aggregates the data from this level 
+# directly to protein level. Call this assay `"proteins_direct"`.
+
+norm_qf <- aggregateFeatures(norm_qf,
+                             i = "psms_imputed", 
+                             fcol = "Master.Protein.Accessions",
+                             name = "proteins_direct",
+                             fun = MsCoreUtils::robustSummary,
+                             na.rm = TRUE)
+
+## Verify
+experiments(norm_qf)
+
+# 2. Run the `normalyzer` function on the newly created (un-transformed) 
+# protein level data using the below code,
+
+normalyzer(jobName = "normalyzer",
+           experimentObj = norm_qf[["proteins_direct"]],
+           sampleColName = "sample",
+           groupColName = "condition",
+           outputDir = "outputs",
+           requireReplicates = FALSE)
 
 # If your job is successful a new folder will be created in your working 
 # directory called normalyzer. Take a look at the PDF report. What method do you 
 # think is appropriate?
   
-
-## ---------------------------------------------------------------------------------------------------------
-## CHALLENGE 2
-## ---------------------------------------------------------------------------------------------------------
-
-# For this biological question we are not interested in peptide level data and
-# wish to avoid the intermediate summarisation step of aggreagting PSMs to
-# peptides. Take the log PSM data and aggregate the data straight to the protein 
-# level. 
-
 
 
 
@@ -132,14 +144,14 @@ cc_qf <- aggregateFeatures(cc_qf,
 ## ---------------------------------------------------------------------------------------------------------
 
 cc_qf <- normalize(cc_qf, 
-                   i = "log_proteins_direct", 
+                   i = "log_proteins", 
                    name = "log_norm_proteins",
                    method = "center.median")
 
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Challenge 3 
+## Challenge 2 
 ## ---------------------------------------------------------------------------------------------------------
 
 # Create two boxplots pre- and post-normalisation to visualise the effect it has

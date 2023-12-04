@@ -123,7 +123,8 @@ Let's take a look again at our `QFeatures` object,
 cc_qf
 ```
 
-## Aggregation of PSMs to peptides to proteins
+
+## Feature aggregation 
 
 ```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
 knitr::include_graphics("figs/flow_chart/flow_chart.007.png", error = FALSE)
@@ -143,6 +144,8 @@ information) or (ii) include an intermediate step of aggregating from PSM to
 peptides, and then from the peptide level to proteins. Which you do will depend
 on your biological question. For the purpose of demonstration, let's perform
 the explicit step of PSM to peptide aggregation.
+
+### Step 1: Aggregation of PSMs to peptides
 
 In your console run the `aggregateFeatures` function on your `QFeatures` object.
 We wish to aggregate from PSM to peptide level so pass the argument 
@@ -175,6 +178,9 @@ values. Similarly, using `colSums` can result in protein quantitation values
 being biased by the presence of missing values. Here we will use
 `robustSummary`, a state-of-the art aggregation method that is able to aggregate
 effectively even in the presence of missing values @Sticker2020.
+
+### Step 2: Aggregation of peptides to proteins
+
 
 Let's complete our aggregation by now aggregating our peptide level data to 
 protein level data. Let's again use the `aggregateFeatures` function and pass
@@ -233,7 +239,7 @@ packages, however, exists [`NormalyzerDE`](https://bioconductor.org/packages/rel
 normalisation methods.
 
 :::{.callout-exercise}
-#### Challenge 1: Using NormalyzerDE
+#### Challenge 1: Exploring normalisation methods using NormalyzerDE
 {{< level 1 >}}
 
 The `NormalyzerDE` package provides a function called `normalyzer` which is 
@@ -241,12 +247,21 @@ useful for getting an overview of how different normalisation methods perform
 on a dataset. The `normalyzer` function however **requires a raw intensity matrix
 as input, prior to any log transformation.** 
 
-1. Taking the your data from the `psms_imputed` level, create a new assay in
-your `QFeatures` object (`cc_qf`) that aggregates the data from this level 
+1. Create a copy of your `cc_qf` dataset for testing normalisation methods. Let's
+call this `norm_qf`.
+
+```{r}
+norm_qf <- cc_qf
+
+norm_qf
+```
+
+2. Take the your data from the `psms_imputed` level and create a new assay in
+your `QFeatures` object (`norm_qf`) that aggregates the data from this level 
 directly to protein level. Call this assay `"proteins_direct"`.
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE, eval=TRUE}
-cc_qf <- aggregateFeatures(cc_qf,
+norm_qf <- aggregateFeatures(norm_qf,
                            i = "psms_imputed", 
                            fcol = "Master.Protein.Accessions",
                            name = "proteins_direct",
@@ -254,7 +269,7 @@ cc_qf <- aggregateFeatures(cc_qf,
                            na.rm = TRUE)
 
 ## Verify
-experiments(cc_qf)
+experiments(norm_qf)
 ```
 
 2. Run the `normalyzer` function on the newly created (un-transformed) 
@@ -262,7 +277,7 @@ protein level data using the below code,
 
 ```{r, eval=FALSE}
 normalyzer(jobName = "normalyzer",
-           experimentObj = cc_qf[["proteins_direct"]],
+           experimentObj = norm_qf[["proteins_direct"]],
            sampleColName = "sample",
            groupColName = "condition",
            outputDir = "outputs",
@@ -270,8 +285,9 @@ normalyzer(jobName = "normalyzer",
 ```
 
 If your job is successful a new folder will be created in your working directory
-under `outputs` called `normalyzer`. Take a look at the PDF report. What method
-do you think is appropriate?
+under `outputs` called `normalyzer`. Take a look at the PDF report. 
+
+What method do you think is appropriate?
 
 ::: {.callout-answer collapse=true}
 
@@ -312,43 +328,11 @@ as we have only one sample of the control. For more details on using the
 The median method looks reasonable so we proceed to normalise our
 data with this method. In `QFeatures` we can use the `normalize` function.
 To see which other normalisation methods are supported within this function,
-type `?normalize` to access the function's help page. Before normalising the 
-data complete the following exercise,
-
-:::{.callout-exercise}
-#### Challenge 2: Aggregating PSM straight to protein
-{{< level 1 >}}
-
-For this biological question we are not interested in peptide level data and
-wish to avoid the intermediate summarisation step of aggreagting PSMs to
-peptides. This time take the logged PSM data and aggregate upwards straight to
-the protein level. Give the newly created data level the name
-"log_proteins_direct".
-
-::: {.callout-answer collapse=true}
-
-```{r, message=FALSE, warning=FALSE}
-cc_qf <- aggregateFeatures(cc_qf,
-                           i = "log_psms_imputed", 
-                           fcol = "Master.Protein.Accessions",
-                           name = "log_proteins_direct",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
-
-## Verify
-experiments(cc_qf)
-```
-
-:::
-:::
-
-
-Now let's normalise the protein level data that has been directly aggregated
-from PSMs using the median method.
+type `?normalize` to access the function's help page. 
 
 ```{r}
 cc_qf <- normalize(cc_qf, 
-                   i = "log_proteins_direct", 
+                   i = "log_proteins", 
                    name = "log_norm_proteins",
                    method = "center.median")
 ```
@@ -362,7 +346,7 @@ experiments(cc_qf)
 
 
 :::{.callout-exercise}
-#### Challenge 3: Visualising the data prior and post-normalisation
+#### Challenge 2: Visualising the data prior and post-normalisation
 {{< level 3 >}}
 
 Create two boxplots pre- and post-normalisation to visualise the effect it has
@@ -373,7 +357,7 @@ had on the data and add colour to distinguish between conditions.
 Using `ggplot2`,
 
 ```{r}
-pre_norm <- cc_qf[["log_proteins_direct"]] %>%
+pre_norm <- cc_qf[["log_proteins"]] %>%
   assay() %>%
   longFormat() %>%
   ggplot(aes(x = colname, y = value)) +
@@ -393,7 +377,7 @@ pre_norm  + post_norm
 Colour coding by condition,
 
 ```{r}
-pre_norm <- cc_qf[["log_proteins_direct"]] %>%
+pre_norm <- cc_qf[["log_proteins"]] %>%
   assay() %>%
   longFormat() %>%
   mutate(Condition = strsplit(colname, split = "_") %>% 
