@@ -229,4 +229,22 @@ DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
 proteomics. Some aspects of the workflow would need to be adapted for other
 types of proteomics experiment.
 
+
+## Glossary
+
+Key terms that you should understand for this workshop:
+
+- **Precursor ion** = the original parent ion representing an ionized form of the entire peptide sequence.
+
+- **Fragment ion** = an ion produced by fragmentation of the precursor ion, thus only representing a fraction of the original peptide sequence.
+
+- **MS1 spectrum** = raw mass spectrum produced by the separation of precursor ions based on their mass-to-charge ratio (m/z). Each peak represents a precursor ion at a particular m/z and with an associated intensity.
+
+- **MS2 (MS/MS) spectrum** = raw mass spectrum produced by the separation of fragment ions based on their mass-to-charge ratio (m/z). Each peak corresponds to a fragment ion derived from the same precursor ion.
+
+- **Peptide spectrum match (PSM)** =  A match made between a theoretical mass spectrum for a given peptide sequence and an observed experimental spectrum, thus linking a raw mass spectrum to its predicted peptide sequence
+
+- **Tandem mass tag (TMT)** = a type of peptide label which can be used for relative quantification of peptides across samples. Quantification is measured at the MS2 or MS3 level.
+
+
 ## References {-}
