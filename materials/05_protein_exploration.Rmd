@@ -265,13 +265,19 @@ psm_df %>%
 
 **Task 2: PSM support extremes**
 
+Let's again pull the column `.n` and tabulate the output
+
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
   pull(.n) %>% 
-  frequency()
+  table()
+```
 
+Let's now calculate summary statistics to find the median number of PSMs.
+
+```{r}
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
