@@ -178,9 +178,8 @@ cc_qf[["log_norm_proteins"]] %>%
   table()
 ```
 
-The output tells us that we have `r .support[1]` proteins with `r
-names(.support[1])` peptides, `r .support[2]` proteins with support from 
-`r names(.support[2])` peptides, and so forth.
+The output tells us that we have `r .support[1]` proteins with `r names(.support[1])` 
+peptides, `r .support[2]` proteins with support from `r names(.support[2])` peptides, and so forth.
 
 :::{.callout-exercise}
 #### Challenge 2: Examining peptide support

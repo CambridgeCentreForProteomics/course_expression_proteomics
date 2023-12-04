@@ -129,7 +129,7 @@ normalyzer(jobName = "normalyzer",
            experimentObj = norm_qf[["proteins_direct"]],
            sampleColName = "sample",
            groupColName = "condition",
-           outputDir = "outputs",
+           outputDir = "normalyzer_output",
            requireReplicates = FALSE)
 
 # If your job is successful a new folder will be created in your working 
