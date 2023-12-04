@@ -58,7 +58,7 @@ identification search output that was not a quantification column). Rows
 represent features but columns inform about different attributes of the feature
 (e.g., its sequence, name, modifications).
 
-3. The `colData` - an table (data frame) to store sample metadata that would not
+3. The `colData` - a table (data frame) to store sample metadata that would not
 appear in the output of your identification search. This could be for example,
 the cell line used, which condition, which replicate each sample corresponds to
 etc. Again, this information is stored in a matrix-like data structure.
@@ -140,10 +140,11 @@ library("patchwork")
 library("tidyverse")
 ```
 
-Set your working directory to xxx where you will find the `data` folder which
-contains the material required for this course. This can be done by using the
+Set your working directory to `Course_Materials` where you will find all the
+relevant data and R code files for this course. This can be achieved using the
 `setwd` function or by going to the menu Session -> Set Working Directory ->
-Choose Directory, in RStudio.
+Choose Directory, in RStudio. Type `list.files` into your R console to check
+you can see the materials.
 
 ## Importing data into R
 
@@ -269,7 +270,7 @@ head(assay(cc_qf[["psms_raw"]]))
 This is equivalent to,
 
 ```{r}
-cc_qf %>% 
+cc_qf[["psms_raw"]] %>% 
   assay() %>% 
   head()
 ```
@@ -297,7 +298,7 @@ Explore the `QFeatures` object you have just created.
 
 1. How many assays do we currently have in the object? 
 
-2. How many PSMs have been quantified in the data?
+2. How many PSMs have been identified in the data?
 
 3. How do you access and view the quantitation data i.e. the relative abundance 
 of each PSM across the samples?

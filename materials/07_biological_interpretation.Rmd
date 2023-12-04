@@ -131,7 +131,7 @@ There are many functional analyses that could be done on the proteins with
 differential abundance:
 
 * Investigate the biological pathways that the proteins function within ([KEGG](https://www.genome.jp/kegg/) etc.)
-* Identify potential interacting partners ([IntAct](https://www.ebi.ac.uk/intact/), (STRING)[https://string-db.org] etc.)
+* Identify potential interacting partners ([IntAct](https://www.ebi.ac.uk/intact/), [STRING](https://string-db.org] etc.))
 * Determine the subcellular localisation in which the changing proteins are found 
 * Understand the co-regulation of their mRNAs ([Expression Atlas](https://www.ebi.ac.uk/gxa))
 * Compare our changing proteins to those previously identified in other proteomic

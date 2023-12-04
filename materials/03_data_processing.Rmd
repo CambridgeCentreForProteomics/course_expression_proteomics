@@ -518,7 +518,7 @@ local FDR. In this way, the FDR can be thought of as the proportion of false
 positives above the critical score threshold. 
 
 
-```{r fdr_figure, eccho = FALSE, fig.align = "center", out.width = "50%", fig.cap = "An illustration of the local FDR calculation used to assign each PSM an FDR."}
+```{r fdr_figure, echo = FALSE, fig.align = "center", out.width = "50%", fig.cap = "An illustration of the local FDR calculation used to assign each PSM an FDR."}
 knitr::include_graphics("figs/local_fdr.png")
 ```
 
