@@ -10,7 +10,7 @@ number-sections: false
 
 These materials focus on expression proteomics, which aims to characterise the protein diversity and abundance in a particular system. 
 You will learn about the bioinformatic analysis steps involved when working with these kind of data, in particular several dedicated proteomics Bioconductor packages, part of the R programming language.
-We will use real-world datasets obtained from label free quantitation (LFQ) as well as tandem mass tag (TMT) mass spectrometry. 
+We will use a real-world dataset obtained from a tandem mass tag (TMT) mass spectrometry experiment. 
 We cover the basic data structures used to store and manipulate protein abundance data, how to do quality control and filtering of the data, as well as several visualisations. 
 Finally, we include statistical analysis of differential abundance across sample groups (e.g. control vs. treated) and further evaluation and biological interpretation of the results via gene ontology analysis. 
 
@@ -67,13 +67,14 @@ These examples include icons with links to GitHub and Orcid.
 About the authors:
 
 - **Charlotte Hutchings**
-  <a href="https://github.com/Charl-Hutchings" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
-  _Affiliation_: Department of Biochemistry, University of Cambridge  
+  <a href="https://orcid.org/0000-0002-2727-7806" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a>
+  <a href="https://github.com/Charl-Hutchings" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>
+  _Affiliation_: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge  
   _Roles_: writing - original draft; conceptualisation; coding
 - **Lisa Breckels**
-  <a href="https://orcid.org/0000-0001-8918-7171" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a> 
+  <a href="https://orcid.org/0000-0001-8918-7171" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a>
   <a href="https://github.com/lmsimp" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
-  _Affiliation_: Department of Biochemistry, University of Cambridge  
+  _Affiliation_: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge  
   _Roles_: writing - original draft; conceptualisation; coding
 
 
@@ -122,9 +123,44 @@ Please also cite our associated workflow from which these materials were based o
 }
 ```
 
+The `QFeatures` R/Bioconductor package.
+
+> Gatto L, Vanderaa C: QFeatures: Quantitative features for mass spectrometry data. R package version 1.12.0. 2023. Reference Source
+
+```
+@Manual{QFeatures2023,
+    title = {{QFeatures}: Quantitative features for mass spectrometry data},
+    author = {Laurent Gatto and Christophe Vanderaa},
+    year = {2023},
+    note = {R package version 1.12.0},
+    url = {https://github.com/RforMassSpectrometry/QFeatures}
+}
+```
+
+The `limma` R/Bioconductor package
+
+> Ritchie, M.E., Phipson, B., Wu, D., Hu, Y., Law, C.W., Shi, W., and Smyth, G.K. (2015). limma powers
+  differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Research 43(7), e47.
+
+```
+  @Article{Ritchie2015,
+    author = {Matthew E Ritchie and Belinda Phipson and Di Wu and Yifang Hu and Charity W Law and Wei Shi and Gordon K Smyth},
+    title = {{limma} powers differential expression analyses for {RNA}-sequencing and microarray studies},
+    journal = {Nucleic Acids Research},
+    year = {2015},
+    volume = {43},
+    number = {7},
+    pages = {e47},
+    doi = {10.1093/nar/gkv007},
+  }
+```
+
 ## Acknowledgements
 
 <!-- if there are no acknowledgements we can delete this section -->
+- Thank you to Hugo Tavares for coordinating this course and his valuable input in developing and testing this material.
+- Thomas Kruger and Charlotte S. Dawson for their input and guidance writing this material and the f1000 workflow [A Bioconductor workflow for processing,  evaluating,  and interpreting expression proteomics data](https://doi.org/10.12688/f1000research.139116.1).
+- Prof. Kathryn Lilley, group head and director of [Cambridge Centre for Proteomics](https://proteomics.bio.cam.ac.uk) at the Department of Biochemistry, University of Cambridge.
+- The [`QFeatures`](https://bioconductor.org/packages/release/bioc/html/QFeatures.html) and [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html) R/Bioconductor packages are fundamental to this workflow, please cite them alongside the course if you use this material. Thank you to Laurent Gatto and Christophe Vanderaa for providing exemplary software for proteomics.
+- Thank you to the R for Mass Spectrometry team for providing excellent material in particular the [R for Mass Spectrometry Book](https://rformassspectrometry.github.io/book/) by Laurent Gatto, Sebastian Gibb and Johannes Rainer.
 
-- List any other sources of materials that were used.
-- Or other people that may have advised during the material development (but are not authors).
