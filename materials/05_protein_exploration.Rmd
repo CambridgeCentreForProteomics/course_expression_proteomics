@@ -139,22 +139,27 @@ message(psm_count - psm_final, " PSMs, ",
 
 ## The `.n` column created by `aggregateFeatures`
 
-If we look at the names of the columns within our `"log_proteins"` and 
-`"log_norm_proteins"` assays we see that there is a column called `.n`. This 
-column was not present in the PSM level assays.
+If we look at the names of the columns within our, "`log_peptides"`,
+`"log_proteins"`  assays we see that there is a column called `.n`. This column
+was not present in the PSM level assays.
 
+For example,
 ```{r}
-## Check columns in the log normalised protein assay
-cc_qf[["log_norm_proteins"]] %>%
+## Check columns in the log normalised peptide assay
+cc_qf[["log_peptides"]] %>%
   rowData() %>%
   names()
 ```
 
 The `.n` column is created during the aggregation process that is completed via
 the `aggregateFeatures` function. This column stores information about how many
-child features (PSMs) were aggregated into each parent (protein) feature. Since we aggregated
-directly from the PSMs to protein, the `.n` column tells us how
-many PSMs we have in support of each protein in the final dataset.
+child features (PSMs/peptides) were aggregated into each parent
+(peptides/protein) feature. Since we aggregated completed two steps of
+aggregation (1) PSMs to peptides, (2) peptides to proteins, the `.n` column
+tells us how many PSMs we have in support of each peptide, and how many peptides
+we have in support of each protein, respectively.
+
+Let's examine peptide support,
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -173,16 +178,16 @@ cc_qf[["log_norm_proteins"]] %>%
   table()
 ```
 
-The output tells us that we have `r .support[1]` proteins with `r names(.support[1])` 
-PSMs (single peptide hits), `r .support[2]` proteins with support from 
-`r names(.support[2])` PSMs, and so forth.
+The output tells us that we have `r .support[1]` proteins with `r
+names(.support[1])` peptides, `r .support[2]` proteins with support from 
+`r names(.support[2])` peptides, and so forth.
 
 :::{.callout-exercise}
-#### Challenge 2: Examining PSM support
+#### Challenge 2: Examining peptide support
 {{< level 2 >}}
 
 1. Using the information we have in the `.n` column create a graph to visualise
-PSM support. 
+peptide support. 
 
 <details><summary>Inspiration</summary> The ["from Data to Viz project"](https://www.data-to-viz.com)
 provides some great ideas for visualisation in R and a brilliant platform for 
@@ -191,19 +196,19 @@ is another great source of inspiration with coded examples to follow.</details>
 
 2. What is,
 
-(i) the *maximum* number of PSMs we have available for one given protein? 
-(ii) the *most common* number of PSMs available for any given protein?
-(iii) the *median* number of PSMs available for any given protein?
+(i) the *maximum* number of peptides we have available for one given protein? 
+(ii) the *most common* number of peptides available for any given protein?
+(iii) the *median* number of peptides available for any given protein?
 
-<details><summary>Hint</summary> The functions `frequency` and `summary`
+<details><summary>Hint</summary> The functions `table` and `summary`
 may help. </details>
 
 
 ::: {.callout-answer collapse=true}
 
-**Task 1: Graph to visualise PSM support**
+**Task 1: Graph to visualise peptide support**
 
-There are many ways we can visualise PSM support. The first thing we could do
+There are many ways we can visualise peptide support. The first thing we could do
 is plot a histogram. 
 
 
@@ -216,36 +221,36 @@ cc_qf[["log_norm_proteins"]] %>%
 ```
 
 Is this a good visualisation for our dataset? It is perhaps not the easiest
-plot to read if the aim is to get an overview of how many PSMs are available per 
+plot to read if the aim is to get an overview of how many peptides are available per 
 protein group. 
 
-Let's bin PSMs with > 8 PSMs per protein group into one category and then plot
-the data.
+Let's bin peptides with > 8 peptides per protein group into one category and
+then plot the data.
 
 In the next code chunk we create a new `tibble` which tells us how many
-proteins we have which have `n` number of PSMs.
+proteins we have which have `n` number of peptides.
 
 ```{r}
-## Summarise the number of PSMs per protein if we have greater than 8  
-psm_df <- cc_qf[["log_norm_proteins"]] %>%
+## Summarise the number of peptides per protein if we have greater than 8  
+peptide_df <- cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
   select(.n) %>% 
-  mutate(psm_n = ifelse(.n <= 7, .n, "8+")) %>% 
-  count(psm_n) 
+  mutate(peptide_n = ifelse(.n <= 7, .n, "8+")) %>% 
+  count(peptide_n) 
 
-psm_df
+peptide_df
 ```
 
 Now let's plot this data.
 
 ```{r}
 ## Plot the data using a lollipop
-ggplot(psm_df, aes(x = psm_n, y = n)) +
-  geom_segment(aes(x = psm_n, xend = psm_n, y=0, yend = n)) +
+ggplot(peptide_df, aes(x = peptide_n, y = n)) +
+  geom_segment(aes(x = peptide_n, xend = peptide_n, y=0, yend = n)) +
   geom_point(color = "red", size = 4) +
   ylab("Frequency") +
-  xlab("Number of PSMs per protein group") +
+  xlab("Number of peptides per protein group") +
   theme_light() 
 ```
 
@@ -253,17 +258,17 @@ We can also plot as a percentage.
 
 ```{r}
 ## Plot the data using a lollipop
-psm_df %>% 
+peptide_df %>% 
   mutate(n, n_percent = n/sum(n)*100) %>% 
-  ggplot(aes(x = psm_n, y = n_percent)) +
-  geom_segment(aes(x = psm_n, xend = psm_n, y = 0, yend = n_percent)) +
+  ggplot(aes(x = peptide_n, y = n_percent)) +
+  geom_segment(aes(x = peptide_n, xend = peptide_n, y = 0, yend = n_percent)) +
   geom_point(color="red", size=4) +
   ylab("Frequency (%)") +
-  xlab("Number of PSMs per protein group") +
+  xlab("Number of peptides per protein group") +
   theme_light()
 ```
 
-**Task 2: PSM support extremes**
+**Task 2: Peptides support, summary statistics**
 
 Let's again pull the column `.n` and tabulate the output
 
@@ -275,7 +280,7 @@ cc_qf[["log_norm_proteins"]] %>%
   table()
 ```
 
-Let's now calculate summary statistics to find the median number of PSMs.
+Let's now calculate summary statistics to find the median number of peptides,
 
 ```{r}
 cc_qf[["log_norm_proteins"]] %>%
@@ -285,90 +290,13 @@ cc_qf[["log_norm_proteins"]] %>%
   summary()
 ```
 
-(i) We have one instance which has 223 PSMs for one given protein.
-(ii) From the above output we see the most common number of PSMs available to support
+(i) We have one instance which has 223 peptides for one given protein.
+(ii) From the above output we see the most common number of peptides available to support
 a given protein is 1. Single peptide hits most frequently occur in the data. 
-(iii) The median number of PSMs is 2.
+(iii) The median number of peptides is 2.
 
 :::
 :::
-
-<!-- We may wish to examine PSM support in the context of peptides, and peptide -->
-<!-- support for protein groups.  -->
-
-<!-- **Challenge** -->
-<!-- Now we know how many master proteins are in our final dataset and how many PSMs -->
-<!-- support the quantification of these proteins. Determine how many peptide  -->
-<!-- sequences are in support of the final master proteins. -->
-
-<!-- 1. Use the `aggregateFeatures` function to aggregate from log imputed PSM level to log peptide and then log peptide to log protein -->
-<!-- 2. Calculate the sum of the `.n` column in the log peptide and log protein assays - think about what these values mean in each instance -->
-
-<!-- **Below is the solution - change to eval=TRUE, include=FALSE** -->
-
-<!-- ```{r, warning = FALSE} -->
-<!-- ## Aggregate from PSM to peptide -->
-<!-- cc_qf <- aggregateFeatures(cc_qf,  -->
-<!--                            i = "log_imputed_psms",  -->
-<!--                            fcol = "Sequence", -->
-<!--                            name = "log_peptides", -->
-<!--                            fun = MsCoreUtils::robustSummary, -->
-<!--                            na.rm = TRUE) -->
-
-<!-- ## Aggregate from peptide to protein -->
-<!-- cc_qf <- aggregateFeatures(cc_qf,  -->
-<!--                            i = "log_peptides",  -->
-<!--                            fcol = "Master.Protein.Accessions", -->
-<!--                            name = "log_proteins_2", -->
-<!--                            fun = MsCoreUtils::robustSummary, -->
-<!--                            na.rm = TRUE) -->
-
-<!-- ## Sum of .n in peptide-level (i.e., total PSMs) -->
-<!-- cc_qf[["log_peptides"]] %>% -->
-<!--   rowData() %>% -->
-<!--   as_tibble() %>% -->
-<!--   pull(.n) %>% -->
-<!--   sum() -->
-
-<!-- ## Sum of .n in protein level (i.e., total peptides) -->
-<!-- cc_qf[["log_proteins_2"]] %>% -->
-<!--   rowData() %>% -->
-<!--   as_tibble() %>% -->
-<!--   pull(.n) %>% -->
-<!--   sum() -->
-<!-- ``` -->
-
-
-<!-- **Challenge**  -->
-<!-- Sometimes we also want to know the dimensions of the raw data. For example, if  -->
-<!-- we want to report how many PSMs or peptides were in support of a protein's -->
-<!-- *identification* rather than its *quantitation* then using the raw data is  -->
-<!-- more appropriate.  -->
-
-<!-- Look at the names of the `rowData` colums in the `"psms_raw"` assay. Using the -->
-<!-- `unique()` function, determine how many PSMs, peptide sequences and master -->
-<!-- protein accessions were identified from the raw data. -->
-
-<!-- **Below is the solution! need to hide** -->
-
-<!-- ```{r} -->
-<!-- cc_qf[["psms_raw"]] %>%  -->
-<!--   nrow() -->
-
-<!-- cc_qf[["psms_raw"]] %>%  -->
-<!--   rowData() %>% -->
-<!--   as_tibble() %>% -->
-<!--   pull(Sequence) %>% -->
-<!--   unique() %>% -->
-<!--   length() -->
-
-<!-- cc_qf[["psms_raw"]] %>%  -->
-<!--   rowData() %>% -->
-<!--   as_tibble() %>% -->
-<!--   pull(Master.Protein.Accessions) %>% -->
-<!--   unique() %>% -->
-<!--   length() -->
-<!-- ``` -->
 
 
 ## The `subsetByFeature` function
@@ -388,7 +316,7 @@ Let's take a look at O43583, the human density-regulated protein.
 ```{r}
 O43583 <- subsetByFeature(cc_qf, "O43583")
 
-O43583@ExperimentList
+experiments(O43583)
 ```
 
 From this we can see that the O43583 protein is supported by 4 peptides derived

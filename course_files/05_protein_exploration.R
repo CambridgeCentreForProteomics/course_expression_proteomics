@@ -81,16 +81,16 @@ cc_qf[["log_norm_proteins"]] %>%
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Challenge 2: Examining PSM support
+## Challenge 2: Examining peptide support
 ## ---------------------------------------------------------------------------------------------------------
 
 # (i)  Using the information we have in the .n column create a graph to 
-#      visualise PSM support.
+#      visualise peptide support.
 
 # (ii) What is,
-#   - the maximum number of PSMs we have available for one given protein?
-#   - the most common number of PSMs available for any given protein?
-#   - the median number of PSMs available for any given protein?
+#   - the maximum number of peptides we have available for one given protein?
+#   - the most common number of peptides available for any given protein?
+#   - the median number of peptides available for any given protein?
 
 
 
