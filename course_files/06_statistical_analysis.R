@@ -54,7 +54,7 @@ colnames(m_design) <- levels(all_proteins$condition)
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Specify contrasts of interest
-contrasts <- makeContrasts(M_G1 = G1 - M, 
+contrasts <- makeContrasts(G1_M = G1 - M, 
                            M_Des = M - Desynch, 
                            G1_Des = G1 - Desynch,
                            levels = m_design)
