@@ -105,21 +105,9 @@ After filtering we have,
 ```{r}
 psm_final <- cc_qf[["psms_filtered"]] %>% nrow()
 
-peptide_final <- 
-  cc_qf[["psms_filtered"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Sequence) %>%
-  unique() %>%
-  length() 
+peptide_final <- cc_qf[["log_peptides"]] %>% nrow()
 
-prot_final <- 
-  cc_qf[["psms_filtered"]] %>%
-  rowData() %>%
-  as_tibble() %>%
-  pull(Master.Protein.Accessions) %>%
-  unique() %>%
-  length() 
+prot_final <- cc_qf[["log_norm_proteins"]] %>% nrow()
 
 message(psm_final, " PSMs, ", 
         peptide_final, " peptides and ", 
@@ -219,9 +207,9 @@ cc_qf[["log_norm_proteins"]] %>%
   geom_histogram(binwidth = 1)
 ```
 
-Is this a good visualisation for our dataset? It is perhaps not the easiest
-plot to read if the aim is to get an overview of how many peptides are available per 
-protein group. 
+Is this a good visualisation for our dataset? It is perhaps not the easiest plot
+to read if the aim is to get an overview of how many peptides are available per
+protein group.
 
 Let's bin peptides with > 8 peptides per protein group into one category and
 then plot the data.

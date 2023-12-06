@@ -70,7 +70,7 @@ cc_qf[["log_norm_proteins"]] %>%
   names()
 
 
-## the .n column tells us how many PSMs we have in support of each protein 
+## the .n column tells us how many peptides we have in support of each protein 
 ## in the final dataset. 
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
@@ -104,7 +104,7 @@ cc_qf[["log_norm_proteins"]] %>%
 
 O43583 <- subsetByFeature(cc_qf, "O43583")
 
-O43583@ExperimentList
+experiments(O43583)
 
 
 ## We can use our new QFeatures object to create a plot which displays how the 

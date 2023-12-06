@@ -205,7 +205,7 @@ matrix the contrasts are being applied to.
 
 ```{r}
 ## Specify contrasts of interest
-contrasts <- makeContrasts(M_G1 = G1 - M, 
+contrasts <- makeContrasts(G1_M = G1 - M, 
                            M_Des = M - Desynch, 
                            G1_Des = G1 - Desynch,
                            levels = m_design)
@@ -385,7 +385,7 @@ head(limma_results)
 
 Interpreting the output of `topTable` for a multi-contrast model:
 
-* `M_G1`, `M_Des` and `G1_Des` = the estimated log2FC for each model contrast
+* `G1_M`, `M_Des` and `G1_Des` = the estimated log2FC for each model contrast
 * `AveExpr` = the average log abundance of the protein across samples
 * `F` = eBayes moderated F-value. Interpreted in the same way as a normal F-value (see above).
 * `P.Value` = Unadjusted p-value
@@ -398,7 +398,7 @@ Our null hypothesis is:
 **(H0)** The change in abundance for a protein between cell cycle stages is 0. 
 In other words, the null hypothesis for each protein is that the mean abundance
 in M-phase = the mean abundance in G1-phase = the mean abundance in desynchronised 
-cells. So, `M_G1` = `M_Des` = `G1_Des` = 0.
+cells. So, `G1_M` = `M_Des` = `G1_Des` = 0.
 
 Our alternative hypothesis is:
 **(H1)** The change in abundance for a protein between cell cycle stages is 
@@ -528,7 +528,7 @@ colnames(global_sig) <- paste0("sig_", colnames(global_sig))
 limma_results <- dplyr::left_join(limma_results, global_sig, by = c("Protein" = "sig_protein"))
 ```
 
-We now have three additional column, one per contrast, called `sig_M_G1`, `sig_M_Des`,
+We now have three additional column, one per contrast, called `sig_G1_M`, `sig_M_Des`,
 and `sig_G1_Des`. These columns contain -1, 0 or 1 meaning that the protein is
 significantly downregulated, non-significant or significantly upregulated in the
 given contrast.
