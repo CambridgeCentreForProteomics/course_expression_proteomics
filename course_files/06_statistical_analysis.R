@@ -151,10 +151,11 @@ decideTests(object = final_model,
 
 
 ## Determine global significance using decideTests
-global_sig <- as.data.frame(decideTests(object = final_model, 
+global_sig <- decideTests(object = final_model, 
                           adjust.method = "BH", 
                           p.value = 0.01, 
-                          method = "global")) %>%
+                          method = "global") %>%
+  as.data.frame() %>% 
   rownames_to_column("protein")
 
 
@@ -162,8 +163,12 @@ global_sig <- as.data.frame(decideTests(object = final_model,
 colnames(global_sig) <- paste0("sig_", colnames(global_sig))
 
 ## Add the results of global significance test to overall ANOVA results
-limma_results <- dplyr::left_join(limma_results, global_sig, by = c("Protein" = "sig_protein"))
+limma_results <- dplyr::left_join(limma_results, 
+                                  global_sig, 
+                                  by = c("Protein" = "sig_protein"))
 
+## Verify
+limma_results %>% head()
 
 ## ---------------------------------------------------------------------------------------------------------
 ## Adding significance thresholds
