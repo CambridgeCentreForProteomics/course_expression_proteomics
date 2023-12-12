@@ -86,12 +86,17 @@ data distribution into a symmetrical, Gaussian distribution, as visualised below
 
 ::: {.callout-note}
 #### Why use base-2 logarithmic transformation?
-Although there is no mathematical reason for applying a log2 transformation 
+Although there is no mathematical reason for applying a log2 transformation
 rather than using a higher base such as log10, the log2 scale provides an easy
 visualisation tool. Any protein that halves in abundance between conditions will
-have a 0.5 fold change, which translates into a log2 fold change of -1. Any protein
-that doubles in abundance will have a fold change of 2 and a log2 fold change of
-+1. 
+have a 0.5 fold change, which translates into a log2 fold change of -1. Any
+protein that doubles in abundance will have a fold change of 2 and a log2 fold
+change of +1.
+
+Logarithmic transformation can also be applied at any stage of the data
+processing. We have chosen to log transform the data in this example prior to
+protein aggregation as we will use the `robust` method for summarisation and
+this method requires the data to be log transformed.
 
 :::
 
