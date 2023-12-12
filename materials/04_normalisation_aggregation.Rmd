@@ -81,22 +81,25 @@ that the protein is 10-fold more abundant in sample B compared to sample A, and
 changes are equal, the abundance values in A and B are much closer together on 
 a linear scale than those of B and C. A parametric test would not account for 
 this bias and would not consider A and B to be as equally different as B and C.
-By applying a logarithmic transformation we can convert our skewed asymmetrical 
-data distribution into a symmetrical, Gaussian distribution, as visualised below. 
+**By applying a logarithmic transformation we can convert our skewed asymmetrical data distribution into a symmetrical, Gaussian distribution.**
 
 ::: {.callout-note}
-#### Why use base-2 logarithmic transformation?
+#### Why use base-2?
 Although there is no mathematical reason for applying a log2 transformation
 rather than using a higher base such as log10, the log2 scale provides an easy
 visualisation tool. Any protein that halves in abundance between conditions will
 have a 0.5 fold change, which translates into a log2 fold change of -1. Any
 protein that doubles in abundance will have a fold change of 2 and a log2 fold
 change of +1.
+:::
 
-Logarithmic transformation can also be applied at any stage of the data
-processing. We have chosen to log transform the data in this example prior to
-protein aggregation as we will use the `robust` method for summarisation and
-this method requires the data to be log transformed.
+
+::: {.callout-note}
+#### At which stage of the processing should I perform log transformation?
+Logarithmic transformation can be applied at any stage of the data processing.
+We have chosen to log transform the data in this example prior to protein
+aggregation as we will use the `robust` method for summarisation and this method
+requires the data to be log transformed.
 
 :::
 
@@ -252,8 +255,8 @@ useful for getting an overview of how different normalisation methods perform
 on a dataset. The `normalyzer` function however **requires a raw intensity matrix
 as input, prior to any log transformation.** 
 
-1. Create a copy of your `cc_qf` dataset for testing normalisation methods. Let's
-call this `norm_qf`.
+1. Create a copy of your `cc_qf` dataset for testing normalisation methods.
+Let's call this `norm_qf`.
 
 ```{r}
 norm_qf <- cc_qf
@@ -322,13 +325,64 @@ normalyzer(jobName = "normalyzer",
            requireReplicates = FALSE)
 ```
 
-Note: To run `normalyzer` on this data we need to pass `requireReplicates = FALSE` 
-as we have only one sample of the control. For more details on using the
-`NormalyzerDE` package take a look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
-
+Note: To run `normalyzer` on this data we need to pass `requireReplicates =
+FALSE` as we have only one sample of the control. We pass the un-transformed
+data as the `normalyzer` function does an internal log2 transformation as part
+of its pipeline. For more details on using the `NormalyzerDE` package take a
+look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
 
 :::
 :::
+
+
+In the above challenge we used the `normalyzer` function to execute the `normalyzerDE` pipeline 
+and produce an output PDF report. We passed the un-transformed protein level data
+as the `normalyzer` function does its own log2 transformation prior to testing
+any normalisation methods. A range of normalisations are tested on the data and
+performance measures and visualisations are calculated to facilitate comparison
+between different methods. 
+
+The output report contains:
+
+- Total intensity plot: Barplot showing the summed intensity in each sample for the log2-transformed data
+- Total missing plot: Barplot showing the number of missing values found in each sample for the log2-transformed data
+- Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing inspection of the main global changes in the data
+- Scatterplots: The first two samples from each dataset are plotted.
+- Q-Q plots: QQ-plots are plotted for the first sample in each normalized dataset.
+- Boxplots: Boxplots for all samples are plotted and colored according to the replicate grouping.
+- Relative Log Expression (RLE) plots: Relative log expression value plots. Ratio between the expression of the variable and the median expression of this variable across all samples. The samples should be aligned around zero. Any deviation would indicate discrepancies in the data.
+- Density plots: Density distributions for each sample using the density function. Can capture outliers (if single densities lies far from the others) and see if there is batch effects in the dataset (if for instance there is two clear collections of lines in the data).
+- MDS plots: Multidimensional scaling plot using the `cmdscale()` function from the `stats` package. Is often able to show whether replicates group together, and whether there are any clear outliers in the data.
+- Dendograms: Generated using the `hclust` function. Data is centered and scaled prior to analysis. Coloring of replicates is done using `as.phylo` from the `ape` package.
+
+When interpreting our `normalyzer` output we need to consider our experimental
+design. If all samples come from the same cells and we don't expect the treatment/conditions
+to cause huge changes to the proteome, we expect the distributions of the
+intensities to be roughly the same. We can compare across samples by plotting
+the distribution in each sample together. When doing this you should get an idea
+of where the majority of the intensities lie. We expect samples from the same
+condition to have intensities that lie in the same range and if they do not then we
+can assume that this is due to technical noise, and we want to normalise for this
+technical variability. 
+
+```{r fig-density, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/density_plots_example.png", error = FALSE)
+```
+
+@fig-density shows a screenshot of the PDF report output from running the
+`normalyzer` pipeline. We see that the data before normalisation (log2, topleft)
+has curves/peaks at different locations and what we want to do is try and
+register the curves at the same location and shift them according to their
+median so all peaks of samples are overlapping. Which method to choose? Really
+you need to look at the underlying summary statistics. For example, the mean is
+very sensitive to outliers and in proteomics we often have outliers, so this is
+not a method we would choose. The median (or median-based methods) are a good
+choice for most quantitative proteomics data. Quantile normalisation is not
+recommended for quantitative proteomics data. Quantile methods will not change
+the median but will change all quantiles of the distribution so that all
+distributions coincide. We could do this but this often causes problems due to
+the fact that we have missing data in proteomics. This makes the normalisation
+even more challenging than in other omics types of data.
 
 The median method looks reasonable so we proceed to normalise our
 data with this method. In `QFeatures` we can use the `normalize` function.
