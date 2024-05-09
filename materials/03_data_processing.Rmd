@@ -820,7 +820,7 @@ and after filtering,
 mv_filtered$nNAcols
 ```
 
-Now, we can extract the percentage of NAs in each sample,
+Now, we can extract the proportion of NAs in each sample,
 
 ```{r}
 mv_raw$nNAcols$pNA
@@ -907,7 +907,7 @@ How many PSMs do we have with (i) 0 missing values, (ii) 1 missing value, (iii)
 
 
 The `nNA` column gives information on the number missing values (or we can 
-use `pNA` which gives information on the percentage). Calling `table` on the
+use `pNA` which gives information on the proportion of missing values). Calling `table` on the
 output number of missing values we have across samples,
 
 On the raw data,
@@ -945,7 +945,7 @@ of missing values to allow per feature.
 
 ```{r}
 cc_qf <- cc_qf %>%
-  filterNA(pNA = 0.2, i = "psms_filtered")
+  filterNA(pNA = 2, i = "psms_filtered")
 ```
 
 

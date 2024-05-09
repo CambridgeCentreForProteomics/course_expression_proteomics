@@ -149,33 +149,34 @@ you can see the materials.
 ## Importing data into R
 
 There are several ways in which data can be imported into a `QFeatures` object.
-For example, it is possible to first read the data into a `SummarizedExperiment`
-object using the `readSummarizedExperiment()` function, and then import this
-`SummarizedExperiment` object into a `QFeatures` object. Alternatively, we can 
-import our data directly into a `QFeatures` object using the `readQFeatures()`
-function. We will use the latter.
+The most straightforward way is to first read the data into R as a `data.frame`
+using the `read.delim` function, and then import this `data.frame` into a 
+`QFeatures` object. 
 
 Arguments to pass to `readQFeatures`:
 
-* `table` = file path to our data
-* `ecol` = an index for columns containing quantitative data. Can be a numeric 
+* `assayData` = A `data.frame`, or any object that can be coerced into a 
+`data.frame`, holding the quantitative assay
+* `quantCols` = an index for columns containing quantitative data. Can be a numeric 
 index of the columns or a character vector containing the column names
-* `sep` = the file delimiter used (`\t` for tab-delimited `.txt` files and 
-`,` for comma separated `.csv` files)
-* `name` = the name we want to give our first `SummarizedExperiment`, or `assay`
-within the `QFeatures` object
+* `name` = name we want to give our first `experiment`, in the `QFeatures` object
 
 Let's read in the total proteome dataset from our experiment which is has been
 output from Proteome Discoverer at the PSM level. The file is called
 `cell_cycle_total_proteome_analysis_PSMs.txt`. 
 
-Before we can read in the data we need to first identify which columns the
-quantitation data is stored in. The data is a `.txt` file is tab-delimited
-so we can use the `read.delim` function and look at the column names.
+The first step is to read the data into R as a `data.frame`. We use the 
+`read.delim` function.
 
 ```{r}
-read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt") %>%
-  names()
+df <- read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt")
+```
+
+Before we can create a `QFeatures` object we need to first identify which columns the
+quantitation data is stored in. 
+
+```{r}
+df %>% names()
 ```
 
 We can see the quantitation data is located in columns 47 - 56 which start with
@@ -184,16 +185,14 @@ columns is dependent on the third party software used and version, please make
 sure you check you identify the relevent column numbers containing the
 quantitation data in your own data.
 
-We will pass this information to the `ecol` argument when we use the
-`readQFeatures` function. As already mentioned, the `.txt` file is tab-delimited
-so we thus pass `sep = "\t"`. As this is the first data import before any
+We will pass this information to the `quantCols` argument when we use the
+`readQFeatures` function. As this is the first data import before any
 processing so let's call this data level `"psms_raw"`.
 
 ```{r}
 ## Import data into QF object
-cc_qf <- readQFeatures(table = "data/cell_cycle_total_proteome_analysis_PSMs.txt",
-                       ecol = 47:56, 
-                       sep = "\t",
+cc_qf <- readQFeatures(assayData = df,
+                       quantCols = 47:56, 
                        name = "psms_raw")
 ```
 
