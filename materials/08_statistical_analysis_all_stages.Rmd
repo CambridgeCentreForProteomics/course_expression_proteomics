@@ -1,0 +1,73 @@
+---
+title: Statistical analysis of all 3 cell cycle stages
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+WORK IN PROGRESS. CURRENTLY A DUMPING GROUP FOR TEXT/CODE TO KEEP/REUSE
+
+The aim of this section is to answer the
+question: *"Which proteins show a significant change in abundance
+between cell cycle stages?"*.
+
+Our null hypothesis is: **(H0)** The change in abundance for a protein
+between cell cycle stages is 0.
+
+Our alternative hypothesis is: **(H1)** The change in abundance for a
+protein between cell cycle stages is greater than 0.
+
+Here, we will apply an ANOVA test to each of our proteins to ask whether
+the difference in the mean abundance of a protein between cell cycle
+stages is significantly different from 0. We use an ANOVA rather than a
+t-test because we have three different conditions of interest: cells in
+M-phase, G1-phase and desynchronised cells.
+
+
+We also define **contrasts**. The contrasts represent which comparisons
+are of interest to us. This is important since we are not directly
+interested in the parameter (mean) estimates for each group but rather
+the differences in these parameter (mean) estimates *between* groups.
+The `makeContrasts` function is used by passing the name we wish to give
+each contrast and how this contrast should be calculated using column
+names from the design matrix. We also pass the `levels` argument to tell
+R where the column names come from i.e., which design matrix the
+contrasts are being applied to.
+
+```{r}
+## Specify contrasts of interest
+contrasts <- makeContrasts(G1_M = G1 - M, 
+                           M_Des = M - Desynch, 
+                           G1_Des = G1 - Desynch,
+                           levels = m_design)
+
+## Verify
+contrasts
+```
+
+
+
+
+
+
+## Running an empirical Bayes moderated test using `limma`
+
+After we have specified the design matrix and contrasts we wish to make,
+the next step is to apply the statistical model. Since we have three
+conditions, this model will be an ANOVA model.
+
+```{r}
+## Fit linear model using the design matrix and desired contrasts
+fit_model <- lmFit(object = assay(all_proteins), design = m_design)
+fit_contrasts <- contrasts.fit(fit = fit_model, contrasts = contrasts)
+```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
