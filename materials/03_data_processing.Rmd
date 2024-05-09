@@ -936,7 +936,7 @@ mv_filtered$nNArows$nNA %>% table()
 
 ### Removing data with high levels of missingness
 
-Although the use-case data has only a small number of missing values it is still
+Although the use-case data has only a small number of mssing values it is still
 common to remove individual features that have too many missing values across
 samples. Here, we remove PSMs that have >20% missing values. This is done using
 the `filterNA` function where the `pNA` argument specifies the maximum proportion
@@ -945,7 +945,7 @@ of missing values to allow per feature.
 
 ```{r}
 cc_qf <- cc_qf %>%
-  filterNA(pNA = 2, i = "psms_filtered")
+  filterNA(pNA = 0.2, i = "psms_filtered")
 ```
 
 
