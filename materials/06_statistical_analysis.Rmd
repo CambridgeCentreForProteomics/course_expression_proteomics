@@ -38,6 +38,7 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("here")
+
 load(here("materials/output/lesson04.rda"), verbose = TRUE)
 ```
 
@@ -98,7 +99,7 @@ t-value or an F-value, respectively.
 
 A t-value is a parametric statistical value used to compare the mean
 values of **two** groups. The t-value is the ratio of the difference in means to
-the standard error of the difference in means. The further away from 0 that a
+the standard error of the difference in means. The further away from zero that a
 t-value lies, the more significant the difference between the groups is.
     
 ### What is a F -value?
@@ -113,11 +114,13 @@ The higher the F-value, the more significant the difference between the groups i
 A p-value may be obtained from a t/F-value by comparing the value against a t/F-distribution with the suitable degrees of freedom.
     
 -   **degrees of freedom** = the number of observations minus the number
-    of independent variables (*n* - 1)
+    of independent variables 
 -   **p-value** = the probability of achieving the t-value/F-value under the
     null hypothesis i.e., by chance
     
 Here, we will perform a comparison between two groups (M and G1 phases) for each protein and obtain a t-value and p-value for each protein. For a multifactorial comparison, see [INSERT LINK HERE].
+
+
 
 ### What does the empirical Bayes part mean?
 
@@ -133,19 +136,12 @@ estimates, thus reducing false negatives for proteins with over-estimated varian
 [here](https://online.stat.psu.edu/stat555/node/40/).
 
 
-## Defining the statistical model
+## Extracting the required data
 
-Before we apply our empirical Bayes moderated linear model, we first need
-to set up a model. To define the model design we use `model.matrix`. A
-**model matrix**, also called a design matrix, is a matrix in which rows
-represent individual samples and columns correspond to explanatory
-variables, in our case the cell cycle stages. Simply put, the model
-design is determined by how samples are distributed across conditions.
-
-We subset to our log2 normalised protein level data and retain just the M and G1 phase samples
+We subset to our log2 transformed protein-level data and retain just the M and G1 phase samples
 
 ```{r}
-## Identify the columns for the M/G1 samples int he protein assay
+## Identify the columns for the M/G1 samples in the protein assay
 M_G1_col_ix <- colData(cc_qf[["log_norm_proteins"]])$condition %in% c('M', 'G1')
 
 # Extract the protein assay from our QFeatures object and subset to M/G1 samples
@@ -158,15 +154,21 @@ all_proteins$condition <- factor(all_proteins$condition,
 
 ```
 
-### With or without an intercept
+## Defining the statistical model
+
+Before we apply our empirical Bayes moderated linear model, we first need
+to set up a model. To define the model design we use `model.matrix`. A
+**model matrix**, also called a design matrix, is a matrix in which rows
+represent individual samples and columns correspond to explanatory
+variables, in our case the cell cycle stages. Simply put, the model
+design is determined by how samples are distributed across conditions.
+
+### Should we include an intercept?
 
 When investigating the effect of a single explanatory variable, the design
 matrix should be created using `model.matrix(~variable)`, such that an intercept term is included. This means that the first level of the variable (here, M) is considered the 'baseline' and modeled by the intercept. The second level of the variable (here, G1) is then modelled by an additional term in the model, which captures the difference between M and G1. 
 
-If one specified a model without an intercept for a single explanatory variable (
-`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between the group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could use contrasts to explore the differences between the groups having not included an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
-
-Next, we define the model matrix with an intercept term.
+Below, we define the model matrix with an intercept term.
 
 ```{r}
 ## Design a matrix containing all factors that we wish to model
@@ -177,6 +179,23 @@ m_design <- model.matrix(~condition) # Model with intercept
 ## Verify
 m_design
 ```
+
+If one specified a model without an intercept for a single explanatory variable (
+`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between the group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could use contrasts to explore the differences between the groups having not included an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
+
+::: callout-exercise
+#### Challenge: Volcano plots
+
+{{< level 1 >}} Inspect the design matrix obtained when not including an intercept term and contrast with the model including an intercept.
+
+::: {.callout-answer collapse="true"}
+
+```{r}
+
+print(model.matrix(~0+condition)) # Model without an intercept
+
+```
+:::
 
 ## Running an empirical Bayes-moderated test using `limma`
 
@@ -218,7 +237,7 @@ The `topTable` function extracts a table of the top-ranked proteins from
 our fitted linear model. By default, `topTable` outputs a table of the
 top 10 ranked proteins, that is the 10 proteins with the highest
 log-odds of being differentially abundant. To get the results for all of
-our proteins we use the `number = Inf` argument. Let's give this a go.
+our proteins we use the `number = Inf` argument.
 
 ```{r}
 ## Format results
@@ -233,9 +252,9 @@ head(limma_results)
 ```
 
 As expected, we see the two key parameters of an ANOVA output - the
-*t-value* (`F`) and *p-value* (`P.Value`). We also see an *adjusted
-p-value* (`adj.P.Val`). This refers to p-value adjustment that must be
-done following multiple hypothesis testing.
+*t-value* (`t`) and *p-value* (`P.Value`). We also see an *adjusted
+p-value* (`adj.P.Val`). This provides p-values adjusted to account
+for the multiple hypothesis tests performed.
 
 ### Multiple hypothesis testing and correction
 
@@ -248,8 +267,8 @@ test a null hypothesis on different data. Here we have carried out
 `r format(nrow(limma_results), scientific=FALSE)` hypothesis tests.
 If we were to use the typical p \< 0.05 significance threshold for each
 test, we would expect a 5% chance of incorrectly rejecting the null
-hypothesis *per test*. Therefore, for every 100 tests that we carry out,
-we would expect an average of 5 false positives.
+hypothesis *per test*. Here, we would expect approximately
+`r round(0.05 * nrow(limma_results))` p-values <= 0.05 by chance.
 
 If we do not account for the fact that we have carried out multiple
 hypothesis, we risk including false positives in our data. Many
@@ -267,7 +286,9 @@ Above we specified the "BH" method for adjusting p-values in our `topTable` func
 The False Discovery Rate (FDR) defines the fraction of false discoveries
 that we are willing to tolerate in our list of differential proteins.
 For example, an FDR threshold of 0.05 means that approximately 5% of the
-proteins deemed differentially abundant will be false positives. It is up to you to decide what this threshold should be, but conventionally people between 0.01 (1%) and 0.1 (10%).
+proteins deemed differentially abundant will be false positives. It is up to you
+to decide what this threshold should be, but conventionally a value between 0.01
+(1%) and 0.1 (10%) is chosen.
 :::
 
 ### Diagnostic plots to verify suitability of our statistical model
@@ -311,7 +332,7 @@ limma_results %>%
 ```
 
 The histogram we have plotted shows an anti-conservative distribution,
-which is good. The flat distribution across the bottom corresponds to
+which is good. The near-flat distribution across the bottom corresponds to
 null p-values which are distributed approximately uniformly between 0
 and 1. The peak close to 0 contains a combination of our significantly changing proteins (true positives) and proteins with a low p-value by chance (false positives).
 
@@ -322,7 +343,7 @@ shapes can indicate that something was wrong with the model design or
 statistical test. For more detail on how to interpret p-value histograms
 there is a great
 [blog](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/)
-by David Robinson.
+by David Robinson, from which the examples below are taken.
 
 ```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
 knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
@@ -340,7 +361,7 @@ head(limma_results)
 
 Interpreting the output of `topTable`:
 
--   logFC = The observed log2FC for G1 vs M cell cycle stages 
+-   `logFC` = The observed log2FC for G1 vs M cell cycle stages 
 -   `AveExpr` = the average log abundance of the protein across samples
 -   `t` = eBayes moderated t-value. Interpreted in the same way as a
     normal t-value (see above).
@@ -349,14 +370,11 @@ Interpreting the output of `topTable`:
     and contrasts - global adjustment)
 
 We have used the statistical test to ask *"Does this protein show a
-significant change in abundance between cell cycle stages?"* for each
+significant change in abundance between M and G1 cell cycle stages?"* for each
 protein.
 
 Our null hypothesis is: **(H0)** The change in abundance for a protein
-between cell cycle stages is 0. In other words, the null hypothesis for
-each protein is that the mean abundance in M-phase = the mean abundance
-in G1-phase = the mean abundance in desynchronised cells. So, `G1_M` =
-`M_Des` = `G1_Des` = 0.
+between cell cycle stages is 0.
 
 Our alternative hypothesis is: **(H1)** The change in abundance for a
 protein between cell cycle stages is greater than 0.
@@ -369,13 +387,12 @@ different abundance across M and G1 cell cycle stages.
 #### Adding user-defined significance thresholds
 
 The output of our statistical test will provide us with key information
-for each protein, including its p-value, BH-adjusted p-value (here,
-across proteins but not contrasts) and logFC. However, it is up to us to
-decide what we consider to be significant. The first parameter to
-consider is the `adj.P.Val` threshold that we wish to apply. The second parameter which is sometimes used to define significance is the `logFC`. This is mainly for
-the purpose of deciding on hits to follow-up, since it is easier to
-validate larger abundance changes than those which are consistent but
-subtle.
+for each protein, including its p-value, BH-adjusted p-value and logFC.
+However, it is up to us to decide what we consider to be significant.
+The first parameter to consider is the `adj.P.Val` threshold that we wish
+to apply. The second parameter which is sometimes used to define significance
+is the `logFC`. This is mainly because larger fold changes are deemed more likely 
+to be 'biologically relevant'.
 
 Here we are going to define significance based on an `adj.P.Val` \<
 0.01. We can add a column to our results to indicate significance as
@@ -442,7 +459,10 @@ based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 ```{r}
 my_results <- 
   limma_results %>%
-  mutate(significance = ifelse(adj.P.Val < 0.05 & abs(logFC)>1, "sig", "not.sig"))
+  mutate(direction = ifelse(logFC > 0, "up", "down"), 
+         significance = ifelse(adj.P.Val < 0.05 & abs(logFC)>1, "sig", "not.sig"))
+
+table(my_results$direction, my_results$significance)
 
 my_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
@@ -451,47 +471,85 @@ my_results %>%
 ```
 :::
 
+## A more statistically valid way to include a fold-change threshold
+
+Although it is commonplace to see a threshold being applied to the point estimate for the log fold-change (logFC) to determine the 'biologically significant' changes, there is a drawback. The point estimate does not take into account the confidence interval for the logFC. As such, proteins with poorly estimated fold-changes are more likely to pass the logFC threshold by chance, while proteins with very well estimated fold-changes which fall just below the threshold would not be deemed biologically significant. 
+
+Thankfully, `limma` has in-built functions which allows us to specify a different null hypothesis and more appropriately test whether a protein has a fold-change greater than a given value. A statistical test whether the fold-change is greater than a specific value is more stringent than threshold on the point estimate and it thus makes sense to use a slightly lower threshold. Here we will use a threshold of absolute logFC > 0.5 (>1.4 fold-change).
+
+```{r}
+
+final_model_treat <- treat(final_model,
+                           lfc = 0.5, # null hypothesis is 'absolute logFC < 0.5'
+                           trend = TRUE, 
+                           robust = TRUE)
+
+# Need to now used TopTreat in place of TopTable
+limma_results_treat <- topTreat(final_model_treat,
+                                coef='conditionG1',
+                                n=Inf)
+```
+
+Again, we add columns specifying the direction of change and significance (using the adjusted p-value alone).
+
+```{r}
+## Add direction and significance information
+limma_results_treat <- limma_results_treat %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down"),
+         significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
 
 
+table(limma_results_treat$direction, limma_results_treat$significance)
+```
 
-Another widely used visualisation tool are heatmaps. A heatmap is a two-dimensional
+Finally, we visualise the volcano plot.
+```{r}
+limma_results_treat %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+```
+
+## Visualising the protein abundances in a heatmap
+
+Another widely used visualisation tool is a heatmap. A heatmap is a two-dimensional
 representation of our quantitative data where the magnitude of values are depicted
 by colour. These visualisations are commonly combined with clustering tools to
 facilitate the identification of groups of features, here proteins, that display
 similar quantitative behaviour. Here, we will use the `pheatmap` function from the 
 `pheatmap` package to plot a heatmap of proteins that display a significant 
-difference in abundance between M-phase and desynchronised cells.
+difference in abundance between M-phase and G1-phase cells.
 
 We first extract the accessions of proteins with significant differences. We 
-use these accessions to subset the original quantitation data which is currently
+use these accessions to subset the original quantification data which is currently
 stored in the `assay` of our `cp_qf` object.
 
 ```{r}
 ## Extract accessions of significant proteins
-sig_proteins <- M_Desynch_results %>%
+sig_proteins <- limma_results %>%
   filter(significance == "sig") %>%
-  pull(protein)
-
-## Save indices of rows where these proteins our in our cp_qf object
-sig_indices <- which(rowData(cc_qf[["log_norm_proteins"]])$Master.Protein.Accessions %in% sig_proteins)
+  pull(Protein)
 
 ## Subset quantitative data corresponding to significant proteins
-quant_data <- cc_qf[["log_norm_proteins"]][sig_indices, ] %>%
+quant_data <- cc_qf[["log_norm_proteins"]][sig_proteins, ] %>%
   assay() 
 ```
 
-Now we use the quantitative data to plot a heatmap using `pheatmap`.
+Now we use the quantitative data to plot a heatmap using `pheatmap`. We will normalise each row of protein abundances to Z-scores (standard deviations away from the mean).
 
 ```{r}
-pheatmap(mat = quant_data)
+pheatmap(mat = quant_data,
+         scale = 'row', # Z-score normalise across the rows (proteins)
+         show_rownames = FALSE # Too many proteins to show all their names!
+         )
 ```
 
 A more in-depth overview of `pheatmap` and how to customise these plots further
-can be found [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
+can be found in the documentation (`?pheatmap') and [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
 
 ```{r, include=FALSE}
 ## Save results
-save(M_Desynch_results, all_proteins, file = "output/lesson06.rda")
+save(limma_results, all_proteins, file = here("materials/output/lesson06.rda"))
 ```
 
 ::: {.callout-tip}
@@ -501,20 +559,22 @@ save(M_Desynch_results, all_proteins, file = "output/lesson06.rda")
     of differential expression (abundance) experiments
 -   Empirical Bayes moderation involves borrowing information across
     proteins to squeeze the per-protein variance estimates towards an
-    expected value based on the behaviour of other proteins with similar
+    expected value based on the behavior of other proteins with similar
     abundances. This method increases the statistical power and reduces
     the number of false positives.
 -   Since proteomics data typically shows an intensity-dependent trend,
     it is recommended to apply empirical Bayes moderation with
-    `trend = TRUE` and `robust = TRUE`. This approach can be validated
-    by plotting an SA plot.
--   Significance thresholds are somewhat arbitary and must be selected
+    `trend = TRUE` and `robust = TRUE`. The validity of this approach can be
+    assessed by plotting an SA plot.
+-   Significance thresholds are somewhat arbitrary and must be selected
     by the user. However, correction must be carried out for multiple
     hypothesis testing so significance thresholds should be based on
-    adjusted p-values rather than raw p-values. Users may also threshold
-    significance based on a log fold-change value too.
+    adjusted p-values rather than raw p-values. 
+-   The statisticall appropriate way to threshold based on a log fold-change is
+    to use the TREAT functions in `limma` and define a null hypothesis that the
+    change is below a given value.
 -   The results of differential expression and abundance analyses are
-    often summarised on volcano plots.
+    often summarised on volcano plots and heatmaps.
 :::
 
 ## References {.unnumbered}
