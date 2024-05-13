@@ -35,14 +35,14 @@ dir.create("output", showWarnings = FALSE)
 ## Import data into QF object
 ## ---------------------------------------------------------------------------------------------------------
 
-read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt") %>%
+df <- read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt")
+
+df %>%
   names()
 
-cc_qf <- readQFeatures(table = "data/cell_cycle_total_proteome_analysis_PSMs.txt",
-                       ecol = 47:56, 
-                       sep = "\t",
+cc_qf <- readQFeatures(assayData = df,
+                       quantCols = 47:56, 
                        name = "psms_raw")
-
 
 
 ## ---------------------------------------------------------------------------------------------------------

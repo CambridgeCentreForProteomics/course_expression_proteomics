@@ -104,9 +104,11 @@ knitr::include_graphics("figs/qfeatures.png", error = FALSE)
 :::{.callout-note}
 #### QFeatures
 When talking about a `QFeatures` object, each dataset (individual
-`SummarizedExperiment`) can be referred to as an `experiment assay`. This is not
-to be confused with the quantitative matrix section of a `SummarizedExperiment`,
-which is also called the `assay` data.
+`SummarizedExperiment`) can be referred to as an `experiment`. Previously, each
+dataset was referred to as an `experimental assay`, and some older resources 
+may still use this term. However, the `experimental assay` should not be confused 
+with the quantitative matrix section of a `SummarizedExperiment`, which is 
+called the `assay` data.
 :::
 
 In order to generate the explicit links between data levels, we need to import
@@ -182,7 +184,7 @@ df %>% names()
 We can see the quantitation data is located in columns 47 - 56 which start with
 "Abundance..." followed by the identifying TMT tag. Naming of the abundance
 columns is dependent on the third party software used and version, please make
-sure you check you identify the relevent column numbers containing the
+sure you check you identify the relevant column numbers containing the
 quantitation data in your own data.
 
 We will pass this information to the `quantCols` argument when we use the

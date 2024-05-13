@@ -156,7 +156,7 @@ mv_raw$nNAcols %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
   geom_bar(stat = "identity") +
-  labs(x = "Sample", y = "Missing values (%)") + 
+  labs(x = "Sample", y = "Proportion missing values") + 
   theme_bw()
 
 
@@ -165,7 +165,7 @@ mv_filtered$nNAcols %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
   geom_bar(stat = "identity") +
-  labs(x = "Sample", y = "Missing values (%)") +
+  labs(x = "Sample", y = " Proportion missing values") +
   theme_bw()
 
 
