@@ -61,6 +61,8 @@ between cell cycle stages is 0.
 Our alternative hypothesis is: **(H1)** The change in abundance for a
 protein between cell cycle stages is greater than 0.
 
+We want to perform a statistical test to determine if there is sufficient evidence to reject the null hypothesis. This is carried out on each protein separately, though as we will see, all proteins are tested simultaneously and there is some sharing of information between the proteins.
+
 ## Selecting a statistical test
 
 There are a few aspects of our data that we need to consider prior to
@@ -85,44 +87,37 @@ log-transform the abundances.
 
 Many different R packages can be used to carry out differential
 expression (abundance) analysis on proteomics data. Here we will use
-`limma`, a package that is widely used for omics analysis and has
-several models that allow differential abundance to be assessed in single comparisons or 
-multifactorial experiments. For single comparison analyses (i.e.,
-comparing protein abundance between two groups) we recommend `limma`'s
-**empirical Bayes moderated linear model**. A simple example of the empirical
-Bayes moderated linear model is provided in @Hutchings2023. 
+`limma`, a package that is widely used for omics analysis and can be used in single comparisons or multifactorial experiments using an
+**empirical Bayes-moderated linear model**. A simple example of the empirical
+Bayes-moderated linear model is provided in @Hutchings2023. 
 
-Depending on how a linear model is used, the test statistic will either be a
-t-value or an F-value.
+Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic will either be a
+t-value or an F-value, respectively.
 
 ### What is a t-value?
 
 A t-value is a parametric statistical value used to compare the mean
 values of **two** groups. The t-value is the ratio of the difference in means to
 the standard error of the difference in means. The further away from 0 that a
-t-value lies, the more likely it is to represent a significant difference between 
-means (large difference between conditions, small variation within conditions)
+t-value lies, the more significant the difference between the groups is.
     
-### What is a F -value
+### What is a F -value?
 
 An F-value is a parametric statistical value used to compare the mean
 values of **three or more** groups. The F-value is the ratio of the between-group
 variation (explained variance) and the within-group variance (unexplained variance).
-The higher the F-value, the more likely it is that the protein has a significantly
-different mean abundance (large variation between means in different conditions,
-small variation
-    within conditions)
+The higher the F-value, the more significant the difference between the groups is.
 
-Regardless whether a t-value or F-value is obtained, a p-value can be obtained by
-comparing the value against a t/F-distibution with the suitable degrees of freedom.
+### How is the p-value obtained?
+
+A p-value may be obtained from a t/F-value by comparing the value against a t/F-distribution with the suitable degrees of freedom.
     
 -   **degrees of freedom** = the number of observations minus the number
     of independent variables (*n* - 1)
 -   **p-value** = the probability of achieving the t-value/F-value under the
     null hypothesis i.e., by chance
     
-Here, we will perform a comparison between two groups (M and G1 phases) for each protein and
-obtain a t-value and p-value for each protein.
+Here, we will perform a comparison between two groups (M and G1 phases) for each protein and obtain a t-value and p-value for each protein. For a multifactorial comparison, see [INSERT LINK HERE].
 
 ### What does the empirical Bayes part mean?
 
@@ -134,10 +129,7 @@ inaccurate. The empirical Bayes method borrows information across
 features (proteins) and shifts the per-protein variance estimates
 towards an expected value based on the variance estimates of other
 proteins with a similar abundance. This improves the accuracy of the variance
-estimates, thus increasing statistical
-power for proteins with over-estimated variance and reducing false positives
-from proteins with under-estimated variance. For more detail about
-empirical Bayes methods see
+estimates, thus reducing false negatives for proteins with over-estimated variance and reducing false positives from proteins with under-estimated variance. For more detail about the empirical Bayes methods, see
 [here](https://online.stat.psu.edu/stat555/node/40/).
 
 
@@ -168,34 +160,25 @@ all_proteins$condition <- factor(all_proteins$condition,
 
 ### With or without an intercept
 
-When investigating the effect of a single explanatory variable, a design
-matrix can be created using either `model.matrix(~variable)` or
-`model.matrix(~0 + variable)`. The difference between these two options
-is that the first will create a model that includes an intercept term
-whilst the second will exclude any intercept term. If the explantory
-variable is a factor, both models with and without an intercept are
-equivalent. If, however, the explanatory variable is a continuous
-variable, the two models are then fundamentally different.
+When investigating the effect of a single explanatory variable, the design
+matrix should be created using `model.matrix(~variable)`, such that an intercept term is included. This means that the first level of the variable (here, M) is considered the 'baseline' and modeled by the intercept. The second level of the variable (here, G1) is then modelled by an additional term in the model, which captures the difference between M and G1. 
 
-In this experiment we consider our explanatory variable (cell cycle
-stage) to be categorical, making it of `factor` class in R. However, design
-matrices without an intercept value tend to be easier to interpret. For further
-guidance on generating design matrices for covariates or continuous explanatory
-variables, see [A guide to creating design matrices for gene expression experiments](https://bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/designmatrices.html#design-and-contrast-matrices).
+If one specified a model without an intercept for a single explanatory variable (
+`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between the group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could use contrasts to explore the differences between the groups having not included an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
 
-Next, we define the model matrix without any intercept term.
+Next, we define the model matrix with an intercept term.
 
 ```{r}
 ## Design a matrix containing all factors that we wish to model
 condition <- all_proteins$condition
-m_design <- model.matrix(~condition)
 
+m_design <- model.matrix(~condition) # Model with intercept
 
 ## Verify
 m_design
 ```
 
-## Running an empirical Bayes moderated test using `limma`
+## Running an empirical Bayes-moderated test using `limma`
 
 After we have specified the design matrix and contrasts we wish to make,
 the next step is to apply the statistical model. Since we have three
@@ -250,46 +233,41 @@ head(limma_results)
 ```
 
 As expected, we see the two key parameters of an ANOVA output - the
-*F-value* (`F`) and *p-value* (`P.Value`). We also see an *adjusted
+*t-value* (`F`) and *p-value* (`P.Value`). We also see an *adjusted
 p-value* (`adj.P.Val`). This refers to p-value adjustment that must be
 done following multiple hypothesis testing.
 
 ### Multiple hypothesis testing and correction
 
-Using the linear model defined above, we have carried out many
-statistical comparisons. We have three comparisons made per protein, of
-which we have `r nrow(limma_results)`.
+Using the linear model defined above, we have carried out a
+statistical test for each protein.
 
-Multiple testing describes the process of separately testing each null
-hypothesis i.e., carrying out many statistical tests at a time each to
-test a different hypothesis. Here we have carried out
-`r format(nrow(limma_results) * 3, scientific=FALSE)` hypothesis tests.
+Multiple testing describes the process of separately testing multiple null
+hypothesis i.e., carrying out many statistical tests at a time, each to
+test a null hypothesis on different data. Here we have carried out
+`r format(nrow(limma_results), scientific=FALSE)` hypothesis tests.
 If we were to use the typical p \< 0.05 significance threshold for each
-test we would accept a 5% chance of incorrectly rejecting the null
-hypothesis *per test*. Therefore, for every 100 tests that we carry out
-we expect an average of 5 false positives.
+test, we would expect a 5% chance of incorrectly rejecting the null
+hypothesis *per test*. Therefore, for every 100 tests that we carry out,
+we would expect an average of 5 false positives.
 
 If we do not account for the fact that we have carried out multiple
-hypothesis then we risk including false positives in our data. Many
+hypothesis, we risk including false positives in our data. Many
 methods exist to correct for multiple hypothesis testing and these
 mainly fall into two categories:
 
 1.  Control of the Family-Wise Error Rate (FWER)
 2.  Control of the False Discovery Rate (FDR)
 
-Above we used the "BH", or Benjamini-Hochberg procedure, to control the
-FDR. This accounts for multiple hypothesis testing *per protein* and
-*per contrast* to give us an overall view of the data.
+Above we specified the "BH" method for adjusting p-values in our `topTable` function call. This is shorthand for the Benjamini-Hochberg procedure, to control the FDR. 
 
 ::: callout-tip
 #### The False Discovery Rate
 
 The False Discovery Rate (FDR) defines the fraction of false discoveries
 that we are willing to tolerate in our list of differential proteins.
-For example, an FDR threshold of 0.05 means that around 5% of the
-differential proteins will be false positives. It is up to you to decide
-what this threshold should be, but conventionally people use 0.01 or
-0.05.
+For example, an FDR threshold of 0.05 means that approximately 5% of the
+proteins deemed differentially abundant will be false positives. It is up to you to decide what this threshold should be, but conventionally people between 0.01 (1%) and 0.1 (10%).
 :::
 
 ### Diagnostic plots to verify suitability of our statistical model
@@ -301,7 +279,27 @@ typically come with several assumptions. To check that these assumptions
 were met and that our model was suitable, we create some diagnostic
 plots.
 
-First we plot a histogram of the raw p-values (not BH-adjusted
+The first plot that we generate is an SA plot to display the residual
+standard deviation (sigma) versus log abundance for each protein to
+which our model was fitted. We can use the `plotSA` function to do this.
+
+```{r}
+plotSA(fit = final_model,
+       cex = 0.5,
+       xlab = "Average log2 abundance")
+```
+
+It is recommended that an SA plot be used as a routine diagnostic plot
+when applying a limma-trend pipeline. From the SA plot we can visualise
+the intensity-dependent trend that has been incorporated into our
+linear model. It is important to verify that the trend line fits the
+data well. If we had not included the `trend = TRUE` argument in our
+`eBayes` function, then we would instead see a straight horizontal line
+that does not follow the trend of the data. Further, the plot also
+colours any outliers in red. These are the outliers that are only
+detected and excluded when using the `robust = TRUE` argument.
+
+Next, we plot a histogram of the raw p-values (not adjusted
 p-values). This can be done by passing our results data into standard
 `ggplot2` plotting functions.
 
@@ -315,8 +313,7 @@ limma_results %>%
 The histogram we have plotted shows an anti-conservative distribution,
 which is good. The flat distribution across the bottom corresponds to
 null p-values which are distributed approximately uniformly between 0
-and 1. The peak close to 0 contains our significantly changing proteins,
-a combination of true positives and false positives.
+and 1. The peak close to 0 contains a combination of our significantly changing proteins (true positives) and proteins with a low p-value by chance (false positives).
 
 Other examples of how a p-value histogram could look are shown below.
 Whilst in some experiments a uniform p-value distribution may arise due
@@ -331,54 +328,27 @@ by David Robinson.
 knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
 ```
 
-The second plot that we generate is an SA plot to display the residual
-standard deviation (sigma) versus log abundance for each protein to
-which our model was fitted. We can use the `plotSA` function to do this.
-
-```{r}
-plotSA(fit = final_model,
-       cex = 0.5,
-       xlab = "Average log2 abundance")
-```
-
-It is recommended that an SA plot be used as a routine diagnostic plot
-when applying a limma-trend pipeline. From the SA plot we can visualise
-the intensity- dependent trend that has been incorporated into our
-linear model. It is important to verify that the trend line fits the
-data well. If we had not included the `trend = TRUE` argument in our
-`eBayes` function, then we would instead see a straight horizontal line
-that does not follow the trend of the data. Further, the plot also
-colours any outliers in red. These are the outliers that are only
-detected and excluded when using the `robust = TRUE` argument.
 
 ### Interpreting the output of our statistical model
 
 Having checked that the model we fitted was appropriate for the data, we
-can now take a look at the results of our test using the `topTable` and
-`decideTests` functions.
-
-#### Interpreting the overall ANOVA output
-
-As we saw above, `topTable` will give us the overall output of our ANOVA
-model. We previously used this function to generate our `limma_results`
-without specifying any value for the `coef` argument.
+can now take a look at the results of our test
 
 ```{r}
 head(limma_results)
 ```
 
-Interpreting the output of `topTable` for a multi-contrast model:
+Interpreting the output of `topTable`:
 
--   `G1_M`, `M_Des` and `G1_Des` = the estimated log2FC for each model
-    contrast
+-   logFC = The observed log2FC for G1 vs M cell cycle stages 
 -   `AveExpr` = the average log abundance of the protein across samples
--   `F` = eBayes moderated F-value. Interpreted in the same way as a
-    normal F-value (see above).
+-   `t` = eBayes moderated t-value. Interpreted in the same way as a
+    normal t-value (see above).
 -   `P.Value` = Unadjusted p-value
 -   `adj.P.Val` = FDR-adjusted p-value (adjusting across both proteins
     and contrasts - global adjustment)
 
-We have used the ANOVA test to ask *"Does this protein show a
+We have used the statistical test to ask *"Does this protein show a
 significant change in abundance between cell cycle stages?"* for each
 protein.
 
@@ -391,165 +361,18 @@ in G1-phase = the mean abundance in desynchronised cells. So, `G1_M` =
 Our alternative hypothesis is: **(H1)** The change in abundance for a
 protein between cell cycle stages is greater than 0.
 
-From our output we can see that some of our proteins have high F-values
+From our output we can see that some of our proteins have high t-values
 and low adjusted p-values (below any likely threshold of significance).
-These adjusted p-values may tell us that a protein has a significantly
-different abundance across cell cycle stages. However, we cannot tell
-from this output from which contrast this significance is derived. Does
-a protein have a significantly different abundance between M- and
-G1-phase, or M-phase and desynchronised cells, or G1-phase and
-desynchronised cells, or even multiple of these comparisons?
-
-#### Interpreting the results of a single contrast
-
-We can look at individual contrasts by passing the contrast name to the
-`coef` argument in the `topTable` function. For example, let's look at
-the pairwise comparison between M-phase and desynchronised cells. We use
-the `topTable` function to get the results of the `"M_Des"` contrast. We
-use the argument `confint = TRUE` so that the our output reports the 95%
-confidence interval of the calculated log2FC.
-
-```{r}
-M_Desynch_results <- topTable(fit = final_model, 
-                              coef = "M_Des", 
-                              number = Inf,
-                              adjust.method = "BH",
-                              confint = TRUE) %>%
-  rownames_to_column("protein")
-
-## Verify
-head(M_Desynch_results)
-```
-
-Interpreting the output of `topTable` for a single contrast:
-
--   `logFC` = the fold change between the mean log abundance in group A
-    and the mean log abundance in group B
--   `CI.L` = the left limit of the 95% confidence interval for the
-    reported log2FC
--   `CI.R` = the right limit of the 95% confidence interval for the
-    reported log2FC
--   `AveExpr` = the average log abundance of the protein across samples
--   `t` = t-statistic derived from the original ANOVA test (not a
-    t-test)
--   `P.Value` = Unadjusted p-value
--   `adj.P.Val` = FDR-adjusted p-value (adjusted across proteins but not
-    multiple contrasts)
--   `B` = B-statistic representing the log-odds that a protein is
-    differentially abundant between conditions
-
-This time the output of `topTable` contains a t-statistic rather than an
-F-value. This is because we only told the function to compare two
-conditions, so the corresponding t-statistic from our ANOVA test is
-reported. Importantly, however, the p-value adjustment in this case only
-accounts for multiple tests across our `r nrow(limma_results)` proteins,
-not the three different contrasts/comparisons we used the data for. As a
-result, we could over-estimate the number of statistically significant
-proteins within this contrast. although this this effect is only likely
-to become problematic when we have a larger number of contrasts to
-account for.
-
-#### Interpreting the results of all contrasts
-
-To understand the impact of adjusting for multiple hypothesis testing
-across our comparisons, we can use the `decideTests` function. This
-function provides a matrix of values -1, 0 and +1 to indicate whether a
-protein is significantly downregulated, unchanged or significantly
-upregulated in a given contrast. For the function to determine
-significance we have to provide a p-value adjustment method and
-threshold, here we use the standard Benjamini-Hochberg procedure for FDR
-adjustment and set a threshold of `adj.P.Value < 0.01` for significance.
-
-The `decideTests` function also takes an argument called `method`. This
-argument specifies whether p-value adjustment should account only for
-multiple hypothesis tests across proteins (`"separate"`) or across both
-proteins and contrasts (`"global"`).
-
-Let's first look at the results when we apply the `"separate"` method
-i.e., consider each contrast separately.
-
-```{r}
-decideTests(object = final_model,
-            adjust.method = "BH", 
-            p.value = 0.01, 
-            method = "separate") %>%
-  summary()
-```
-
-From this table we can see the number of significantly changing proteins
-per contrast. For the `M_Des` comparison the total number of
-significantly changing proteins is `r 422 + 473`. This should be the
-same as the number of proteins with an adjusted p-value \< 0.01 in our
-`M_Desynch_results` object. Let's check.
-
-```{r}
-M_Desynch_results %>%
-  as_tibble() %>%
-  filter(adj.P.Val < 0.01) %>% 
-  nrow()
-```
-
-However, if we use the `"global"` method for p-value adjustment and
-therefore adjust for both per protein and per contrast hypotheses we may
-see slightly fewer significant proteins in our `M_Des` contrast.
-
-```{r}
-decideTests(object = final_model,
-            adjust.method = "BH", 
-            p.value = 0.01, 
-            method = "global") %>%
-  summary()
-```
-
-Unfortunately, there is no way to specify global p-value adjustment
-accounting for all contrasts when using `topTable` to look at a single
-contrast. Instead, we can merge the results from our globally adjusted
-significance summary (generated using `decideTests` with
-`method = "global"`) with the results of our overall ANOVA test
-(generated using `topTable` with `coef = NULL`). We demonstrate how to
-do this in the code below.
-
-```{r}
-## Determine global significance using decideTests
-global_sig <- decideTests(object = final_model, 
-                          adjust.method = "BH", 
-                          p.value = 0.01, 
-                          method = "global") %>%
-  as.data.frame() %>% 
-  rownames_to_column("protein")
-
-
-## Change column names to avoid conflict when binding
-colnames(global_sig) <- paste0("sig_", colnames(global_sig))
-
-## Add the results of global significance test to overall ANOVA results
-limma_results <- dplyr::left_join(limma_results, 
-                                  global_sig, 
-                                  by = c("Protein" = "sig_protein"))
-
-## Verify
-limma_results %>% head()
-```
-
-We now have three additional column, one per contrast, called
-`sig_G1_M`, `sig_M_Des`, and `sig_G1_Des`. These columns contain -1, 0
-or 1 meaning that the protein is significantly downregulated,
-non-significant or significantly upregulated in the given contrast.
+These adjusted p-values tell us that these protein have a significantly
+different abundance across M and G1 cell cycle stages. 
 
 #### Adding user-defined significance thresholds
-
-For the remainder of this workshop we will consider only the `M_Des`
-single contrast and use the results of `topTable` with `coef = "M_Des"`.
-We currently have these results stored in an object called
-`M_Desynch_results`.
 
 The output of our statistical test will provide us with key information
 for each protein, including its p-value, BH-adjusted p-value (here,
 across proteins but not contrasts) and logFC. However, it is up to us to
 decide what we consider to be significant. The first parameter to
-consider is the `adj.P.Val` threshold that we wish to apply - 0.05 and
-0.01 are both common in proteomics. The second parameter which is
-sometimes used to define significance is the `logFC`. This is mainly for
+consider is the `adj.P.Val` threshold that we wish to apply. The second parameter which is sometimes used to define significance is the `logFC`. This is mainly for
 the purpose of deciding on hits to follow-up, since it is easier to
 validate larger abundance changes than those which are consistent but
 subtle.
@@ -560,15 +383,13 @@ well as the direction of change.
 
 ```{r}
 ## Add direction and significance information
-M_Desynch_results <- 
-  M_Desynch_results %>%
-  as_tibble() %>%
+limma_results <- limma_results %>%
   mutate(direction = ifelse(logFC > 0, "up", "down"),
          significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
 
 
 ## Verify
-head(M_Desynch_results)
+head(limma_results)
 ```
 
 ## Visualising the results of our statistical model
@@ -595,7 +416,7 @@ adjusted p-values, making the comparison and interpretation of values
 more difficult.
 
 ```{r}
-M_Desynch_results %>%
+limma_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
   geom_point(shape = 21, stroke = 0.25, size = 3) +
   theme_bw()
@@ -607,11 +428,7 @@ plotting code. The default for this function is to save the last plot
 displayed.
 
 ```{r, eval = FALSE}
-my_results %>%
-  ggplot(aes(x = logFC, y = -log10(P.Value), fill = result)) +
-  geom_point(shape = 21, stroke = 0.25, size = 3) +
-  theme_bw()
-ggsave(filename = "volcano_M_vs_Desynch.png", device = "png")
+ggsave(filename = "volcano_M_vs_G1.png", device = "png")
 ```
 
 ::: callout-exercise
@@ -621,33 +438,24 @@ ggsave(filename = "volcano_M_vs_Desynch.png", device = "png")
 based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 
 ::: {.callout-answer collapse="true"}
-First let's regenerate the results adding a column for the log2 fold
-change
 
 ```{r}
 my_results <- 
-  M_Desynch_results %>%
-  as_tibble() %>%
-  mutate(direction = ifelse(logFC > 0, "up", "down"),
-         significance = ifelse(adj.P.Val < 0.05, "sig", "not.sig"),
-         lfc = ifelse(logFC > 1 | logFC < -1, "sig", "not.sig"),
-         result = ifelse(significance == "sig" & lfc == "sig", "sig", "not.sig"))
+  limma_results %>%
+  mutate(significance = ifelse(adj.P.Val < 0.05 & abs(logFC)>1, "sig", "not.sig"))
 
-```
-
-Now let's plot the results
-
-```{r}
 my_results %>%
-  ggplot(aes(x = logFC, y = -log10(P.Value), fill = result)) +
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
   geom_point(shape = 21, stroke = 0.25, size = 3) +
   theme_bw()
 ```
 :::
 
 
+
+
 Another widely used visualisation tool are heatmaps. A heatmap is a two-dimensional
-representation of our quantitative data where the magniture of values are depicted
+representation of our quantitative data where the magnitude of values are depicted
 by colour. These visualisations are commonly combined with clustering tools to
 facilitate the identification of groups of features, here proteins, that display
 similar quantitative behaviour. Here, we will use the `pheatmap` function from the 
