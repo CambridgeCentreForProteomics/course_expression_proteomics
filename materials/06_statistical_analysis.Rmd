@@ -36,6 +36,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
+library("pheatmap")
 library("here")
 load(here("materials/output/lesson04.rda"), verbose = TRUE)
 ```
@@ -643,14 +644,49 @@ my_results %>%
   theme_bw()
 ```
 :::
-:::
+
+
+Another widely used visualisation tool are heatmaps. A heatmap is a two-dimensional
+representation of our quantitative data where the magniture of values are depicted
+by colour. These visualisations are commonly combined with clustering tools to
+facilitate the identification of groups of features, here proteins, that display
+similar quantitative behaviour. Here, we will use the `pheatmap` function from the 
+`pheatmap` package to plot a heatmap of proteins that display a significant 
+difference in abundance between M-phase and desynchronised cells.
+
+We first extract the accessions of proteins with significant differences. We 
+use these accessions to subset the original quantitation data which is currently
+stored in the `assay` of our `cp_qf` object.
+
+```{r}
+## Extract accessions of significant proteins
+sig_proteins <- M_Desynch_results %>%
+  filter(significance == "sig") %>%
+  pull(protein)
+
+## Save indices of rows where these proteins our in our cp_qf object
+sig_indices <- which(rowData(cc_qf[["log_norm_proteins"]])$Master.Protein.Accessions %in% sig_proteins)
+
+## Subset quantitative data corresponding to significant proteins
+quant_data <- cc_qf[["log_norm_proteins"]][sig_indices, ] %>%
+  assay() 
+```
+
+Now we use the quantitative data to plot a heatmap using `pheatmap`.
+
+```{r}
+pheatmap(mat = quant_data)
+```
+
+A more in-depth overview of `pheatmap` and how to customise these plots further
+can be found [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
 
 ```{r, include=FALSE}
 ## Save results
 save(M_Desynch_results, all_proteins, file = "output/lesson06.rda")
 ```
 
-::: callout-tip
+::: {.callout-tip}
 #### Key Points
 
 -   The `limma` package provides a statistical pipeline for the analysis

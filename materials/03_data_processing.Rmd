@@ -820,7 +820,7 @@ and after filtering,
 mv_filtered$nNAcols
 ```
 
-Now, we can extract the percentage of NAs in each sample,
+Now, we can extract the proportion of NAs in each sample,
 
 ```{r}
 mv_raw$nNAcols$pNA
@@ -844,7 +844,7 @@ mv_raw$nNAcols %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
   geom_bar(stat = "identity") +
-  labs(x = "Sample", y = "Missing values (%)") + 
+  labs(x = "Sample", y = "Proportion issing values") + 
   theme_bw()
 ```
 
@@ -856,7 +856,7 @@ mv_filtered$nNAcols %>%
   mutate(condition = colData(cc_qf)$condition) %>%
   ggplot(aes(x = name, y = pNA, group = condition, fill = condition)) +
   geom_bar(stat = "identity") +
-  labs(x = "Sample", y = "Missing values (%)") +
+  labs(x = "Sample", y = "Proportion missing values") +
   theme_bw()
 ```
 
@@ -907,7 +907,7 @@ How many PSMs do we have with (i) 0 missing values, (ii) 1 missing value, (iii)
 
 
 The `nNA` column gives information on the number missing values (or we can 
-use `pNA` which gives information on the percentage). Calling `table` on the
+use `pNA` which gives information on the proportion of missing values). Calling `table` on the
 output number of missing values we have across samples,
 
 On the raw data,
@@ -936,7 +936,7 @@ mv_filtered$nNArows$nNA %>% table()
 
 ### Removing data with high levels of missingness
 
-Although the use-case data has only a small number of missing values it is still
+Although the use-case data has only a small number of mssing values it is still
 common to remove individual features that have too many missing values across
 samples. Here, we remove PSMs that have >20% missing values. This is done using
 the `filterNA` function where the `pNA` argument specifies the maximum proportion
