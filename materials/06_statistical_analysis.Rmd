@@ -14,7 +14,7 @@ editor:
 -   Acknowledge the availability of different R/Bioconductor packages
     for carrying out differential expression (abundance) analyses
 -   Using the `limma` package, design a statistical model to test for
-    differentially abundant proteins between two or more conditions
+    differentially abundant proteins between two conditions
 -   Be able to interpret the output of a statistical model and annotate
     the results with user-defined significance thresholds
 -   Produce volcano plots to visualise the results of differential
@@ -50,7 +50,7 @@ out statistical analysis.
 
 To simply the statistical analysis, we will focus on just two conditions here:
 M and G1 cell cycle stages. For a more complete statistical analysis of all cell
-cycles stages, see [INSERT LINK HERE]
+cycles stages, please see the [Statistical analysis of all 3 cell cycle stages](./08_statistical_analysis_all_stages.html) section.
 
 The aim of this section is to answer the
 question: *"Which proteins show a significant change in abundance
@@ -93,7 +93,7 @@ expression (abundance) analysis on proteomics data. Here we will use
 Bayes-moderated linear model is provided in @Hutchings2023. 
 
 Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic will either be a
-t-value or an F-value, respectively.
+t-value or an F-value, respectively.Here, we are performing a single comparison, so we will obtain a t-value. 
 
 ### What is a t-value?
 
@@ -102,24 +102,16 @@ values of **two** groups. The t-value is the ratio of the difference in means to
 the standard error of the difference in means. The further away from zero that a
 t-value lies, the more significant the difference between the groups is.
     
-### What is a F -value?
-
-An F-value is a parametric statistical value used to compare the mean
-values of **three or more** groups. The F-value is the ratio of the between-group
-variation (explained variance) and the within-group variance (unexplained variance).
-The higher the F-value, the more significant the difference between the groups is.
-
 ### How is the p-value obtained?
 
-A p-value may be obtained from a t/F-value by comparing the value against a t/F-distribution with the suitable degrees of freedom.
+A p-value may be obtained from a t-value by comparing the value against a t-distribution with the appropriate degrees of freedom.
     
 -   **degrees of freedom** = the number of observations minus the number
-    of independent variables 
--   **p-value** = the probability of achieving the t-value/F-value under the
+    of independent variables in the model
+-   **p-value** = the probability of achieving the t-value under the
     null hypothesis i.e., by chance
     
-Here, we will perform a comparison between two groups (M and G1 phases) for each protein and obtain a t-value and p-value for each protein. For a multifactorial comparison, see [INSERT LINK HERE].
-
+Here, we will perform a comparison between two groups (M and G1 phases) for each protein and obtain a t-value and p-value for each protein. For a multifactorial comparison of all cell cycle stages, see [INSERT LINK HERE].
 
 
 ### What does the empirical Bayes part mean?
