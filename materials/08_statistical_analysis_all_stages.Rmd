@@ -51,10 +51,10 @@ question: *"Which proteins show a significant change in abundance
 between the multiple cell cycle stages?"*.
 
 Our null hypothesis is: **(H0)** The change in abundance for a protein
-between cell cycle stages is 0.
+between cell cycle stages is zero.
 
 Our alternative hypothesis is: **(H1)** The change in abundance for a
-protein between cell cycle stages is greater than 0.
+protein between cell cycle stages is not zero.
 
 
 We will use `limma` to perform the statistical tests using an **empirical Bayes-moderated linear model**. Please see the [Statistical analysis](./06_statistical_analysis.html) section for more details about `limma` and its application in quantitative proteomics. 
@@ -181,8 +181,6 @@ head(limma_results_all_contrasts)
 ```
 
 ### QC plots for statistical test assumptions
-
-Next, we plot a histogram of the raw p-values (not adjusted p-values). This can be done by passing our results data into standard ggplot2 plotting functions.
 
 First we examine whether there is the expected relationship between abundance and variance, and that the trend line captures this.
 ```{r}
