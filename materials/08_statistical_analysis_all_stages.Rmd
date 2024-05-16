@@ -35,9 +35,8 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
-library("here")
 
-load(here("materials/output/lesson04.rda"), verbose = TRUE)
+load("output/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential expression analysis
@@ -50,17 +49,16 @@ The aim of this section is to answer the
 question: *"Which proteins show a significant change in abundance
 between the multiple cell cycle stages?"*.
 
-Our null hypothesis is: **(H0)** The change in abundance for a protein
-between cell cycle stages is zero.
+Our null hypothesis is: **(H0)** The mean protein abundance is the same across cell cycle stages.
 
-Our alternative hypothesis is: **(H1)** The change in abundance for a
-protein between cell cycle stages is not zero.
+Our alternative hypothesis is: **(H1)** The mean protein abundance differs across cell cycle stages.
 
 
 We will use `limma` to perform the statistical tests using an **empirical Bayes-moderated linear model**. Please see the [Statistical analysis](./06_statistical_analysis.html) section for more details about `limma` and its application in quantitative proteomics. 
 
-Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic will either be a
-t-value or an F-value, respectively. Here, we are performing a multifactorial comparison, so we will obtain an F-value. 
+Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic will either be a t-value or an F-value, respectively. Here, we will perform both, starting with assessing the overall effect of cell cycle with an F-test. The F-test does not tell us which groups are different to one another, only that the cell cycle stage does affect protein abundance. Later we will see how to perform all the pairwise comparisons with t-tests.
+
+::: callout-note
 
 ### What is an F-value?
 
@@ -68,30 +66,46 @@ An F-value is a parametric statistical value used to compare the mean
 values of **three or more** groups. The F-value is the ratio of the between-group
 variation (explained variance) and the within-group variance (unexplained variance).
 The higher the F-value, the more significant the difference between the groups is.
+:::
+
+::: callout-note
+
+### What is a t-value?
+
+A t-value is a parametric statistical value used to compare the mean
+values of **two** groups. The t-value is the ratio of the difference in means to
+the standard error of the difference in means. The further away from zero that a
+t-value lies, the more significant the difference between the groups is.
+
+:::
+
+::: callout-note
 
 ### How is the p-value obtained?
 
-A p-value may be obtained from an F-value by comparing the value against an F-distribution with the appropriate degrees of freedom.
+A p-value may be obtained from a t-value/F-value by comparing the value against an t-value/F-distribution with the appropriate degrees of freedom.
     
 -   **degrees of freedom** = the number of observations minus the number
     of independent variables in the model
--   **p-value** = the probability of achieving the F-value under the
+-   **p-value** = the probability of achieving the t-value/F-value under the
     null hypothesis i.e., by chance
-    
-Here, we will perform a comparison between three groups (M phase, G1 phase and
+
+:::
+
+Here, we will start by performing a comparison between three groups (M phase, G1 phase and
 desynchronised) for each protein and obtain an F-value and p-value for each protein.
 
-First, we extract the protein assay data. We will remove the pre-treatment sample,
+First, we extract the suitable protein experiment. We will remove the pre-treatment sample,
 since this condition is not replicated and so not amenable to statistical testing.
+
 ```{r}
 
-## Identify the columns for the Pre-treatment sample in the protein assay
-pre_treatment_col_ix <- colData(cc_qf[["log_norm_proteins"]])$condition == 'Pre-treatment'
+# extract the log-normalised experiment from our QFeatures object
+all_proteins <- cc_qf[["log_norm_proteins"]]
 
-# Extract the protein assay from our QFeatures object, excluding the pre-treatment sample
-all_proteins <- cc_qf[["log_norm_proteins"]][, !pre_treatment_col_ix]
-
-
+# subset to exclude the pre-treatment sample
+all_proteins <- all_proteins[, all_proteins$condition != 'Pre-treatment']
+                             
 ```
 
 ### Modelling with or without an intercept
@@ -402,7 +416,8 @@ pheatmap(mat = quant_data,
 
 ```{r, include=FALSE}
 ## Save results
-save(limma_results_all_contrasts, all_proteins, file = here("materials/output/lesson08.rda"))
+#save(limma_results_all_contrasts, all_proteins, file = here("materials/output/lesson08.rda"))
+save(limma_results_all_contrasts, all_proteins, file = "output/lesson08.rda")
 ```
 
 ::: {.callout-tip}

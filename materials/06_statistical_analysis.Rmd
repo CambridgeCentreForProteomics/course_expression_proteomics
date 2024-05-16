@@ -15,7 +15,7 @@ editor:
     for carrying out differential expression (abundance) analyses
 -   Using the `limma` package, design a statistical model to test for
     differentially abundant proteins between two conditions
--   Be able to interpret the output of a statistical model and annotate
+-   Interpret the output of a statistical model and annotate
     the results with user-defined significance thresholds
 -   Produce volcano plots and heatmaps to explore the results of differential
     expression analyses
@@ -36,9 +36,8 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
-library("here")
 
-load(here("materials/output/lesson04.rda"), verbose = TRUE)
+load("output/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential expression analysis
@@ -91,26 +90,7 @@ expression (abundance) analysis on proteomics data. Here we will use
 **empirical Bayes-moderated linear model**. A simple example of the empirical
 Bayes-moderated linear model is provided in @Hutchings2023. 
 
-Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic will either be a
-t-value or an F-value, respectively. Here, we are performing a single comparison, so we will obtain a t-value. 
-
-### What is a t-value?
-
-A t-value is a parametric statistical value used to compare the mean
-values of **two** groups. The t-value is the ratio of the difference in means to
-the standard error of the difference in means. The further away from zero that a
-t-value lies, the more significant the difference between the groups is.
-    
-### How is the p-value obtained?
-
-A p-value may be obtained from a t-value by comparing the value against a t-distribution with the appropriate degrees of freedom.
-    
--   **degrees of freedom** = the number of observations minus the number
-    of independent variables in the model
--   **p-value** = the probability of achieving the t-value under the
-    null hypothesis i.e., by chance
-    
-Here, we will perform a comparison between two groups (M and G1 phases) for each protein and obtain a t-value and p-value for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./08_statistical_analysis_all_stages.html).
+Here, we will perform a comparison between two groups (M and G1 phases) for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./08_statistical_analysis_all_stages.html).
 
 
 ### What does the empirical Bayes part mean?
@@ -132,16 +112,17 @@ estimates, thus reducing false negatives for proteins with over-estimated varian
 We subset to our log2 transformed protein-level data and retain just the M and G1 phase samples
 
 ```{r}
-## Identify the columns for the M/G1 samples in the protein assay
-M_G1_col_ix <- colData(cc_qf[["log_norm_proteins"]])$condition %in% c('M', 'G1')
+# extract the log-normalised experiment from our QFeatures object
+all_proteins <- cc_qf[["log_norm_proteins"]]
 
-# Extract the protein assay from our QFeatures object and subset to M/G1 samples
-all_proteins <- cc_qf[["log_norm_proteins"]][, M_G1_col_ix]
-
-## Ensure that conditions are stored as levels of a factor 
-## Explicitly define level order by cell cycle stage
+# subset to retain only M and G1 samples
+all_proteins <- all_proteins[, all_proteins$condition %in% c("M", "G1")]
+                             
+## Ensure that conditions are stored as levels of a factor with
+## explicitly defined levels
 all_proteins$condition <- factor(all_proteins$condition, 
                                  levels = c("M", "G1"))
+
 
 ```
 
@@ -154,46 +135,38 @@ represent individual samples and columns correspond to explanatory
 variables, in our case the cell cycle stages. Simply put, the model
 design is determined by how samples are distributed across conditions.
 
-### Should we include an intercept?
-
-When investigating the effect of a single explanatory variable, the design
-matrix should be created using `model.matrix(~variable)`, such that an intercept term is included. This means that the first level of the variable (here, M) is considered the 'baseline' and modeled by the intercept. The second level of the variable (here, G1) is then modelled by an additional term in the model, which captures the difference between M and G1. 
-
-Below, we define the model matrix with an intercept term.
-
+Below, we define the model matrix with `condition` as the explanatory variable. 
 ```{r}
 ## Design a matrix containing all factors that we wish to model
 condition <- all_proteins$condition
 
 m_design <- model.matrix(~condition) # Model with intercept
 
-## Verify
+```
+
+Inspecting the design matrix, we can see that we have a coefficient called `(Intercept)` and a coefficient called `conditionG1`. The first level of the variable (here, M) is considered the 'baseline' and modeled by the intercept. The second level of the variable (here, G1) is then modeled by an additional term in the model, which captures the difference between M and G1. This is the most appropriate way to model the data since the term `conditionG1` captures the difference we are interested in.
+
+```{r}
+## Inspect the design matrix
 m_design
 ```
 
-If one specified a model without an intercept for a single explanatory variable (
-`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between the group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could still use contrasts to explore the differences between the groups an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
+::: callout-note
 
-::: callout-exercise
+### What happens if we don't include an intercept?
 
-#### Challenge: Design matrix without intercept
+When investigating the effect of a single explanatory variable, the design
+matrix should be created using `model.matrix(~variable)`, such that an intercept term is included and the other model term captures the difference we are interested in.
 
-{{< level 1 >}} Inspect the design matrix obtained when not including an intercept term and contrast the models +/- intercept.
-
-::: {.callout-answer collapse="true"}
-
-```{r}
-
-print(model.matrix(~0+condition)) # Model without an intercept
-
-```
+If we specified a model without an intercept (`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between each group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could still use contrasts to explore the differences between the groups an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
 
 :::
 
+
 ## Running an empirical Bayes-moderated test using `limma`
 
-After we have specified the design matrix and contrasts we wish to make,
-the next step is to apply the statistical model
+After we have specified the design matrix, the next step is to apply the
+statistical model
 
 ```{r}
 ## Fit linear model using the design matrix and desired contrasts
@@ -244,12 +217,32 @@ limma_results <- topTable(fit = final_model,
 head(limma_results)
 ```
 
-As expected, we see the two key parameters:
+Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic for each protein will either be a t-value or an F-value, respectively. Here, we are performing a single comparison (M vs G1), so we obtain a *t-value*. We also obtain the *p-value* from the comparison of the t-value with a t-distribution.
 
-- *t-value* (`t`)
-- *p-value* (`P.Value`). 
+::: callout-note
 
-We also see an *adjusted p-value* (`adj.P.Val`). This provides p-values adjusted to account
+### What is a t-value?
+
+A t-value is a parametric statistical value used to compare the mean
+values of **two** groups. The t-value is the ratio of the difference in means to
+the standard error of the difference in means. The further away from zero that a
+t-value lies, the more significant the difference between the groups is.
+:::
+
+::: callout-note
+
+### How is the p-value obtained?
+
+A p-value may be obtained from a t-value by comparing the value against a t-distribution with the appropriate degrees of freedom.
+    
+-   **degrees of freedom** = the number of observations minus the number
+    of independent variables in the model
+-   **p-value** = the probability of achieving the t-value under the
+    null hypothesis i.e., by chance
+    
+:::
+
+We also see an *adjusted p-value* (`adj.P.Val`) column. This provides p-values adjusted to account
 for the multiple hypothesis tests performed.
 
 ### Multiple hypothesis testing and correction
@@ -338,7 +331,7 @@ to an absence of significant alternative hypotheses, other distribution
 shapes can indicate that something was wrong with the model design or
 statistical test. For more detail on how to interpret p-value histograms
 there is a great
-[blog](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/)
+[blog post](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/)
 by David Robinson, from which the examples below are taken.
 
 ```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
@@ -435,19 +428,13 @@ limma_results %>%
   theme_bw()
 ```
 
-There are several ways in which we can export this volcano plot from R.
-One option is to use the `ggsave` function immediately after our
-plotting code. The default for this function is to save the last plot
-displayed.
-
-```{r, eval = FALSE}
-ggsave(filename = "volcano_M_vs_G1.png", device = "png")
-```
 
 ::: callout-exercise
 #### Challenge: Volcano plots
 
-{{< level 2 >}} Re-generate your table of results defining significance
+{{< level 2 >}} 
+
+Re-generate your table of results defining significance
 based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 
 ::: {.callout-answer collapse="true"}
@@ -463,6 +450,8 @@ my_results %>%
   geom_point(shape = 21, stroke = 0.25, size = 3) +
   theme_bw()
 ```
+:::
+
 :::
 
 ## A more statistically valid way to include a fold-change threshold
@@ -510,7 +499,7 @@ limma_results_treat %>%
 
 {{< level 3 >}} 
 
-- Compare the overall results of the logFC thresholding by tabulating the number of proteins with increased/decreased abundance and significant/not significant change. 
+- Compare the overall results for each logFC thresholding approach by creating a 2 x 2 table with the number of proteins with increased/decreased abundance and significant/not significant change, for each approach. 
 - Identify the proteins which are significant when thresholding on the logFC post-hoc, but not when using the TREAT functions to define a logFC threshold for the null hypothesis. You can use the existing `my_results` and `limma_results_treat` objects for this. 
 - Re-make the volcano plots for the two logFC thresholding approaches, but this time with the proteins identified above highlighted by the point shape.
 \> 1.
@@ -526,8 +515,11 @@ table(my_results$direction,
 table(limma_results_treat$direction,
       limma_results_treat$significance)
 
+```
+
+```{r}
 # Identify the proteins which are significant only
-# when thresholding on logFC post hoc
+# when thresholding on logFC post-hoc
 post_hoc_sig <- my_results %>%
   filter(significance == 'sig') %>%
   pull(Protein)
@@ -537,9 +529,11 @@ treat_not_sig <- limma_results_treat %>%
   pull(Protein)
 
 sig_post_hoc_only <- intersect(post_hoc_sig, treat_not_sig)
+```
 
+```{r}
 # Make a volcano plot highlighting these proteins
-p <- my_results %>%
+my_results %>%
   # Add a new column to annotate the proteins to highlight
   mutate(highlight = Protein %in% sig_post_hoc_only) %>% 
   # Use the highlight column to control the shape aesthetic
@@ -552,16 +546,21 @@ p <- my_results %>%
                      name='Post-hoc logFC\nthresh. sig. only') + 
   theme_bw()
 
-print(p)
+limma_results_treat %>%
+  mutate(highlight = Protein %in% sig_post_hoc_only) %>% 
+  ggplot(aes(x = logFC, y = -log10(P.Value),
+             fill = significance,
+             shape = highlight)) + 
+  geom_point(stroke = 0.25, size = 3) +
+  scale_shape_manual(values = c(21,8),
+                     name='Post-hoc logFC\nthresh. sig. only') + 
+  theme_bw()
 
-# Re-use the plot object with updated data using the '%+%' operator.
-p2 <- p %+%
-  mutate(highlight=Protein %in% sig_post_hoc_only, limma_results_treat)
-print(p2)
 
 ```
 :::
 
+:::
 
 
 ## Visualising the protein abundances in a heatmap
@@ -585,8 +584,9 @@ sig_proteins <- limma_results %>%
   pull(Protein)
 
 ## Subset quantitative data corresponding to significant proteins
-quant_data <- cc_qf[["log_norm_proteins"]][sig_proteins, ] %>%
-  assay() 
+quant_data <- cc_qf[["log_norm_proteins"]]
+
+quant_data <- quant_data[sig_proteins, ] %>% assay() 
 ```
 
 Now we use the quantitative data to plot a heatmap using `pheatmap`. We will normalise each row of protein abundances to Z-scores (standard deviations away from the mean).
@@ -603,7 +603,8 @@ can be found in the documentation (`?pheatmap`) and [here](https://davetang.org/
 
 ```{r, include=FALSE}
 ## Save results
-save(limma_results, all_proteins, file = here("materials/output/lesson06.rda"))
+
+save(limma_results, all_proteins, file = "output/lesson06.rda")
 ```
 
 ::: {.callout-tip}
