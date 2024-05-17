@@ -26,7 +26,9 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson03.rda", verbose = TRUE)
+library("here")
+
+load(here("course_files/preprocessed//lesson03.rda"), verbose = TRUE)
 ```
 
 Let's start by recapping which stage we have reached in the processing of our 
@@ -462,7 +464,7 @@ pre_norm + post_norm
 :::
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson04.rda")
+save(cc_qf, file = here("course_files/preprocessed/lesson04.rda"))
 ```
 
 
