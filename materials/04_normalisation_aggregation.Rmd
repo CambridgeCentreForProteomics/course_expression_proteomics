@@ -441,7 +441,7 @@ Colour coding by condition,
 pre_norm <- cc_qf[["log_proteins"]] %>%
   assay() %>%
   longFormat() %>%
-  mutate(Condition = strsplit(colname, split = "_") %>% 
+  mutate(Condition = strsplit(as.character(colname), split = "_") %>% 
            sapply("[[", 1)) %>%
   ggplot(aes(x = colname, y = value, fill = Condition))  +
   geom_boxplot() +
@@ -451,7 +451,7 @@ pre_norm <- cc_qf[["log_proteins"]] %>%
 post_norm <- cc_qf[["log_norm_proteins"]] %>%
   assay() %>%
   longFormat() %>%
-  mutate(Condition = strsplit(colname, split = "_") %>% 
+  mutate(Condition = strsplit(as.character(colname), split = "_") %>% 
            sapply("[[", 1)) %>% 
   ggplot(aes(x = colname, y = value, fill = Condition))  +
   geom_boxplot() +
