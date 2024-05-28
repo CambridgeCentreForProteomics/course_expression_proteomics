@@ -28,7 +28,9 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
-load("output/lesson02.rda", verbose = TRUE)
+library("here")
+
+load(here("course_files/preprocessed/lesson02.rda"), verbose = TRUE)
 ```
 
 
@@ -1049,7 +1051,7 @@ mv_imputed$nNAcols$nNA %>% table()
 
 
 ```{r, include=FALSE}
-save(cc_qf, file = "output/lesson03.rda")
+save(cc_qf, file = here("course_files/preprocessed/lesson03.rda"))
 ```
 
 ::: {.callout-tip}

@@ -140,6 +140,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
+library("here")
 ```
 
 Set your working directory to `Course_Materials` where you will find all the
@@ -600,7 +601,7 @@ colData(cc_qf[["psms_raw"]])
 ```
 
 ```{r, include=FALSE, eval=TRUE}
-save(cc_qf, file = "output/lesson02.rda")
+save(cc_qf, file = here("course_files/preprocessed/lesson02.rda"))
 ```
 
 

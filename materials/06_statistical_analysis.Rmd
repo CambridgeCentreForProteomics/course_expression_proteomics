@@ -36,8 +36,9 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
+library("here")
 
-load("output/lesson04.rda", verbose = TRUE)
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
 ## Differential expression analysis
@@ -603,8 +604,7 @@ can be found in the documentation (`?pheatmap`) and [here](https://davetang.org/
 
 ```{r, include=FALSE}
 ## Save results
-
-save(limma_results, all_proteins, file = "output/lesson06.rda")
+save(limma_results, all_proteins, file = here("course_files/preprocessed/lesson06.rda"))
 ```
 
 ::: {.callout-tip}

@@ -35,8 +35,9 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
+library("here")
 
-load("output/lesson04.rda", verbose = TRUE)
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
 ## Differential expression analysis
@@ -414,11 +415,6 @@ pheatmap(mat = quant_data,
          )
 ```
 
-```{r, include=FALSE}
-## Save results
-#save(limma_results_all_contrasts, all_proteins, file = here("materials/output/lesson08.rda"))
-save(limma_results_all_contrasts, all_proteins, file = "output/lesson08.rda")
-```
 
 ::: {.callout-tip}
 #### Key Points
