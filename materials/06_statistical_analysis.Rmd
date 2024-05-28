@@ -31,7 +31,9 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
-load("output/lesson04.rda", verbose = TRUE)
+library("here")
+
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
 
@@ -690,7 +692,7 @@ can be found [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-w
 
 ```{r, include=FALSE}
 ## Save results
-save(M_Desynch_results, all_proteins, file = "output/lesson06.rda")
+save(M_Desynch_results, all_proteins, file = here("course_files/preprocessed/lesson06.rda"))
 ```
 
 
