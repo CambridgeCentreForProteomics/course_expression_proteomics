@@ -7,9 +7,9 @@ bibliography: course_refs.bib
 #### Learning Objectives
 
 * Be aware of key data cleaning steps which should or could be completed during the processing of expression proteomics data
-* Make use of the `filterFeatures` function to conditionally remove data from (i) an entire `QFeatures` object or (ii) specified `experiment assays` of a `QFeatures` object
+* Make use of the `filterFeatures` function to conditionally remove data from (i) an entire `QFeatures` object or (ii) specified `experimental assays` of a `QFeatures` object
 * Understand the difference between non-specific and data-dependent filtering  
-* Be able to explore the metadata stored in the `rowData` and get a feel for how to make your own data-dependent decisions regarding data cleaning
+* Be able to explore the feature data stored in the `rowData` and get a feel for how to make your own data-dependent decisions regarding data cleaning
 * Understand the importance of dealing with missing values in expression proteomics datasets and be aware of different approaches to doing so
 
 :::
@@ -41,9 +41,9 @@ back to it later.
 
 ## Creating a copy of the raw data 
 
-To create a copy of the `psms_raw` data we can first extract the `experiment assay`
+To create a copy of the `psms_raw` data we can first extract the `experimental assay`
 and then add it back to our `QFeatures` object using the `addAssay` function.
-When we do this, we give the second `experiment assay` (our copy) a new name. Here we will
+When we do this, we give the second `experimental assay` (our copy) a new name. Here we will
 call it `psms_filtered` as by the end of our data cleaning and filtering, this
 copy will have had the unwanted data removed.
 
@@ -60,10 +60,10 @@ cc_qf <- addAssay(x = cc_qf,
 cc_qf
 ```
 
-We now see that a second `experiment assay` has been added to the `QFeatures`
+We now see that a second `experimental assay` has been added to the `QFeatures`
 object. When we use `addAssay` to add to a `QFeatures` object, the newly created
-`experiment assay` does not automatically have links to the pre-existing 
-`experiment assay`s. We can use the `assayLink()` function to check which links
+`experimental assay` does not automatically have links to the pre-existing 
+`experimental assay`s. We can use the `assayLink()` function to check which links
 exist for `psms_filtered`.
 
 
@@ -79,17 +79,17 @@ data we could do so using the `addAssayLink` function, as demonstrated below.
 ```{r}
 ## Create assay link
 cc_qf <- addAssayLink(object = cc_qf, 
-                      from = "psms_filtered", 
-                      to = "psms_raw",
+                      from = "psms_raw", 
+                      to = "psms_filtered",
                       varFrom = "Master.Protein.Accessions",
                       varTo = "Master.Protein.Accessions")
 
 ## Verify
 assayLink(x = cc_qf,
-          i = "psms_raw")
+          i = "psms_filtered")
 ```
 
-Adding a relation between these two `experiment assays` ensure traceability. We
+Adding a relation between these two `experimental assays` ensure traceability. We
 will learn more about assay links as we progress through this course.
 
 ::: {.callout-note}
@@ -163,13 +163,13 @@ proposed filters and steps accordingly.
 ### Non-specific filtering
 
 To remove features based on variables within our `rowData` we make use of the
-**`filterFeatures` function**. This function takes a `QFeatures` object as its input
-and then filters this object against (indicated by the `~` operator) a condition
-based on the `rowData`. If the condition is met and returns TRUE for a feature,
+**`filterFeatures`** function. This function takes a `QFeatures` object as its input
+and then filters this object against a condition based on the `rowData` (indicated
+by the `~` operator). If the condition is met and returns TRUE for a feature,
 this feature will be kept.
 
 The `filterFeatures` function provides the option to apply our filter (i) to the
-whole `QFeatures` object and all of its `experiment assays`, or (ii) to specific
+whole `QFeatures` object and all of its `experimental assays`, or (ii) to specific
 assays within the `QFeatures` object. We wish to only filter on the data in our
 `QFeatures` object called `psms_filtered` (and not every assay) so in the
 following code chunks we always pass the argument `i = "psms_filtered"`.
@@ -190,7 +190,7 @@ cc_qf
 
 We see a message printed to the screen `"Master.Protein.Accessions' found in 2 out of 2 assay(s)"` this is informing us that the column
 `"Master.Protein.Accessions"` is present in the `rowData` of the two 
-`experiment assays` in our `QFeatures` object. We can see from looking 
+`experimental assays` in our `QFeatures` object. We can see from looking 
 at our `cc_qf` object before and after filtering we have lost several hundred 
 PSMs that do not have a master protein.
 
@@ -209,7 +209,7 @@ object.
 {{< level 2 >}}
 
 The Proteome Discoverer software flags a potential contaminant in the
-`Contaminants` column found in the `rowData` of the `experiment assay`.
+`Contaminants` column found in the `rowData` of the `experimental assay`.
 
 we can count how many contaminants there are using,
 
@@ -233,7 +233,7 @@ cc_qf[["psms_filtered"]] %>%
 Careful: it is not a `logical` TRUE or FALSE. It is a `character` and takes
 two values, `"True"` or `"False"`. 
 
-1. Use the `filterFeatures` function on the `psms_filtered` experiment assay 
+1. Use the `filterFeatures` function on the `psms_filtered` experimental assay 
 and filter out any contaminants which have been flagged as `"True"`.
 
 2. How many PSMs are left after this step?
@@ -576,7 +576,7 @@ dim(protein_data_PD)
 ```
 
 The output contains `r nrow(protein_data_PD)` proteins. Let's compare this to the
-number of master protein accessions in our raw and imputed filtered PSM data,
+number of master protein accessions in our raw and filtered PSM data,
 
 ```{r}
 ## Number of master proteins in our raw data
@@ -611,7 +611,7 @@ names(protein_data_PD) %>%
 ```
 
 We have a column called `"Protein.FDR.Confidence.Combined"`. Let's add this 
-information to our `rowData` of the `psms_filtered` experiment assay of our `QFeatures` 
+information to our `rowData` of the `psms_filtered` experimental assay of our `QFeatures` 
 object. 
 
 First let's extract the `rowData` and convert it to a `data.frame` so we can 
@@ -793,12 +793,12 @@ nNA(cc_qf, i = "psms_filtered")
 
 The output from this function is a `list` of three `DFrame`s. The first of
 these (called `nNA`) gives us information about missing data at the global level
-(i.e., for the entire experiment assay). We get information about the absolute number of
+(i.e., for the entire experimental assay). We get information about the absolute number of
 missing values (`nNA`) and the proportion of the total data set that is missing
 values (`pNA`). The next two data frames also give us `nNA` and `pNA` but this
 time on a per row/feature (`nNArows`) and per column/sample (`nNAcols`) basis.
 
-Let's direct the output of `nNA` on each `experiment assay` to an object,
+Let's direct the output of `nNA` on each `experimental assay` to an object,
 
 ```{r}
 mv_raw <- nNA(cc_qf, i = "psms_raw")
@@ -985,7 +985,7 @@ We can now check to see how many missing values remain in the data.
 nNA(cc_qf[["psms_filtered"]])$nNA
 ```
 
-We only have `r nNA(cc_qf[["psms_filtered"]])$nNA$pNA`% missing values in our
+We only have `r nNA(cc_qf[["psms_filtered"]])$nNA$pNA * 100`% missing values in our
 data, so imputation is not really necessary here. We could either remove the 
 PSMs that still have missing values or continue our analysis. The latter is 
 possible since missing values are often lost during aggregation and there are
@@ -997,7 +997,7 @@ a large effect on the data structure or downstream analysis.
 
 Imputation within the `QFeatures` infrastructure is completed using the `impute`
 function. To see what imputation methods this function facilitates we can use
-`MsCoreUtils::imputeMethods()`
+`MsCoreUtils::imputeMethods()`.
 
 To see what imputation methods are available,
 
@@ -1057,7 +1057,7 @@ save(cc_qf, file = here("course_files/preprocessed/lesson03.rda"))
 ::: {.callout-tip}
 #### Key Points
 
-- The `filterFeatures` function can be used to remove data from a `QFeatures` object (or an `experiment assay` within a `QFeatures` object) based on filtering parameters within the `rowData`.
+- The `filterFeatures` function can be used to remove data from a `QFeatures` object (or an `experimental assay` within a `QFeatures` object) based on filtering parameters within the `rowData`.
 - Data processing includes (i) standard proteomics data cleaning steps e.g., removal of contaminants, and (ii) data-specific quality control filtering e.g., co-isolation interference thresholding for TMT data.
 - The management of missing quantitative data in expression proteomics data is complex. The `nNA` function can be used to explore missing data and the `filterNA` function can be used to remove features with undesirably high levels of missing data. Where imputation is absolutely necessary, the `impute` function exists within the `QFeatures` infrastructure.
 - Protein level thresholding on false discovery rate is required to ensure confident identifications.

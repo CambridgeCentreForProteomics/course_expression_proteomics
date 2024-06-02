@@ -180,10 +180,10 @@ transparency throughout the process.
 
 For TMT data we can start our data analysis from the PSM level. However, it is
 not always possible to start at this level. For the analysis of label-free data
-it is advisable to begin processing at the peptide level. This is because most
-identification searches carried out on label-free MS data utilise an algorithm
-called retention time (RT) alignment, which uses the match between runs (MBR)
-function.
+processed using Proteome Discoverer it is advisable to begin processing at the
+peptide level. This is because most identification searches carried out on label-
+free MS data utilise an algorithm called retention time (RT) alignment, which 
+uses the match between runs (MBR) function. 
 
 **What problem does retention time alignment address?**
 

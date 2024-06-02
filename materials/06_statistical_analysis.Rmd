@@ -454,7 +454,7 @@ corresponding t-statistic from our ANOVA test is reported. Importantly, however,
 the p-value adjustment in this case only accounts for multiple tests across our
 `r nrow(limma_results)` proteins, not the three different contrasts/comparisons
 we used the data for. As a result, we could over-estimate the number of
-statistically significant proteins within this contrast. although this this 
+statistically significant proteins within this contrast, although this this 
 effect is only likely to become problematic when we have a larger number of 
 contrasts to account for. 
 
@@ -537,10 +537,10 @@ limma_results <- dplyr::left_join(limma_results,
 limma_results %>% head()
 ```
 
-We now have three additional column, one per contrast, called `sig_G1_M`, `sig_M_Des`,
+We now have three additional columns, one per contrast, called `sig_G1_M`, `sig_M_Des`,
 and `sig_G1_Des`. These columns contain -1, 0 or 1 meaning that the protein is
 significantly downregulated, non-significant or significantly upregulated in the
-given contrast.
+given contrast after applying global p-value adjustment.
 
 
 #### Adding user-defined significance thresholds 
@@ -620,9 +620,9 @@ my_results %>%
 ggsave(filename = "volcano_M_vs_Desynch.png", device = "png")
 ```
 
+::: {.callout-exercise}
 
-:::{.callout-exercise}
-#### Challenge: Volcano plots
+#### Challenge 1: Volcano plots
 {{< level 2 >}}
 Re-generate your table of results defining significance based on an adjusted 
 P-value < 0.05 and a log2 fold-change of > 1.
@@ -651,9 +651,8 @@ my_results %>%
   theme_bw()
 ```
 
-
 :::
-
+:::
 
 Another widely used visualisation tool are heatmaps. A heatmap is a two-dimensional
 representation of our quantitative data where the magniture of values are depicted

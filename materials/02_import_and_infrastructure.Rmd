@@ -248,7 +248,6 @@ Within each `SummarizedExperiment`(SE), the `rowData`, `colData` and `assay`
 data are accessed using `rowData()`, `colData()` and `assay()`, respectively.
 Let's use these functions to explore the data structure further.
 
-- How has our data been organised within the `QFeatures` object? 
 
 ### The `assay` container
 
@@ -298,7 +297,7 @@ multiple lines of code. For more information see Hadley Wickham's Tidyverse at
 
 Explore the `QFeatures` object you have just created. 
 
-1. How many assays do we currently have in the object? 
+1. How many experimental assays do we currently have in the object? 
 
 2. How many PSMs have been identified in the data?
 
@@ -311,8 +310,8 @@ of each PSM across the samples?
 **Task 1**
 
 When we type the name of the the object `cc_qf` a summary of the data is 
-printed to the screen. This summary shows us a summary of the number of assays
-we have in the data.
+printed to the screen. This summary shows us a summary of the number of experimental
+assays we have in the data.
 
 ```{r}
 cc_qf
@@ -409,12 +408,13 @@ function and find a column that related to the peptide sequence information.
 1. What class is the `rowData` container? How many rows and columns are in 
 this data structure?
 
-2. Extract the `rowData` and convert it to a `tibble` or `data.frame`. Find a column that contains information that relates to the peptide sequence. Pull this information and calculate
-how many unique peptide sequences we have in the dataset.
+2. Extract the `rowData` and convert it to a `tibble` or `data.frame`. Find a column
+that contains information that relates to the peptide sequence. Pull this information
+and calculate how many unique peptide sequences we have in the dataset.
 
 <details><summary>Hint</summary> Using the `unique` function may be helpful.</details>
 
-3. How many proteins have been identified in the dataset? 
+3. How many protein groups (master proteins) have been identified in the dataset? 
 
 <details><summary>Hint</summary> Again, convert the `rowData` to a `tibble` or
 `data.frame` and find a column that contains information that relates to protein
@@ -488,7 +488,8 @@ We have `r length(tbl)` peptides.
 
 **Task 3**
 
-Information regarding the proteins is found in the `Master.Protein.Accessions` column. 
+Information regarding the protein groups is found in the `Master.Protein.Accessions` 
+column. 
 
 ```{r}
 ## Using pipes
@@ -508,7 +509,8 @@ tbl <- unique(rd$Master.Protein.Accessions)
 length(tbl)
 ```
 
-We have `r length(tbl)` proteins.
+We have `r length(tbl)` protein groups represented by `r length(tbl)` master 
+proteins.
 
 ----
 
@@ -636,9 +638,10 @@ maximum of 2 missed cleavage sites. This is typical in bottom-up proteomics.
 - The `QFeatures` infrastructure provides a convenient and transparent way to 
 store proteomics data across multiple levels.
 - A `QFeatures` object stores each data level as a `SummarizedExperiment`, 
-also called an `assay`, with explicit links maintained between features across 
-different `assay`s (e.g., links between all PSMs contributing to a peptide).
-- Explicit links between `assay`s are (i) generated automatically when 
+also called an ` experimental assay`, with explicit links maintained between 
+features across different `experimental assay`s (e.g., links between all PSMs 
+contributing to a peptide).
+- Explicit links between `experimental assay`s are (i) generated automatically when 
 aggregating data using `aggregateFeatures` or (ii) added manually using the 
 `addAssayLinks` function, as we will see later on.
 - Within each `SummarizedExperiment` the feature data is stored within the 
