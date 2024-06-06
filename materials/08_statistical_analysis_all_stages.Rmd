@@ -127,7 +127,7 @@ all_proteins$condition <- factor(all_proteins$condition,
 
 ## Design a matrix containing all factors that we wish to model
 condition <- all_proteins$condition
-m_design <- model.matrix(~0+condition)
+m_design <- model.matrix(~0 + condition)
 
 # Rename design matrix columns to make them easier to refer to
 colnames(m_design) <- levels(condition)
@@ -182,6 +182,7 @@ final_model <- eBayes(fit = fit_contrasts,
 ### Accessing the model results
 
 To get the results for all of our proteins we use the `topTable` function with the `number = Inf` argument.
+
 ```{r}
 ## Format results
 limma_results_all_contrasts <- topTable(
@@ -198,6 +199,7 @@ head(limma_results_all_contrasts)
 ### QC plots for statistical test assumptions
 
 First we examine whether there is the expected relationship between abundance and variance, and that the trend line captures this.
+
 ```{r}
 plotSA(fit = final_model,
        cex = 0.5,
@@ -205,6 +207,7 @@ plotSA(fit = final_model,
 ```
 
 Next, we check that the p-value distribution is as expected.
+
 ```{r}
 
 limma_results_all_contrasts %>%
@@ -215,7 +218,7 @@ limma_results_all_contrasts %>%
 
 #### Interpreting the overall linear model output
 
-Having checked that the model we fitted was appropriate for the data, we can now take a look at the results of our test
+Having checked that the model we fitted was appropriate for the data, we can now take a look at the results of our test.
 
 As we saw above, `topTable` will give us the overall output of our linear model. We previously used this function to generate our `limma_results_all_contrasts` without specifying any value for the `coef` argument.
 
@@ -231,8 +234,7 @@ Interpreting the output of `topTable` for a multi-contrast model:
 -   `F` = eBayes moderated F-value. Interpreted in the same way as a
     normal F-value (see above).
 -   `P.Value` = Unadjusted p-value
--   `adj.P.Val` = FDR-adjusted p-value (adjusting across both proteins
-    and contrasts - global adjustment)
+-   `adj.P.Val` = FDR-adjusted p-value (adjusting across proteins but not multiple contrasts)
 
 
 #### Interpreting the results of a single contrast
@@ -396,10 +398,10 @@ n_sig <- decideTests(object = final_model,
                           adjust.method = "BH", 
                           p.value = 0.01, 
                           method = "global") %>%
-  apply(MARGIN=1, FUN=function(x) sum(x!=0))
+  apply(MARGIN = 1, FUN = function(x) sum(x != 0))
 
 # Identify the proteins significant at least once
-sig_proteins <- names(n_sig)[n_sig>0]  
+sig_proteins <- names(n_sig)[n_sig > 0]  
 
 ## Subset quantitative data corresponding to significant proteins
 quant_data <- cc_qf[["log_norm_proteins"]][sig_proteins, ] %>%
@@ -411,8 +413,8 @@ Now we use the quantitative data to plot a heatmap using `pheatmap`.
 ```{r}
 pheatmap(mat = quant_data,
          scale = 'row', # Z-score normalise across the rows (proteins)
-         show_rownames = FALSE # Too many proteins to show all their names!
-         )
+         show_rownames = FALSE) # Too many proteins to show all their names!
+         
 ```
 
 

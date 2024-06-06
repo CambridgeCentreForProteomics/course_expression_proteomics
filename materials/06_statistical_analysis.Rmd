@@ -72,7 +72,7 @@ deciding which statistical test to apply.
     (i.e., they do not follow a Gaussian distribution). However, they
     are approximately normal following a log-transformation.
 -   The cell cycle is not expected to have a large impact on biological
-    variability. We can assume that the variance is approximately equal accross the groups.
+    variability. We can assume that the variance is approximately equal across the groups.
 -   The samples are independent not paired. For example, M_1 is not
     derived from the same cells as G1_1 and DS_1.
 
@@ -99,7 +99,7 @@ Here, we will perform a comparison between two groups (M and G1 phases) for each
 When carrying out high throughput omics experiments we not only have a
 population of samples but also a population of features - here we have
 several thousand proteins. Proteomics experiments are typically lowly replicated
-(e.g n << 10), therefore, the per-protein variance estimates are relatively
+(e.g n < 10), therefore, the per-protein variance estimates are relatively
 inaccurate. The empirical Bayes method borrows information across
 features (proteins) and shifts the per-protein variance estimates
 towards an expected value based on the variance estimates of other
@@ -209,7 +209,7 @@ our proteins we use the `number = Inf` argument.
 ```{r}
 ## Format results
 limma_results <- topTable(fit = final_model,
-                          coef='conditionG1',
+                          coef = 'conditionG1',
                           adjust.method = "BH",    # Method for multiple hypothesis testing
                           number = Inf) %>%        # Print results for all proteins
   rownames_to_column("Protein") 
@@ -356,8 +356,7 @@ Interpreting the output of `topTable`:
 -   `t` = eBayes moderated t-value. Interpreted in the same way as a
     normal t-value (see above).
 -   `P.Value` = Unadjusted p-value
--   `adj.P.Val` = FDR-adjusted p-value (adjusting across both proteins
-    and contrasts - global adjustment)
+-   `adj.P.Val` = FDR-adjusted p-value (note that this adjustment is only for multiple proteins, not multiple contrasts i.e., separate rather than global correction)
 
 We have used the statistical test to ask *"Does this protein show a
 significant change in abundance between M and G1 cell cycle stages?"* for each
@@ -444,7 +443,7 @@ based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 my_results <- 
   limma_results %>%
   mutate(direction = ifelse(logFC > 0, "up", "down"), 
-         significance = ifelse(adj.P.Val < 0.05 & abs(logFC)>1, "sig", "not.sig"))
+         significance = ifelse(adj.P.Val < 0.05 & abs(logFC) > 1, "sig", "not.sig"))
 
 my_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
@@ -470,8 +469,8 @@ final_model_treat <- treat(final_model,
 
 # We now need to use TopTreat in place of TopTable
 limma_results_treat <- topTreat(final_model_treat,
-                                coef='conditionG1',
-                                n=Inf) %>%
+                                coef = "conditionG1",
+                                n = Inf) %>%
   rownames_to_column("Protein")
 ```
 
@@ -543,8 +542,8 @@ my_results %>%
              shape = highlight)) + 
   geom_point(stroke = 0.25, size = 3) +
   # Define the shapes
-  scale_shape_manual(values = c(21,8),
-                     name='Post-hoc logFC\nthresh. sig. only') + 
+  scale_shape_manual(values = c(21, 8),
+                     name = 'Post-hoc logFC\nthresh. sig. only') + 
   theme_bw()
 
 limma_results_treat %>%
@@ -553,8 +552,8 @@ limma_results_treat %>%
              fill = significance,
              shape = highlight)) + 
   geom_point(stroke = 0.25, size = 3) +
-  scale_shape_manual(values = c(21,8),
-                     name='Post-hoc logFC\nthresh. sig. only') + 
+  scale_shape_manual(values = c(21, 8),
+                     name = 'Post-hoc logFC\nthresh. sig. only') + 
   theme_bw()
 
 
@@ -595,8 +594,8 @@ Now we use the quantitative data to plot a heatmap using `pheatmap`. We will nor
 ```{r}
 pheatmap(mat = quant_data,
          scale = 'row', # Z-score normalise across the rows (proteins)
-         show_rownames = FALSE # Too many proteins to show all their names!
-         )
+         show_rownames = FALSE) # Too many proteins to show all their names!
+         
 ```
 
 A more in-depth overview of `pheatmap` and how to customise these plots further
