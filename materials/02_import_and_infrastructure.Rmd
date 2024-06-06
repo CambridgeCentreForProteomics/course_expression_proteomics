@@ -390,7 +390,7 @@ variables stored in the `rowData` when we come to data cleaning and filtering.
 
 We again use the `head` command to print the first 6 rows of the `rowData`
 
-```{r, eval = FALSE}
+```{r}
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   head()
