@@ -43,7 +43,7 @@ It is also useful to re-add information about the master protein descriptions
 since this is lost in the output of `limma` analysis. 
 
 It is important to note that the results table we have generated from `limma`
-is not the same as the input data. In order to add information from our
+is not in the same order as the input data. Therefore, to add information from our
 original data e.g., from the `rowData` such as the `Master.Protein.Descriptions`
 we must match the protein names between them. 
 

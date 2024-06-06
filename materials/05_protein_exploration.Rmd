@@ -8,7 +8,7 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Know how to determine the number of PSMs, peptides, proteins and protein groups (i.e., master proteins) in an assay of a `QFeatures` object
+* Know how to determine the number of PSMs, peptides, proteins and protein groups (i.e., master proteins) in an experimental assay of a `QFeatures` object
 * Understand what the `.n` column corresponds to when using the `aggregateFeatures` function to aggregate features
 * Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
 * Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation 
@@ -99,7 +99,7 @@ prot_count <-
 
 message(psm_count, " PSMs, ", 
         peptide_count, " peptides and ", 
-        prot_count, " proteins")
+        prot_count, " protein groups")
 ```
 
 After filtering we have,
@@ -113,7 +113,7 @@ prot_final <- cc_qf[["log_norm_proteins"]] %>% nrow()
 
 message(psm_final, " PSMs, ", 
         peptide_final, " peptides and ", 
-        prot_final, " proteins")
+        prot_final, " protein groups")
 ```
 
 During the course of data processing we have lost,
@@ -121,7 +121,7 @@ During the course of data processing we have lost,
 ```{r}
 message(psm_count - psm_final, " PSMs, ", 
         peptide_count - peptide_final, " peptides and ", 
-        prot_count - prot_final, " proteins")
+        prot_count - prot_final, " protein groups")
 ```
 
 :::
@@ -131,7 +131,7 @@ message(psm_count - psm_final, " PSMs, ",
 
 If we look at the names of the columns within our, "`log_peptides"`,
 `"log_proteins"`  assays we see that there is a column called `.n`. This column
-was not present in the PSM level assays.
+was not present in the PSM level experimental assays.
 
 For example,
 ```{r}
@@ -399,7 +399,7 @@ near-zero, the two variables are not expected to have any relationship.
 Eigendecomposition is a concept in linear algebra whereby a data matrix is 
 represented in terms of **eigenvalues** and **eigenvectors**. In this case, the
 the eigenvalues and eigenvectors are calculated based on the covariance matrix
-and will inform us about the magnitude and direction of our data. Each eigenvectoor
+and will inform us about the magnitude and direction of our data. Each eigenvector
 represents a direction in the data with a corresponding eigenvalue telling us how 
 much variation in our data occurs in that direction.
 
@@ -435,9 +435,9 @@ log normalised protein level data. To make this matrix compatible with `prcomp`
 we also need to transpose the data such that the samples become rows and 
 proteins become columns. This is easily achieved using the `t` function. 
 
-Our protein data does not contain due to the decision to impute. However, if
-there were any missing values in the data, these would need to be removed using 
-`filterNA` to facilitate compatibility with PCA.
+Our protein data does not contain missing values due to the decision to impute.
+However, if there were any missing values in the data, these would need to be 
+removed using `filterNA` to facilitate compatibility with PCA.
 
 
 ```{r}

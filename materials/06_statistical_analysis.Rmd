@@ -562,7 +562,7 @@ limma_results_treat %>%
 :::
 
 :::
-
+:::
 
 ## Visualising the protein abundances in a heatmap
 
