@@ -1,5 +1,5 @@
 ---
-author: "Charlotte Hutchings, Lisa Breckels"
+author: "Charlotte Hutchings, Lisa Breckels, Tom Smith"
 date: today
 number-sections: false
 ---
@@ -56,7 +56,10 @@ This workshop will be run by:
 * Lisa M. Breckels - Cambridge Centre for Proteomcis, University of Cambridge
 * Charlotte Hutchings - Cambridge Centre for Proteomcis, University of Cambridge
 * Charlotte S. Dawson - Cambridge Centre for Proteomcis, University of Cambridge
-* Tom Smith - MRC Toxicology Unit Bioinformatics Facility, University of Cambridge
+* Tom Smith - Bioinformatics Facility, MRC Toxicology Unit, University of Cambridge
+
+Previous instructors include:
+* Thomas Krueger - Department of Biochemistry, University of Cambridge
 
 ## Authors
 <!-- 
@@ -76,7 +79,11 @@ About the authors:
   <a href="https://github.com/lmsimp" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
   _Affiliation_: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge  
   _Roles_: writing - original draft; conceptualisation; coding
-
+- **Tom Smith**
+  <a href="https://orcid.org/0000-0002-0697-8777" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a>
+  <a href="https://github.com/TomSmithCGAT" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
+  _Affiliation_: Bioinformatics Facility, MRC Toxicology Unit, University of Cambridge  
+  _Roles_: writing-review-editing; coding
 
 ## Citation
 
