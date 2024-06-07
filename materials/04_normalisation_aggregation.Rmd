@@ -62,7 +62,7 @@ see that our abundance values are dramatically skewed towards zero.
 
 ```{r, warning = FALSE, message=FALSE}
 ## Look at distribution of abundance values in untransformed data
-cc_qf[["psms_imputed"]] %>%
+cc_qf[["psms_filtered"]] %>%
   assay() %>%
   longFormat() %>%
   ggplot(aes(x = value)) +
@@ -108,7 +108,7 @@ requires the data to be log transformed.
 
 ```{r, warning = FALSE, message=FALSE}
 ## Look at distribution of abundance values in untransformed data
-cc_qf[["psms_imputed"]] %>%
+cc_qf[["psms_filtered"]] %>%
   assay() %>%
   longFormat() %>%
   ggplot(aes(x = log2(value))) +
@@ -123,8 +123,8 @@ and specify `base = 2`.
 ```{r}
 cc_qf <- logTransform(object = cc_qf, 
                       base = 2, 
-                      i = "psms_imputed", 
-                      name = "log_psms_imputed")
+                      i = "psms_filtered", 
+                      name = "log_psms")
 ```
 
 Let's take a look again at our `QFeatures` object,
@@ -165,7 +165,7 @@ group by the peptide amino acid sequence.
 
 ```{r, warning = FALSE, message=FALSE}
 cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_psms_imputed", 
+                           i = "log_psms", 
                            fcol = "Sequence",
                            name = "log_peptides",
                            fun = MsCoreUtils::robustSummary,
@@ -175,7 +175,7 @@ cc_qf
 ```
 
 We see we have created a new assay called `log_peptides` and summarised 
-`r nrow(cc_qf[["log_psms_imputed"]])` PSMs into `r nrow(cc_qf[["log_peptides"]])`
+`r nrow(cc_qf[["log_psms"]])` PSMs into `r nrow(cc_qf[["log_peptides"]])`
 peptides.
 
 There are many ways in which we can combine the quantitative values from each of
@@ -340,22 +340,23 @@ the raw data, (2) the log transformed data and (3) the log normalised data.
 Using `plotDensities` from the `Limma` package,
 
 ```{r}
-raw_dist <- cc_qf[["psms_filtered"]] %>%
+par(mfrow = c(1, 3))  ## Set up panel to hold three figures
+
+cc_qf[["psms_filtered"]] %>%
   assay() %>%
   plotDensities(legend = FALSE, 
                 main = "Raw PSMs") 
 
-log_dist <- cc_qf[["log_psms"]] %>%
+cc_qf[["log_psms"]] %>%
   assay() %>%
   plotDensities(legend = FALSE, 
                 main = "Log2 PSMs") 
 
-log_norm_dist <- cc_qf[["log_norm_filtered"]] %>%
+cc_qf[["log_norm_proteins"]] %>%
   assay() %>%
   plotDensities(legend = FALSE, 
                 main = "Log2 norm proteins") 
 
-raw_dist + log_dist + log_norm_dist
 ```
 
 :::

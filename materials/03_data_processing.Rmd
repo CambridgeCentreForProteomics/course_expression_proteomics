@@ -938,116 +938,46 @@ mv_filtered$nNArows$nNA %>% table()
 
 ### Removing data with high levels of missingness
 
-Although the use-case data has only a small number of mssing values it is still
-common to remove individual features that have too many missing values across
-samples. Here, we remove PSMs that have >20% missing values. This is done using
+Since the use-case data only has a small number of missing values, it makes
+sense to simply remove any PSM with a missing value. This is done using
 the `filterNA` function where the `pNA` argument specifies the maximum proportion
 of missing values to allow per feature.
 
 
 ```{r}
 cc_qf <- cc_qf %>%
-  filterNA(pNA = 0.2, i = "psms_filtered")
+  filterNA(pNA = 0, i = "psms_filtered")
 ```
 
+Check that we now have no missing values, 
+
+```{r}
+nNA(cc_qf, i = "psms_filtered")$nNA
+```
 
 We already established that none of our samples have an abnormally high 
 proportion of missing values (relative to the average). Therefore, we do not
 need to remove any entire samples/columns.
 
 
-### Imputation of remaining missing values
+### Imputation of missing values
 
-The final step in managing our missing data is to consider whether to impute.
+The final step when managing missing data is to consider whether to impute.
 Imputation involves the replacement of missing values with probable values.
 Unfortunately, estimating probable values is difficult and requires complex 
-assumptions about why a value is missing. For example, if a value is missing 
-because a peptide is completely absent or present at an abundance below the limit
-of detection then the most suitable replacement value is arguably the lowest
-abundance value recorded in the data set (since this represents the limit of
-detection). Alternatively, if a value is missing because of stochastic technical
-reasons then it might be more appropriate to replace it with a value derived 
-from a similar peptide. Overall, left-censored methods such as minimal value and
-limit of detection approaches work best for data that is MNAR (intensity-dependent
-missing values). Hot deck methods such as k-nearest neighbors, random forest and 
-maximum likelihood methods work better for data that is MCAR (intensity-independent).
-To confuse the situation further, most data sets contain missing values that are
-a mixture of MNAR and MCAR, so mixed imputation methods can be applied.
+assumptions about why a value is missing. Given that imputation is difficult 
+to get right and can have substantial effects on the results of downstream 
+analysis, it is generally recommended to avoid it where we can. This means that 
+if there is not a large proportion of missing values in our data, we should not 
+impute. This is one of the reasons that it was easier in the use-case to simply 
+remove the few missing values remaining so that we do not need to impute.
 
-Given that imputation is difficult to get right and can have substantial effects
-on the results of downstream analysis, it is generally recommended to avoid
-it where we can. This means that if there is not a large proportion of missing
-values in our data, we should not impute. 
+Unfortunately, not all datasets benefit from having so few missing values. Label-
+free proteomics experiments in particular have many more missing values than their
+label-based equivalents. For a more in-depth discussion of imputation and how to
+complete this within the `QFeatures` infrastructure, please see the
+[Adapting this workflow to label-free proteomics data](./11_lfq_vs_tmt.html) section.
 
-We can now check to see how many missing values remain in the data.
-
-```{r}
-nNA(cc_qf[["psms_filtered"]])$nNA
-```
-
-We only have `r nNA(cc_qf[["psms_filtered"]])$nNA$pNA * 100`% missing values in our
-data, so imputation is not really necessary here. We could either remove the 
-PSMs that still have missing values or continue our analysis. The latter is 
-possible since missing values are often lost during aggregation and there are
-now aggregation methods that are able to deal with missing data @Goeminne2020 @Sticker2020.
-
-For demonstration purposes we will carry out imputation anyway. Since we are 
-only imputing `r nNA(cc_qf[["psms_filtered"]])$nNA$nNA` values we do not expect
-a large effect on the data structure or downstream analysis.
-
-Imputation within the `QFeatures` infrastructure is completed using the `impute`
-function. To see what imputation methods this function facilitates we can use
-`MsCoreUtils::imputeMethods()`.
-
-To see what imputation methods are available,
-
-```{r}
-MsCoreUtils::imputeMethods()
-```
-
-
-Here we will use the baseline k-nearest neighbors (k-NN),
-
-```{r, results = "hide", warning=FALSE, message=FALSE}
-cc_qf <- impute(object = cc_qf,
-                method = "knn", 
-                i = "psms_filtered",
-                name = "psms_imputed")
-
-cc_qf
-```
-
-:::{.callout-exercise}
-#### Challenge 4: Imputation
-{{< level 2 >}}
-
-Use the `nNA` function to check that the `impute` function has worked.
-
-::: {.callout-answer collapse=true}
-
-Call `nNA` on the `"psms_imputed"` assay.
-
-```{r}
-mv_imputed <- nNA(cc_qf[["psms_imputed"]])
-
-## View object
-mv_imputed
-```
-
-Examine the number of NAs across the rows (PSMs).
-
-```{r}
-mv_imputed$nNArows$nNA %>% table()
-```
-
-Now down the columns (samples).
-
-```{r}
-mv_imputed$nNAcols$nNA %>% table()
-```
-
-:::
-:::
 
 
 ```{r, include=FALSE}

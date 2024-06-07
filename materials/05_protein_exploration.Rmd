@@ -320,11 +320,11 @@ to visualise the processing of this protein.
 
 
 ```{r, warning = FALSE, message=FALSE}
-O43583[, , c("log_psms_imputed", "log_peptides", "log_proteins")] %>%
+O43583[, , c("log_psms", "log_peptides", "log_proteins")] %>%
   longFormat() %>%
   as_tibble() %>%
   mutate(assay_order = factor(assay, 
-                              levels = c("log_psms_imputed", 
+                              levels = c("log_psms", 
                                          "log_peptides", 
                                          "log_proteins"))) %>%
   ggplot(aes(x = colname, y = value, colour = assay)) + 
