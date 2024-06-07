@@ -18,7 +18,6 @@ editor_options:
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
 library("factoextra")
 library("org.Hs.eg.db")
@@ -191,7 +190,6 @@ effectively even in the presence of missing values @Sticker2020.
 
 ### Step 2: Aggregation of peptides to proteins
 
-
 Let's complete our aggregation by now aggregating our peptide level data to 
 protein level data. Let's again use the `aggregateFeatures` function and pass
 `fcol = "Master.Protein.Accessions"` to specify we wish to
@@ -228,7 +226,6 @@ conditions, when in reality they are referring to protein groups.
 knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
 ```
 
-
 We now have log protein level abundance data to which we could apply a parametric
 statistical test. However, to perform a statistical test and discover whether any 
 proteins differ in abundance between conditions (here cell cycle stages), we first
@@ -241,155 +238,17 @@ protein abundance between samples and attempt to return our quantitative data
 back to its 'normal' condition i.e., representative of how it was in the original
 biological system. There are various methods that exist to normalise expression
 proteomics data and it is necessary to consider which of these to apply on a 
-case-by-case basis.
+case-by-case basis. Unfortunately, there is not currently a single normalisation 
+method which performs best for all quantitative proteomics datasets. 
 
-Unfortunately, there is not currently a single normalization method which
-performs best for all quantitative proteomics datasets. Within the R Bioconductor
-packages, however, exists [`NormalyzerDE`](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html) @Willforss2018, a tool for evaluating different
-normalisation methods.
+In `QFeatures` we can use the `normalize` function. To see which other 
+normalisation methods are supported within this function, type `?normalize` to 
+access the function's help page. 
 
-:::{.callout-exercise}
-#### Challenge 1: Exploring normalisation methods using NormalyzerDE
-{{< level 1 >}}
-
-The `NormalyzerDE` package provides a function called `normalyzer` which is 
-useful for getting an overview of how different normalisation methods perform
-on a dataset. The `normalyzer` function however **requires a raw intensity matrix
-as input, prior to any log transformation.** 
-
-1. Create a copy of your `cc_qf` dataset for testing normalisation methods.
-Let's call this `norm_qf`.
-
-```{r}
-norm_qf <- cc_qf
-
-norm_qf
-```
-
-2. Take the your data from the `psms_imputed` level and create a new assay in
-your `QFeatures` object (`norm_qf`) that aggregates the data from this level 
-directly to protein level. Call this assay `"proteins_direct"`.
-
-```{r, message=FALSE, warning=FALSE, include=FALSE, eval=TRUE}
-norm_qf <- aggregateFeatures(norm_qf,
-                           i = "psms_imputed", 
-                           fcol = "Master.Protein.Accessions",
-                           name = "proteins_direct",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
-
-## Verify
-experiments(norm_qf)
-```
-
-2. Run the `normalyzer` function on the newly created (un-transformed) 
-protein level data using the below code,
-
-```{r, eval=FALSE}
-normalyzer(jobName = "normalyzer",
-           experimentObj = norm_qf[["proteins_direct"]],
-           sampleColName = "sample",
-           groupColName = "condition",
-           outputDir = "normalyzer_output",
-           requireReplicates = FALSE)
-```
-
-If your job is successful a new folder will be created in your working directory
-under `outputs` called `normalyzer`. Take a look at the PDF report. 
-
-What method do you think is appropriate?
-
-::: {.callout-answer collapse=true}
-
-**Task 1** Create a new protein level assay that takes the imputed PSMs and 
-aggregates directly to protein level.
-
-```{r, message=FALSE, warning=FALSE, eval=FALSE}
-cc_qf <- aggregateFeatures(cc_qf,
-                           i = "psms_imputed", 
-                           fcol = "Master.Protein.Accessions",
-                           name = "proteins_direct",
-                           fun = MsCoreUtils::robustSummary,
-                           na.rm = TRUE)
-
-## Verify
-cc_qf
-```
-
-**Task 2** Running `normalyzer` on your assay.
-
-```{r, eval=FALSE}
-normalyzer(jobName = "normalyzer",
-           experimentObj = cc_qf[["proteins_direct"]],
-           sampleColName = "sample",
-           groupColName = "condition",
-           outputDir = "output",
-           requireReplicates = FALSE)
-```
-
-Note: To run `normalyzer` on this data we need to pass `requireReplicates =
-FALSE` as we have only one sample of the control. We pass the un-transformed
-data as the `normalyzer` function does an internal log2 transformation as part
-of its pipeline. For more details on using the `NormalyzerDE` package take a
-look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
-
-:::
-:::
-
-
-In the above challenge we used the `normalyzer` function to execute the `normalyzerDE` pipeline 
-and produce an output PDF report. We passed the un-transformed protein level data
-as the `normalyzer` function does its own log2 transformation prior to testing
-any normalisation methods. A range of normalisations are tested on the data and
-performance measures and visualisations are calculated to facilitate comparison
-between different methods. 
-
-The output report contains:
-
-- Total intensity plot: Barplot showing the summed intensity in each sample for the log2-transformed data
-- Total missing plot: Barplot showing the number of missing values found in each sample for the log2-transformed data
-- Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing inspection of the main global changes in the data
-- Scatterplots: The first two samples from each dataset are plotted.
-- Q-Q plots: QQ-plots are plotted for the first sample in each normalized dataset.
-- Boxplots: Boxplots for all samples are plotted and colored according to the replicate grouping.
-- Relative Log Expression (RLE) plots: Relative log expression value plots. Ratio between the expression of the variable and the median expression of this variable across all samples. The samples should be aligned around zero. Any deviation would indicate discrepancies in the data.
-- Density plots: Density distributions for each sample using the density function. Can capture outliers (if single densities lies far from the others) and see if there is batch effects in the dataset (if for instance there is two clear collections of lines in the data).
-- MDS plots: Multidimensional scaling plot using the `cmdscale()` function from the `stats` package. Is often able to show whether replicates group together, and whether there are any clear outliers in the data.
-- Dendograms: Generated using the `hclust` function. Data is centered and scaled prior to analysis. Coloring of replicates is done using `as.phylo` from the `ape` package.
-
-When interpreting our `normalyzer` output we need to consider our experimental
-design. If all samples come from the same cells and we don't expect the treatment/conditions
-to cause huge changes to the proteome, we expect the distributions of the
-intensities to be roughly the same. We can compare across samples by plotting
-the distribution in each sample together. When doing this you should get an idea
-of where the majority of the intensities lie. We expect samples from the same
-condition to have intensities that lie in the same range and if they do not then we
-can assume that this is due to technical noise, and we want to normalise for this
-technical variability. 
-
-```{r fig-density, echo = FALSE, fig.align = "center", out.width = "90%"}
-knitr::include_graphics("figs/density_plots_example.png", error = FALSE)
-```
-
-@fig-density shows a screenshot of the PDF report output from running the
-`normalyzer` pipeline. We see that the data before normalisation (log2, topleft)
-has curves/peaks at different locations and what we want to do is try and
-register the curves at the same location and shift them according to their
-median so all peaks of samples are overlapping. Which method to choose? Really
-you need to look at the underlying summary statistics. For example, the mean is
-very sensitive to outliers and in proteomics we often have outliers, so this is
-not a method we would choose. The median (or median-based methods) are a good
-choice for most quantitative proteomics data. Quantile normalisation is not
-recommended for quantitative proteomics data. Quantile methods will not change
-the median but will change all quantiles of the distribution so that all
-distributions coincide. We could do this but this often causes problems due to
-the fact that we have missing data in proteomics. This makes the normalisation
-even more challenging than in other omics types of data.
-
-The median method looks reasonable so we proceed to normalise our
-data with this method. In `QFeatures` we can use the `normalize` function.
-To see which other normalisation methods are supported within this function,
-type `?normalize` to access the function's help page. 
+Of the supported methods, median-based methods work well for most quantitative
+proteomics data. Unlike using the mean, median-based methods are less sensitive
+to the outliers which we often have in proteomics datasets. Let's apply a
+center median normalisation approach,
 
 ```{r}
 cc_qf <- normalize(cc_qf, 
@@ -463,10 +322,56 @@ pre_norm + post_norm
 :::
 :::
 
+To visualise the effect that log transformation followed by normalisation has 
+had on our data, we can also generate density plots. Density plots allow us to
+visualise the distribution of quantitative values in our data and to see where
+the majority of intensities lie. 
+
+:::{.callout-exercise}
+#### Challenge 3: Visualising the impact of data transformation and normalisation
+{{< level 2 >}}
+
+Create three density plots to visualise the distribution of intensities in (1) 
+the raw data, (2) the log transformed data and (3) the log normalised data.
+
+::: {.callout-answer collapse=true}
+
+Using `plotDensities` from the `Limma` package,
+
+```{r}
+raw_dist <- cc_qf[["psms_filtered"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Raw PSMs") 
+
+log_dist <- cc_qf[["log_psms"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Log2 PSMs") 
+
+log_norm_dist <- cc_qf[["log_norm_filtered"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Log2 norm proteins") 
+
+raw_dist + log_dist + log_norm_dist
+```
+
+:::
+:::
+
+From our plots we can see that the center median normalisation has shifted the
+curves according to their median such that all of the final peaks are overlapping.
+This is what we would expect given that all of our samples come from the same 
+cells and our treatment/conditions don't case massive changes in the proteome.
+
+To explore the use of alternative normalisation strategies, the [`NormalyzerDE`](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html) @Willforss2018 package can be used to compare normalisation approaches.
+Please refer to the [Using NormalyzerDE to explore normalisation methods](./09_normalyzer.html) section.
+
+
 ```{r, include=FALSE}
 save(cc_qf, file = here("course_files/preprocessed/lesson04.rda"))
 ```
-
 
 
 ::: {.callout-tip}

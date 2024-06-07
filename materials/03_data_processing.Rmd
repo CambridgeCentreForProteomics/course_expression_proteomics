@@ -21,7 +21,6 @@ knitr::include_graphics("figs/flow_chart/flow_chart.002.png", error = FALSE)
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
