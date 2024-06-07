@@ -26,6 +26,7 @@ This workflow is an adjunct to the [Statistical analysis](./06_statistical_analy
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
+library("NormalyzerDE")
 library("limma")
 library("factoextra")
 library("org.Hs.eg.db")
