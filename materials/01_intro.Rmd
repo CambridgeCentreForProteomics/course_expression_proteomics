@@ -179,42 +179,10 @@ level. This will ensure a greater understanding of the data and facilitate
 transparency throughout the process. 
 
 For TMT data we can start our data analysis from the PSM level. However, it is
-not always possible to start at this level. For the analysis of label-free data
-processed using Proteome Discoverer it is advisable to begin processing at the
-peptide level. This is because most identification searches carried out on label-
-free MS data utilise an algorithm called retention time (RT) alignment, which 
-uses the match between runs (MBR) function. 
-
-**What problem does retention time alignment address?**
-
-Retention time alignment aims to deal with the problem of missing values in 
-label-free data-dependent acquisition (DDA) MS data. Since label-free samples 
-are all analysed by independent MS runs, the stochastic nature of DDA means 
-that different peptides are identified and quantified between samples, hence
-there are a high number of missing values. 
-
-**How does retention time alignment work?**
-
-Quantification of label-free samples is achieved at the MS1 level. This means 
-that we have potentially useful quantitative information before we have any
-peptide identification (MS1 before MS2). In cases where a peptide is identified
-in some samples but not others, it is possible to align the retention times of
-each sample run and then compare the MS1 spectra. In this way, information can
-be shared across runs and a peptide identification made in one run can be 
-assigned to an MS1 spectra from a completely independent run, even if this
-spectrum does not have a corresponding MS2 spectrum.
-
-**Why does retention time alignment prevent analysis from PSM level?**
-
-The process of RT alignment and MBRs occurs after the process of peptide
-spectrum matching. First, PSMs are derived from an identification search. This
-is done independently for each sample. The remaining spectra for which no PSM
-was identified are then included in the RT alignment algorithm in an attempt to
-assign an identification. If successful, this means that there may be peptide
-level data in the absence of PSM level data. Hence, if we used PSM level data 
-for the processing and analysis of label-free data then we would lose out on 
-the benefit of RT alignment.
-
+not always possible to start at this level. Some algorithms used to process 
+label-free data may require the data to be analysed from the peptide-level. See
+[Adapting this workflow to label-free proteomics](./11_lfq_vs_tmt.html) for 
+more details.
 
 ## Summary
 The use-case data that we will process and analyse in this workshop is a **DDA**
