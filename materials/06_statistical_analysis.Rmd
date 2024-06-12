@@ -137,6 +137,7 @@ variables, in our case the cell cycle stages. Simply put, the model
 design is determined by how samples are distributed across conditions.
 
 Below, we define the model matrix with `condition` as the explanatory variable. 
+
 ```{r}
 ## Design a matrix containing all factors that we wish to model
 condition <- all_proteins$condition

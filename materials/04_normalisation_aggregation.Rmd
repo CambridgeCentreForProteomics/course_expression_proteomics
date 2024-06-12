@@ -99,9 +99,11 @@ change of +1.
 ::: {.callout-note}
 #### At which stage of the processing should I perform log transformation?
 Logarithmic transformation can be applied at any stage of the data processing.
-We have chosen to log transform the data in this example prior to protein
-aggregation as we will use the `robust` method for summarisation and this method
-requires the data to be log transformed.
+This decision will depend upon the other data processing steps being completed 
+and the methods used to do so. For example, many imputation methods work on 
+log transformed data. We have chosen to log transform the data in this example
+prior to protein aggregation as we will use the `robust` method for summarisation 
+and this method requires the data to be log transformed.
 
 :::
 
