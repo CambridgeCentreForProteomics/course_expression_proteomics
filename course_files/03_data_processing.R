@@ -39,8 +39,8 @@ cc_qf <- addAssay(x = cc_qf,
 
 ## Create assay link between two experiments
 cc_qf <- addAssayLink(object = cc_qf, 
-                      from = "psms_filtered", 
-                      to = "psms_raw",
+                      from = "psms_raw", 
+                      to = "psms_filtered",
                       varFrom = "Master.Protein.Accessions",
                       varTo = "Master.Protein.Accessions")
 
@@ -183,28 +183,6 @@ mv_filtered$nNAcols %>%
 ## ---------------------------------------------------------------------------------------------------------
 
 cc_qf <- cc_qf %>%
-  filterNA(pNA = 0.2, i = "psms_filtered")
+  filterNA(pNA = 0, i = "psms_filtered")
 
 
-
-## ---------------------------------------------------------------------------------------------------------
-## Imputation
-## ---------------------------------------------------------------------------------------------------------
-
-MsCoreUtils::imputeMethods()
-
-
-cc_qf <- impute(object = cc_qf,
-                method = "knn", 
-                i = "psms_filtered",
-                name = "psms_imputed")
-
-
-## Looking at the data with imputed values
-mv_imputed <- nNA(cc_qf[["psms_imputed"]])
-
-
-
-## Assessing remaining MVs
-mv_imputed$nNArows$nNA %>% table()
-mv_imputed$nNAcols$nNA %>% table()

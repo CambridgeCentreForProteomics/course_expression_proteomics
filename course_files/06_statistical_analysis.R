@@ -30,12 +30,13 @@ load("preprocessed/lesson04.rda", verbose = TRUE)
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Extract protein list from our QFeatures object - remove sample 1 
-all_proteins <- cc_qf[["log_norm_proteins"]][, -1]
+all_proteins <- cc_qf[["log_norm_proteins"]]
+all_proteins <- all_proteins[, all_proteins$condition %in% c("M", "G1")]
 
 ## Ensure that conditions are stored as levels of a factor 
 ## Explicitly define level order by cell cycle stage
 all_proteins$condition <- factor(all_proteins$condition, 
-                                 levels = c("Desynch", "M", "G1"))
+                                 levels = c("M", "G1"))
 
 
 
@@ -44,20 +45,9 @@ all_proteins$condition <- factor(all_proteins$condition,
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Design a matrix containing all factors that we wish to model
-m_design <- model.matrix(~ 0 + all_proteins$condition)
-colnames(m_design) <- levels(all_proteins$condition)
+condition <- all_proteins$condition
 
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Limma: setting up contrasts of interest
-## ---------------------------------------------------------------------------------------------------------
-
-## Specify contrasts of interest
-contrasts <- makeContrasts(G1_M = G1 - M, 
-                           M_Des = M - Desynch, 
-                           G1_Des = G1 - Desynch,
-                           levels = m_design)
+m_design <- model.matrix(~ condition)
 
 
 
@@ -65,16 +55,16 @@ contrasts <- makeContrasts(G1_M = G1 - M,
 ## Limma: fitting a linear model
 ## ---------------------------------------------------------------------------------------------------------
 
-## Fit linear model using the design matrix and desired contrasts
+## Fit linear model using the design matrix 
 fit_model <- lmFit(object = assay(all_proteins), design = m_design)
-fit_contrasts <- contrasts.fit(fit = fit_model, contrasts = contrasts)
+
 
 
 ## ---------------------------------------------------------------------------------------------------------
 ## Limma: updating using eBayes
 ## ---------------------------------------------------------------------------------------------------------
 
-final_model <- eBayes(fit = fit_contrasts, 
+final_model <- eBayes(fit = fit_model, 
                       trend = TRUE,
                       robust = TRUE)
 
@@ -88,18 +78,10 @@ final_model <- eBayes(fit = fit_contrasts,
 # Note coef = NULL and ANOVA performed
 
 limma_results <- topTable(fit = final_model,   
-                          coef = NULL, 
+                          coef = "conditionG1", 
                           adjust.method = "BH",    # Method for multiple hypothesis testing
                           number = Inf) %>%        # Print results for all proteins
   rownames_to_column("Protein") 
-
-
-
-## Plot a histogram of the raw p-values (not BH-adjusted p-values).
-limma_results %>%
-  as_tibble() %>%
-  ggplot(aes(x = P.Value)) + 
-  geom_histogram()
 
 
 
@@ -110,64 +92,18 @@ plotSA(fit = final_model,
        xlab = "Average log2 abundance")
 
 
+## Plot a histogram of the raw p-values (not BH-adjusted p-values).
+limma_results %>%
+  as_tibble() %>%
+  ggplot(aes(x = P.Value)) + 
+  geom_histogram()
+
+
 ## ---------------------------------------------------------------------------------------------------------
 ## Limma: Interpreting the results of a SINGLE contrast
 ## ---------------------------------------------------------------------------------------------------------
 
 ## We can look at individual contrasts by passing the contrast name to 
-## the coef argument in the topTable function.
-M_Desynch_results <- topTable(fit = final_model, 
-                              coef = "M_Des", 
-                              number = Inf,
-                              adjust.method = "BH",
-                              confint = TRUE) %>%
-  rownames_to_column("protein")
-
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Limma: Interpreting the results of ALL contrasts
-## ---------------------------------------------------------------------------------------------------------
-decideTests(object = final_model,
-            adjust.method = "BH", 
-            p.value = 0.01, 
-            method = "separate") %>%
-  summary()
-
-
-
-M_Desynch_results %>%
-  as_tibble() %>%
-  filter(adj.P.Val < 0.01) %>% 
-  nrow()
-
-
-decideTests(object = final_model,
-            adjust.method = "BH", 
-            p.value = 0.01, 
-            method = "global") %>%
-  summary()
-
-
-
-## Determine global significance using decideTests
-global_sig <- decideTests(object = final_model, 
-                          adjust.method = "BH", 
-                          p.value = 0.01, 
-                          method = "global") %>%
-  as.data.frame() %>% 
-  rownames_to_column("protein")
-
-
-## Change column names to avoid conflict when binding
-colnames(global_sig) <- paste0("sig_", colnames(global_sig))
-
-## Add the results of global significance test to overall ANOVA results
-limma_results <- dplyr::left_join(limma_results, 
-                                  global_sig, 
-                                  by = c("Protein" = "sig_protein"))
-
-## Verify
 limma_results %>% head()
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -175,9 +111,8 @@ limma_results %>% head()
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Define significance based on an adj.P.Val < 0.01.
-M_Desynch_results <- 
-  M_Desynch_results %>%
-  as_tibble() %>%
+limma_results <- 
+  limma_results %>%
   mutate(direction = ifelse(logFC > 0, "up", "down"),
          significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
 
@@ -189,10 +124,29 @@ M_Desynch_results <-
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Generate a volcano plot
-M_Desynch_results %>%
+limma_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
   geom_point(shape = 21, stroke = 0.25, size = 3) +
   theme_bw()
+
+
+
+## --------------------------------------------------------------------------------------------------------
+## Fold-change thresholds 
+## --------------------------------------------------------------------------------------------------------
+
+## Use treat to add post-hoc fold change threshold
+final_model_treat <- treat(final_model, 
+                           lfc = 0.5,
+                           trend = TRUE, 
+                           robust = TRUE)
+
+limma_results_treat <- topTreat(final_model_treat, 
+                                coef = "conditionG1",
+                                n = Inf) %>%
+  rownames_to_column("Protein")
+
+
 
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -202,3 +156,21 @@ M_Desynch_results %>%
 # Re-generate your table of results defining significance based on an adjusted 
 # P-value < 0.05 and a log2 fold-change of > 1.
 
+
+## --------------------------------------------------------------------------------------------------------
+## Visualisation - heatmaps
+## --------------------------------------------------------------------------------------------------------
+
+## Extract significantly changing proteins
+sig_protein <- limma_results %>%
+  filter(significance == "sig") %>%
+  pull(Protein)
+
+## Extract quant data for the significant proteins
+quant_data <- cc_qf[["log_norm_proteins"]] 
+quant_data <- quant_data[sig_proteins, ] %>% assay()
+
+## Plot heatmap
+pheatmap(mat = quant_data, 
+         scale = "row",
+         show_rownames = FALSE)
