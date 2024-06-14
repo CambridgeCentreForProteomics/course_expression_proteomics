@@ -129,11 +129,12 @@ message(psm_count - psm_final, " PSMs, ",
 
 ## The `.n` column created by `aggregateFeatures`
 
-If we look at the names of the columns within our, "`log_peptides"`,
-`"log_proteins"`  assays we see that there is a column called `.n`. This column
-was not present in the PSM level experimental assays.
+If we look at the names of the columns within our "`log_peptides"` and
+`"log_proteins"` experimental assays we see that there is a column called `.n`. 
+This column was not present in the PSM level experimental assays.
 
 For example,
+
 ```{r}
 ## Check columns in the log normalised peptide assay
 cc_qf[["log_peptides"]] %>%
@@ -146,8 +147,8 @@ the `aggregateFeatures` function. This column stores information about how many
 child features (PSMs/peptides) were aggregated into each parent
 (peptides/protein) feature. Since we aggregated completed two steps of
 aggregation (1) PSMs to peptides, (2) peptides to proteins, the `.n` column
-tells us how many PSMs we have in support of each peptide, and how many peptides
-we have in support of each protein, respectively.
+in `"log_peptides"` tells us how many PSMs we have in support of each peptide,
+and in `"log_proteins"` how many peptidescwe have in support of each master protein.
 
 Let's examine peptide support,
 
@@ -435,7 +436,7 @@ log normalised protein level data. To make this matrix compatible with `prcomp`
 we also need to transpose the data such that the samples become rows and 
 proteins become columns. This is easily achieved using the `t` function. 
 
-Our protein data does not contain missing values due to the decision to impute.
+Our protein data does not contain missing values.
 However, if there were any missing values in the data, these would need to be 
 removed using `filterNA` to facilitate compatibility with PCA.
 

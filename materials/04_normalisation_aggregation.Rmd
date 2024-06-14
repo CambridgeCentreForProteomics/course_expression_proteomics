@@ -79,8 +79,8 @@ able to apply parametric statistical tests later on. Consider the case where
 we have a protein with abundance values across three samples A, B and C. If the
 abundance values were 0.1, 1 and 10, we can tell from just looking at the numbers
 that the protein is 10-fold more abundant in sample B compared to sample A, and
-10-fold more abundant in sample C than sample B. However, even though the fold-
-changes are equal, the abundance values in A and B are much closer together on 
+10-fold more abundant in sample C than sample B. However, even though the fold-changes 
+are equal, the abundance values in A and B are much closer together on 
 a linear scale than those of B and C. A parametric test would not account for 
 this bias and would not consider A and B to be as equally different as B and C.
 **By applying a logarithmic transformation we can convert our skewed asymmetrical data distribution into a symmetrical, Gaussian distribution.**
@@ -161,7 +161,7 @@ the explicit step of PSM to peptide aggregation.
 
 In your console run the `aggregateFeatures` function on your `QFeatures` object.
 We wish to aggregate from PSM to peptide level so pass the argument 
-`i = "log_imputed_psms"` to specify we wish to aggregate the log transformed PSM
+`i = "log_psms"` to specify we wish to aggregate the log transformed PSM
 data, and then pass `fcol = "Sequence"` to specify we wish to
 group by the peptide amino acid sequence.
 
@@ -187,7 +187,9 @@ quantitation based on the mean, median or sum PSM quantitation. Although the use
 of these simple mathematical functions can be effective, using `colMeans` or
 `colMedians` can become difficult for data sets that still contain missing
 values. Similarly, using `colSums` can result in protein quantitation values
-being biased by the presence of missing values. Here we will use
+being biased by the presence of missing values. That said, when missing values 
+are not a problem, `colSums` can provide a beneficial bias towards the more 
+abundant PSMs or peptides, which are also more likely to be accurate. Here we will use
 `robustSummary`, a state-of-the art aggregation method that is able to aggregate
 effectively even in the presence of missing values @Sticker2020.
 

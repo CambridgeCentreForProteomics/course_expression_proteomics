@@ -155,7 +155,9 @@ This is one among several third party softwares available for protein
 identification. Each software has it's own naming conventions, formatting and
 metrics for quantitation and associated metadata. As such, users following
 this course with their own data should be mindful of this and adapt the 
-proposed filters and steps accordingly.
+proposed filters and steps accordingly. MaxQuant is a free, open-source alternative
+software for database searches of MS data. We have provided details on the
+MaxQuant equivalent column names to those used in this course [here](./10_maxquant_notes.html).
 
 :::
 
@@ -170,8 +172,8 @@ this feature will be kept.
 
 The `filterFeatures` function provides the option to apply our filter (i) to the
 whole `QFeatures` object and all of its `experimental assays`, or (ii) to specific
-assays within the `QFeatures` object. We wish to only filter on the data in our
-`QFeatures` object called `psms_filtered` (and not every assay) so in the
+`experimental assays` within the `QFeatures` object. We wish to only filter on the data in our
+`QFeatures` object called `psms_filtered` (and not every experimental assay) so in the
 following code chunks we always pass the argument `i = "psms_filtered"`.
 
 Let's begin by filtering out any PSMs that **do not have a master protein**.
@@ -198,7 +200,7 @@ As mentioned above it is standard practice in proteomics to filter MS data for
 **common contaminants**. This is done by using a carefully curated,
 sample-specific contaminant database. In this study the data was searched against
 the [Hao Group's Protein Contaminant Libraries for DDA and DIA Proteomics](https://github.com/HaoGroup-ProtContLib/Protein-Contaminant-Libraries-for-DDA-and-DIA-Proteomics/)
-@Frankenfield2022 during the PD search. The PD software flags PSMs that originate
+@Frankenfield2022 during the database search. The PD software flags PSMs that originate
 from proteins that match a contaminant and this is recorded in the "Contaminant"
 column in the PD output and propagated to the `rowData` of our `QFeatures`
 object.
@@ -656,7 +658,7 @@ fdr_confidence <- left_join(x = psm_data_QF,
 ::: {.callout-note}
 #### Joining data.frames
 Note: when using `left_join` we specify the argument `by =
-c("Master.Protein.Accessions" = "Accession"))` (note the = equals sign between
+c("Master.Protein.Accessions" = "Accession")` (note the = equals sign between
 the names). This tells `left_join` we want to match join the two `data.frames`
 by matching accession numbers between the the `Master.Protein.Accessions` column
 in `psm_data_QF` and the column called `Accession` in the `protein_data_PD`
@@ -785,7 +787,7 @@ into `NA` values.
 
 The main function that facilitates the exploration of missing data in `QFeatures`
 is `nNA`. Let's try to use this function. Again, we use the `i = ` argument to
-specify which assay within the `QFeatures` object that we wish to look at. 
+specify which experimental assay within the `QFeatures` object that we wish to look at. 
 
 ```{r}
 nNA(cc_qf, i = "psms_filtered")
@@ -972,8 +974,8 @@ if there is not a large proportion of missing values in our data, we should not
 impute. This is one of the reasons that it was easier in the use-case to simply 
 remove the few missing values remaining so that we do not need to impute.
 
-Unfortunately, not all datasets benefit from having so few missing values. Label-
-free proteomics experiments in particular have many more missing values than their
+Unfortunately, not all datasets benefit from having so few missing values. Label-free 
+proteomics experiments in particular have many more missing values than their
 label-based equivalents. For a more in-depth discussion of imputation and how to
 complete this within the `QFeatures` infrastructure, please see the
 [Adapting this workflow to label-free proteomics data](./11_lfq_vs_tmt.html) section.

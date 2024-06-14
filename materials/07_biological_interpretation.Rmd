@@ -77,10 +77,12 @@ Now we can use the `left_join` function from `dplyr` to match the protein
 descriptions to the protein IDs,
 
 ```{r, message=FALSE, warning=FALSE}
-limma_results <- limma_results %>% left_join(protein_info, by = "Protein")
+limma_results <- limma_results %>% 
+  left_join(protein_info, by = "Protein")
 
 # Verify
-limma_results
+limma_results %>%
+  head()
 ```
 
 ::: {.callout-note}
@@ -112,7 +114,7 @@ sig_down <- sig_changing %>%
 ## Biological interpretation of differentially abundant proteins
 
 Our statistical analyses provided us with a list of proteins that are present
-with significantly different abundances between different stages of the cell 
+with significantly different abundances between M-phase and G1-phase of the cell 
 cycle. We can get an initial idea about what these proteins are and do by 
 looking at the protein descriptions. 
 
@@ -157,7 +159,7 @@ answer the question:
 
 Unfortunately, just looking at the GO terms associated with our differentially
 abundant proteins is insufficient to draw any solid conclusions. For example, if
-we find that `r (nrow(sig_down))/3` of the `r nrow(sig_down)` proteins significantly
+we find that 120 of the `r nrow(sig_down)` proteins significantly
 downregulated in M phase are annotated with the GO term "kinase activity", it may
 seem intuitive to conclude that reducing kinase activity is important for the M-phase 
 phenotype. However, if 90% of all proteins in the cell were kinases (an extreme

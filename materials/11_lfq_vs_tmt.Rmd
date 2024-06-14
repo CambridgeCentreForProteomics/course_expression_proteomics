@@ -41,34 +41,34 @@ knitr::include_graphics("figs/overall_flow_chart.png", error = FALSE)
 
 However, some of the decisions made and exact approaches to each stage may differ
 when considering label-free data. These decisions are discussed below and 
-summarised in \@ref(tab:table1).
+summarised in @tbl-comparison.
 
-```{r table1, echo = FALSE}
+```{r, echo = FALSE}
+#| label: tbl-comparison
+#| tbl-cap: "Main differences between processing workflow for TMT and label-free quantitative proteomics data prior to differential expression analyses"
+
 table1 <- data.frame("Data processing stage" = c("Import", "Data cleaning", "Quality control filtering",
                                                  "Managing missing data", "Log transformation", 
                                                  "Aggregation", "Normalisation", "Statistics"),
                      "TMT" = c("Import PSM-level data", 
                                "Standard data cleaning steps",
-                               "Additional thresholds on reporter ion signal-to-noise ratio,
-                               co-isolation interference and SPS mass matches",
+                               "Additional thresholds on reporter ion signal-to-noise ratio, co-isolation interference and SPS mass matches",
                                "Low proportion of missing values - remove with minimal data loss",
                                "Log2 transformation",
-                               "Aggregation using sum method",
+                               "Aggregation using robustSummary or sum method",
                                "Median-based normalisation", 
                                "Linear model"),
                      "Label-free" = c("Import PSM- or peptide-level data, depending on software output of MBRs",
                                       "Standard data cleaning steps",
                                       "Additional quality control filters are software specific and optional",
-                                      "Higher proportion of missing values - impute at lowest data level or 
-                                      use robustSummary aggregation",
+                                      "Higher proportion of missing values - impute at lowest data level or use robustSummary aggregation",
                                       "Log2 transformation",
                                       "Aggregation using robustSummary method",
                                       "Median-based normalisation",
                                       "Linear model"))
 
 knitr::kable(table1, 
-             col.names = c("Data processing step", "TMT", "Label-free"),
-             caption = "Main differences between processing workflow for TMT and label-free quantitative proteomics data prior to differential expression analyses")
+             col.names = c("Data processing step", "TMT", "Label-free"))
 ```
 
 
@@ -121,6 +121,7 @@ for the processing and analysis of label-free data then we would lose out on
 the benefit of RT alignment. 
 
 **When to use peptide-level data for label-free analysis?**
+
 Label-free data processed using Proteome Discoverer software should be processed
 from the peptide level. This means that we would use the file called 
 `cell_cycle_total_proteome_analysis_PeptideGroups.txt` and import using 
@@ -274,7 +275,7 @@ influence aggregation.
 
 **An alternative to imputation - aggregation using robust summarisation**
 
-## Tom - could you write something here?
+##### Tom - could you write something here?
 
 Here we will use `robustSummary`, a state-of-the art aggregation method that is able to aggregate
 effectively even in the presence of missing values @Sticker2020.

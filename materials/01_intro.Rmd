@@ -195,7 +195,9 @@ Although many of the processing and analysis steps discussed in this course are
 also applicable to other types of proteomics datasets (particularly label-free
 DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
 proteomics. Some aspects of the workflow would need to be adapted for other
-types of proteomics experiment.
+types of proteomics experiment. We have provided details on how this workflow 
+could be adapted to [label-free data](./11_lfq_vs_tmt.html) or 
+[data processed using MaxQuant](./10_maxquant_notes.html) rather than Proteome Discoverer.
 
 
 ## Glossary

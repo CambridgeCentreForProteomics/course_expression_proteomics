@@ -67,23 +67,23 @@ norm_qf <- cc_qf
 norm_qf
 ```
 
-2. Take the your data from the `psms_imputed` level and create a new assay in
+2. Take the your data from the `psms_filtered` level and create a new assay in
 your `QFeatures` object (`norm_qf`) that aggregates the data from this level 
 directly to protein level. Call this assay `"proteins_direct"`.
 
-```{r, message=FALSE, warning=FALSE, include=FALSE, eval=TRUE}
-norm_qf <- aggregateFeatures(norm_qf,
-                            i = "psms_filtered", 
-                            fcol = "Master.Protein.Accessions",
-                            name = "proteins_direct",
-                            fun = MsCoreUtils::robustSummary,
-                            na.rm = TRUE)
+```{r, message=FALSE, warning=FALSE, eval=TRUE}
+norm_qf <- aggregateFeatures(norm_qf, 
+                             i = "filtered_psms",
+                             fcol = "Master.Protein.Accessions",
+                             name = "proteins_direct",
+                             fun = MsCoreUtils::robustSummary,
+                             na.rm = TRUE)
 
 ## Verify
 experiments(norm_qf)
 ```
 
-2. Run the `normalyzer` function on the newly created (untransformed) 
+3. Run the `normalyzer` function on the newly created (untransformed) 
 protein level data using the below code.
 
 Note: To run `normalyzer` on this data we need to pass `requireReplicates =
@@ -137,9 +137,11 @@ knitr::include_graphics("figs/density_plots_example.png", error = FALSE)
 @fig-density shows a screenshot of the PDF report output from running the
 `normalyzer` pipeline. We see that the data before normalisation (log2, topleft)
 has curves/peaks at different locations and what we want to do is try and
-register the curves at the same location and shift them according to their
-median so all peaks of samples are overlapping. Which method to choose? Really
-you need to look at the underlying summary statistics. For example, the mean is
+register the curves at the same location.
+
+**Which method to choose?** For the use-case data, there is no clear differences
+when applying different normalisation methods within `normalyzer`. Really you
+need to look at the underlying summary statistics. For example, the mean is
 very sensitive to outliers and in proteomics we often have outliers, so this is
 not a method we would choose. The median (or median-based methods) are a good
 choice for most quantitative proteomics data. Quantile normalisation is not
@@ -148,3 +150,8 @@ the median but will change all quantiles of the distribution so that all
 distributions coincide. We could do this but this often causes problems due to
 the fact that we have missing data in proteomics. This makes the normalisation
 even more challenging than in other omics types of data.
+
+The decision is ultimately up to the user, but it is often best to explore 
+different normalisation methods and their impact on the data.
+
+## References {.unnumbered}

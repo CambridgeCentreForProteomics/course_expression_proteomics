@@ -159,7 +159,7 @@ contrasts <- makeContrasts(G1_M = G1 - M,
 contrasts
 ```
 
-## Running an empirical Bayes moderated test using `limma`
+### Running an empirical Bayes moderated test using `limma`
 
 After we have specified the design matrix and contrasts we wish to make,
 the next step is to apply the statistical model. 
@@ -216,7 +216,7 @@ limma_results_all_contrasts %>%
   geom_histogram()
 ```
 
-#### Interpreting the overall linear model output
+## Interpreting the overall linear model output
 
 Having checked that the model we fitted was appropriate for the data, we can now take a look at the results of our test.
 
@@ -237,7 +237,7 @@ Interpreting the output of `topTable` for a multi-contrast model:
 -   `adj.P.Val` = FDR-adjusted p-value (adjusting across proteins but not multiple contrasts)
 
 
-#### Interpreting the results of a single contrast
+### Interpreting the results of a single contrast
 
 We can look at individual contrasts by passing the contrast name to the
 `coef` argument in the `topTable` function. For example, let's look at
@@ -286,7 +286,7 @@ proteins within this contrast, although this this effect is only likely
 to become problematic when we have a larger number of contrasts to
 account for.
 
-## Visualising the results of our single contrast test
+### Visualising the results of our single contrast test
 
 Below, we produce a volcano plot to visualisation the statistical test results for the M vs Desynchronised contrast.
 
@@ -299,7 +299,7 @@ M_Desynch_results %>%
 ```
 
 
-#### Interpreting the results of all contrasts
+### Interpreting the results of all contrasts
 
 To understand the impact of adjusting for multiple hypothesis testing
 across our comparisons, we can use the `decideTests` function. This
@@ -387,7 +387,7 @@ We now have three additional column, one per contrast, called
 or 1 meaning that the protein is significantly downregulated,
 non-significant or significantly upregulated in the given contrast.
 
-## Visualising the protein abundances in a heatmap
+### Visualising the protein abundances in a heatmap
 
 ```{r}
 ## Extract accessions of significant proteins
