@@ -1,5 +1,6 @@
 ---
 title: Adapting this workflow to label-free proteomics data
+number-sections: true
 bibliography: course_refs.bib
 editor_options: 
   chunk_output_type: console
@@ -48,22 +49,22 @@ summarised in @tbl-comparison.
 #| tbl-cap: "Main differences between processing workflow for TMT and label-free quantitative proteomics data prior to differential expression analyses"
 
 table1 <- data.frame("Data processing stage" = c("Import", "Data cleaning", "Quality control filtering",
-                                                 "Managing missing data", "Log transformation", 
-                                                 "Aggregation", "Normalisation", "Statistics"),
+                                                 "Managing missing data", "Transformation", 
+                                                 "Summarisation to protein", "Normalisation", "Statistics"),
                      "TMT" = c("Import PSM-level data", 
                                "Standard data cleaning steps",
                                "Additional thresholds on reporter ion signal-to-noise ratio, co-isolation interference and SPS mass matches",
                                "Low proportion of missing values - remove with minimal data loss",
-                               "Log2 transformation",
-                               "Aggregation using robustSummary or sum method",
+                               "Log",
+                               "Summarisation using robustSummary or sum method",
                                "Median-based normalisation", 
                                "Linear model"),
-                     "Label-free" = c("Import PSM- or peptide-level data, depending on software output of MBRs",
+                     "Label-free" = c("Import PSM- or peptide-level data, depending on how software outputs quantification data",
                                       "Standard data cleaning steps",
-                                      "Additional quality control filters are software specific and optional",
-                                      "Higher proportion of missing values - impute at lowest data level or use robustSummary aggregation",
-                                      "Log2 transformation",
-                                      "Aggregation using robustSummary method",
+                                      "Additional quality control filters are software-specific and optional",
+                                      "Higher proportion of missing values - Don't impute and use robustSummary summarisation to protein; If required, impute at lowest data level",
+                                      "Log",
+                                      "Summarisation using robustSummary method",
                                       "Median-based normalisation",
                                       "Linear model"))
 
@@ -192,8 +193,10 @@ in the [Data processing](./03_data_processing.html) section:
 
 Steps 1 and 2 were outlined in the main course content. For the use-case TMT 
 data we decided to remove all missing values rather than impute, since this would
-not represent a drastic data loss. However, for datasets with a higher proportion
-of missing data, imputation can be considered. 
+not represent a drastic data loss. For datasets with a higher proportion
+of missing data, imputation can be considered. However, protein summarisation using an
+approach that can handle missing values appropriately is likely to be the optimal
+approach (see @sec-robust).
 
 
 **How can I impute using QFeatures?**
@@ -244,42 +247,48 @@ There are two aspects to consider when deciding when to impute:
 
 Missing values can be imputed at any data level e.g., PSM, peptide or protein.
 However, if missing values are not imputed in lower data levels then users should
-be aware of how their missing values are treated during aggregation. Data aggregation
+be aware of how their missing values are treated during summarisation. Data summarisation
 methods deal with missing values in different ways, either ignoring them, removing
-them or propagating them. In this way, aggregation itself is an implicit form of
-imputation. For example, if we have a protein supported by 2 peptides and 1 of
-the peptides contains missing values but the other does not, the protein-level 
-data will have no missing value. Therefore, we advise that where imputation is
-necessary, it should be completed at the lowest possible data level to maintain
-transparency and allow users to check that the data structure has not been 
-drastically altered (e.g., by checking summary statistics or plotting density 
-plots pre- and post-imputation).
+them, considering missing values to be zero, or propagating them.
+Thus, a combined strategy for imputation and summarisation must be arrived at. In general,
+we advise that where imputation is necessary, it should be completed at the lowest 
+possible data level to maintain transparency and allow users to check that the data 
+structure has not beendrastically altered (e.g., by checking summary statistics or 
+plotting density plots pre- and post-imputation). For LFQ, we advise summarisation 
+using the `robustSummary` method (see @sec-robust), which negates the need to
+impute missing values.
+
+
+## Summarisation to protein level {#sec-robust}
+
+Summarisation of label-free data can still be achieved using `aggregateFeatures`.
+If imputation has been completed, there should be no missing values left to 
+influence summarisation. 
+
+Here we will use `robustSummary`, a state-of-the art summarisation method that is able to summarise
+effectively even in the presence of missing values @Sticker2020. `robustSummary` directly models the
+**log**-transformed peptide-level quantification as being dependent upon the protein-level abundance of the sample plus
+a peptide-level effect. Thus `robustSummary` estimates the protein-level abundances within the modeling. 
+This modeling-based approach to protein summarisation can handle relatively sparse data as
+it only considers the finite data. The only requirement for a peptide to be informative for
+estimating protein-level abundances using `robustSummary` is that the peptide be quantified in at least two samples.
+
+Since the `robustSummary` can handle missing values, it negates the need to impute missing values.
+Indeed, for LFQ experiments, we recommend not imputing and using `robustSummary` to 
+summarise to protein-level abundance. As expected, protein-level abundance estimates
+are less accurate the more sparse the data is, so removal of peptides with excessive 
+missing values may be worthwhile.
 
 
 ## Logarithmic transformation
 
 As discussed in the [Data processing](./03_data_processing.html) section, logarithmic
-transformation of the data is required to give our data a symmetrical Gaussian
+transformation of the data is required to give our data a Gaussian
 distribution, as required for downstream differential abundance analysis. This 
 step can happen at any stage of the workflow, depending upon which imputation 
-and aggregation methods are selected. If you impute the data using a method which
+and summarisation methods are selected. If you impute or summarise the data using a method which
 requires log transformation, then this step should have been done above. If not,
 log2 transformation can be completed now.
-
-
-## Aggregation to protein level
-
-Aggregation of label-free data can still be achieved using `aggregateFeatures`.
-If imputation has been completed, there should be no missing values left to 
-influence aggregation. 
-
-**An alternative to imputation - aggregation using robust summarisation**
-
-##### Tom - could you write something here?
-
-Here we will use `robustSummary`, a state-of-the art aggregation method that is able to aggregate
-effectively even in the presence of missing values @Sticker2020.
-
 
 ## Normalisation
 
