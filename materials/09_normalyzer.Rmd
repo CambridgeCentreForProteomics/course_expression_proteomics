@@ -1,5 +1,5 @@
 ---
-title: Using `NormalyzerDE` to explore normalisation methods
+title: Exploring normalisation methods
 bibliography: course_refs.bib
 editor_options: 
   chunk_output_type: console
