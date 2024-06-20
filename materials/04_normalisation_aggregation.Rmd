@@ -42,9 +42,9 @@ In this next lesson we will continue processing the PSM level data, explore log
 transformation, normalisation and then aggregate our data to protein-level
 intensities.
 
-```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
-knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
-```
+<!-- ```{r, echo = FALSE, fig.align = "center", out.width = "90%"} -->
+<!-- knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE) -->
+<!-- ``` -->
 
 
 ## Logarithmic transformation

@@ -1,0 +1,90 @@
+---
+title: Adapting this workflow to MaxQuant processed data 
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+::: callout-tip
+#### Learning Objectives
+
+-   Be aware that nomenclature (column names and entries) will differ between 
+software and change over time
+-   Know how to edit the code presented in this course to fit with data processed 
+using MaxQuant
+:::
+
+## Using data processed with MaxQuant
+
+This course was written for proteomics data processed by the Proteome Discoverer
+software, as that is what the Cambridge Centre for Proteomics core facility uses 
+to process DDA data (TMT and LFQ). Nevertheless, the workflow and basic principles
+discussed are also applicable to the output of any similar proteomics raw data 
+processing software, including MaxQuant, among others.
+
+Here we have outlined the differences to be aware of when following this course 
+using MaxQuant output text files. The code as written will require some minor 
+modifications to work properly with MaxQuant formatted data.
+
+1. The rough equivalent of the `PSMs.txt` file output by Proteome Discoverer is 
+the `evidence.txt` file output by MaxQuant.
+
+2. Decoy PSMs (known false discoveries which are used to calculate false discovery
+rate) are automatically filtered out by Proteome Discoverer, but this is not the 
+case with MaxQuant. Hence when working with MaxQuant outputs it is important to
+filter out rows with '+' in the `Reverse` column.
+
+3. Equivalent column names and the type of data contained are described below. 
+Ellipses are put where no equivalent column exists. 
+<!-- (PD PSMs.txt column = MaxQuant evidence.txt column): -->
+
+::: {.callout-note}
+#### Naming of column headers in third party softwares
+Column names are not only different between different softwares but also
+between different versions of the same software. Always check the column
+names and that they correspond to what you expect.
+:::
+
+#### PSM or peptide level files
+
+| Proteome Discoverer (PSMs.txt) | MaxQuant (evidence.txt) |
+| ----------- | ----------- |
+| `Abundance` (float) | `Reporter.intensity.corrected` (integer) |
+| `Sequence` (string) | `Sequence` (string) |
+| `Master.Protein.Accessions` (string) | `Leading.proteins` (string) |
+| `Contaminants` (string, True or False) | `Potential.contaminant` (string, + or blank) |
+| ... | `Reverse` (string, + or blank) |
+| `Rank` (integer) | ... |
+| `Search.Engine.Rank` (integer) | ... |
+| `PSM.Ambiguity` (string) | ... |
+| `Number.of.Protein.Groups` (integer) | ... (you might calculate this by counting the number of ; in the Leading.proteins column and adding 1) |
+| `Average.Reporter.SN` (float) | ... (you might calculate the average reporter ion intensity and threshold based on that instead) |
+| `Isolation.Interference.in.Percent` (float) | `PIF` (float, to get the data in exactly the same format you have to calculate (1 - PIF)*100) |
+| `SPS.Mass.Matches.in.Percent` (integer) | ... |
+
+<!-- * `Abundance` (float) = `Reporter.intensity.corrected` (integer) -->
+<!-- * `Sequence` (string) = `Sequence` (string) -->
+<!-- * `Master.Protein.Accessions` (string) = `Leading.proteins` (string) -->
+<!-- * `Master.Protein.Descriptions` (string) = ... -->
+<!-- * `Contaminants` (string, True or False) = `Potential.contaminant` (string, + or blank) -->
+<!-- * ... = `Reverse` (string, + or blank) -->
+<!-- * `Rank` (integer) = ... -->
+<!-- * `Search.Engine.Rank` (integer) = ... -->
+<!-- * `PSM.Ambiguity` (string) = ... -->
+<!-- * `Number.of.Protein.Groups` (integer) = ... (you might calculate this by counting the number of ; in the Leading.proteins column and adding 1) -->
+<!-- * `Average.Reporter.SN` (float) = ... (you might calculate the average reporter ion intensity and threshold based on that instead) -->
+<!-- * `Isolation.Interference.in.Percent` (float) = `PIF` (float, to get the data in exactly the same format you have to calculate (1 - PIF)*100) -->
+<!-- * `SPS.Mass.Matches.in.Percent` (integer) = ... -->
+
+<br>
+
+#### Protein level files
+
+| Proteome Discoverer (Proteins.txt) | MaxQuant (proteinGroups.txt) |
+| ----------- | ----------- |
+| `Accession` (string) | `Majority.protein.IDs` (string) |
+| `Protein.FDR.Confidence.Combined` (string; High, Medium, or Low) | `Q.value` (float, a Proteome Discoverer protein FDR of 'High' is equivalent to a Q.value < 0.01)|
+

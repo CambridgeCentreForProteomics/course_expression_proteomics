@@ -15,7 +15,7 @@ book:
         - materials/07_biological_interpretation.Rmd
     - part: "Extended materials"
       chapters:
-        - materials/10_maxquant_notes.Rmd
+        - materials/08_maxquant_notes.Rmd
         - materials/09_normalyzer.Rmd
-        - materials/11_lfq_vs_tmt.Rmd
-        - materials/08_statistical_analysis_all_stages.Rmd
+        - materials/10_lfq_vs_tmt.Rmd
+        - materials/11_statistical_analysis_all_stages.Rmd
