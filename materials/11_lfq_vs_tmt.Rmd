@@ -253,7 +253,7 @@ them, considering missing values to be zero, or propagating them.
 Thus, a combined strategy for imputation and summarisation must be arrived at. In general,
 we advise that where imputation is necessary, it should be completed at the lowest 
 possible data level to maintain transparency and allow users to check that the data 
-structure has not beendrastically altered (e.g., by checking summary statistics or 
+structure has not been drastically altered (e.g., by checking summary statistics or 
 plotting density plots pre- and post-imputation). For LFQ, we advise summarisation 
 using the `robustSummary` method (see @sec-robust), which negates the need to
 impute missing values.
@@ -268,8 +268,8 @@ influence summarisation.
 Here we will use `robustSummary`, a state-of-the art summarisation method that is able to summarise
 effectively even in the presence of missing values @Sticker2020. `robustSummary` directly models the
 **log**-transformed peptide-level quantification as being dependent upon the protein-level abundance of the sample plus
-a peptide-level effect. Thus `robustSummary` estimates the protein-level abundances within the modeling. 
-This modeling-based approach to protein summarisation can handle relatively sparse data as
+a peptide-level effect. Thus `robustSummary` estimates the protein-level abundances within the modelling. 
+This modelling-based approach to protein summarisation can handle relatively sparse data as
 it only considers the finite data. The only requirement for a peptide to be informative for
 estimating protein-level abundances using `robustSummary` is that the peptide be quantified in at least two samples.
 
