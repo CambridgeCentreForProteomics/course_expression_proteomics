@@ -22,3 +22,6 @@ _site
 # Jupyter cache
 .jupyter_cache
 /.luarc.json
+
+# Output from normalyzer
+normalyzer*
