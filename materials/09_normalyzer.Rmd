@@ -1,5 +1,5 @@
 ---
-title: Using NormalyzerDE to explore normalisation methods
+title: Using `NormalyzerDE` to explore normalisation methods
 bibliography: course_refs.bib
 editor_options: 
   chunk_output_type: console
@@ -73,7 +73,7 @@ directly to protein level. Call this assay `"proteins_direct"`.
 
 ```{r, message=FALSE, warning=FALSE, eval=TRUE}
 norm_qf <- aggregateFeatures(norm_qf, 
-                             i = "filtered_psms",
+                             i = "psms_filtered",
                              fcol = "Master.Protein.Accessions",
                              name = "proteins_direct",
                              fun = MsCoreUtils::robustSummary,
