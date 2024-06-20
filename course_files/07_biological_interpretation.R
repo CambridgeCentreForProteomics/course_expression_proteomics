@@ -32,8 +32,8 @@ load("preprocessed/lesson06.rda", verbose = TRUE)
 protein_info <- all_proteins %>%
   rowData() %>%
   as_tibble() %>%
-  select(protein = Master.Protein.Accessions, 
-         protein_description = Master.Protein.Descriptions)
+  select(Protein = Master.Protein.Accessions, 
+         Protein_description = Master.Protein.Descriptions)
 
 ## Protein info
 protein_info %>% head()
@@ -63,7 +63,7 @@ sig_down <- sig_changing %>%
 
 ## Look at descriptions of proteins upregulated in M relative to deysnchronized cells
 sig_up %>%
-  pull(protein_description) %>%
+  pull(Protein_description) %>%
   head()
 
 
@@ -80,6 +80,7 @@ ego_down <- enrichGO(gene = sig_down$Protein,               # list of down prote
                      keyType = "UNIPROT",                   # protein ID encoding
                      pvalueCutoff = 0.05, 
                      qvalueCutoff = 0.05, 
+                     ont = "MF",  
                      readable = TRUE)
 
 

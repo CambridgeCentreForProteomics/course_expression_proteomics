@@ -110,13 +110,13 @@ experiments(O43583)
 ## We can use our new QFeatures object to create a plot which displays how the 
 ## PSM data was aggregated to protein for this particular feature.
 
-O43583[, , c("log_psms", "log_peptides", "log_proteins")] %>%
+O43583[, , c("psms_filtered", "peptides", "proteins")] %>%
   longFormat() %>%
   as_tibble() %>%
   mutate(assay_order = 
-           factor(assay, levels = c("log_psms", "log_peptides", 
-                                    "log_proteins"))) %>%
-  ggplot(aes(x = colname, y = value, colour = assay)) + 
+           factor(assay, levels = c("psms_filtered", "peptides", 
+                                    "proteins"))) %>%
+  ggplot(aes(x = colname, y = log2(value), colour = assay)) + 
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme(axis.text.x = element_text(angle = 45, size = 7)) +

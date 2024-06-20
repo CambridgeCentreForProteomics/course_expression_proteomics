@@ -48,40 +48,37 @@ cc_qf[["psms_filtered"]] %>%
   xlab("(Log2) Abundance")
 
 
-
-## ---------------------------------------------------------------------------------------------------------
-## Using the log transforming
-## ---------------------------------------------------------------------------------------------------------
-
-cc_qf <- logTransform(object = cc_qf, 
-                      base = 2, 
-                      i = "psms_filtered", 
-                      name = "log_psms")
-
-
-
 ## ---------------------------------------------------------------------------------------------------------
 ## Feature aggregation
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Aggregating PSM to peptides
 cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_psms",                    # data 
-                           fcol = "Sequence",                 # how do we want to aggregate?
-                           name = "log_peptides",             # new assay name
-                           fun = MsCoreUtils::robustSummary,  # robust method (NAs excluded before fit)
-                           na.rm = TRUE)                      # ignore NA values when summarising 
+                           i = "psms_filtered",    # data 
+                           fcol = "Sequence",      # how do we want to aggregate?
+                           name = "peptides",      # new assay name
+                           fun = base::colSums,    # robust method (NAs excluded before fit)
+                           na.rm = TRUE)           # ignore NA values when summarising 
 
 
 ## Aggregating peptides to proteins
 
 cc_qf <- aggregateFeatures(cc_qf, 
-                           i = "log_peptides", 
+                           i = "peptides", 
                            fcol = "Master.Protein.Accessions",
-                           name = "log_proteins",
-                           fun = MsCoreUtils::robustSummary,
+                           name = "proteins",
+                           fun = base::colSums,
                            na.rm = TRUE)
 
+
+## ---------------------------------------------------------------------------------------------------------
+## Log transformation
+## ---------------------------------------------------------------------------------------------------------
+
+cc_qf <- logTransform(object = cc_qf, 
+                      base = 2, 
+                      i = "proteins", 
+                      name = "log_proteins")
 
 
 ## ---------------------------------------------------------------------------------------------------------

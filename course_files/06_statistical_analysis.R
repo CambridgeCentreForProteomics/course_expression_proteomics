@@ -15,6 +15,7 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
+library("pheatmap")
 
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -162,7 +163,7 @@ limma_results_treat <- topTreat(final_model_treat,
 ## --------------------------------------------------------------------------------------------------------
 
 ## Extract significantly changing proteins
-sig_protein <- limma_results %>%
+sig_proteins <- limma_results %>%
   filter(significance == "sig") %>%
   pull(Protein)
 
