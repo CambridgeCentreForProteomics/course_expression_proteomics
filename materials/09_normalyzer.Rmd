@@ -76,7 +76,7 @@ norm_qf <- aggregateFeatures(norm_qf,
                              i = "psms_filtered",
                              fcol = "Master.Protein.Accessions",
                              name = "proteins_direct",
-                             fun = MsCoreUtils::robustSummary,
+                             fun = base::colSums,
                              na.rm = TRUE)
 
 ## Verify

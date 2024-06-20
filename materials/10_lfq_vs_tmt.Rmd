@@ -282,7 +282,7 @@ missing values may be worthwhile.
 
 ## Logarithmic transformation
 
-As discussed in the [Data processing](./03_data_processing.html) section, logarithmic
+As discussed in the [Normalisation and data aggregation](./04_normalisation_aggregation.html) section, logarithmic
 transformation of the data is required to give our data a Gaussian
 distribution, as required for downstream differential abundance analysis. This 
 step can happen at any stage of the workflow, depending upon which imputation 
