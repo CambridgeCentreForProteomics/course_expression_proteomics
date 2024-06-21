@@ -50,7 +50,7 @@ normalise the protein-level data ready for downstream statistical testing.
 ## Feature aggregation 
 
 ```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
-knitr::include_graphics("figs/flow_chart/flow_chart.007.png", error = FALSE)
+knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
 ```
 
 Let's recap our data,

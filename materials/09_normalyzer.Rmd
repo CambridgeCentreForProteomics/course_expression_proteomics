@@ -16,7 +16,7 @@ to explore the effect of different normalisation methods on the data
 :::
 
 ```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
-knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
+knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
 ```
 
 
