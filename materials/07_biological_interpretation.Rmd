@@ -228,8 +228,9 @@ overview of GO enrichment visualisation tools see [*Visualization of functional 
 ```{r}
 dotplot(ego_down, 
         x = "Count", 
-        showCategory = 15, 
+        showCategory = 10, 
         font.size = 10,
+        label_format = 100,
         color = "p.adjust")
 ```
 
