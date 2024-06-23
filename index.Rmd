@@ -21,7 +21,7 @@ You will learn about:
 
 - How mass spectrometry can be used to quantify protein abundance and some of the methods used for peptide quantitation.
 - The bioinformatics steps involved in processing and analysing expression proteomics data.
-- How to assess the quality of your data, deal with missing values and summarise peptide-level data to protein-level.
+- How to assess the quality of your data, deal with missing values and summarise PSM-level (peptide-spectrum match) data to protein-level.
 - How to perform differential expression analysis to compare protein abundances between different groups of samples.
 :::
 
