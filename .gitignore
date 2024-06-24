@@ -25,3 +25,6 @@ _site
 
 # Output from normalyzer
 normalyzer*
+
+# Mac folder attributes file
+.DS_Store

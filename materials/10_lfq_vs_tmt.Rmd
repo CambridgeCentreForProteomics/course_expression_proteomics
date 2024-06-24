@@ -56,7 +56,7 @@ table1 <- data.frame("Data processing stage" = c("Import", "Data cleaning", "Qua
                                "Additional thresholds on reporter ion signal-to-noise ratio, co-isolation interference and SPS mass matches",
                                "Low proportion of missing values - remove with minimal data loss",
                                "Log",
-                               "Summarisation using robustSummary or sum method",
+                               "Summarisation using sum or robustSummary method",
                                "Median-based normalisation", 
                                "Linear model"),
                      "Label-free" = c("Import PSM- or peptide-level data, depending on how software outputs quantification data",

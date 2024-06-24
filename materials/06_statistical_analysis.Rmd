@@ -27,13 +27,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
-library("factoextra")
-library("org.Hs.eg.db")
-library("clusterProfiler")
-library("enrichplot")
-library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("here")
@@ -435,7 +429,7 @@ limma_results %>%
 
 {{< level 2 >}} 
 
-Re-generate your table of results defining significance
+Re-generate your volcano plot defining significance
 based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 
 ::: {.callout-answer collapse="true"}
@@ -533,6 +527,7 @@ sig_post_hoc_only <- intersect(post_hoc_sig, treat_not_sig)
 ```
 
 ```{r}
+
 # Make a volcano plot highlighting these proteins
 my_results %>%
   # Add a new column to annotate the proteins to highlight
@@ -545,7 +540,9 @@ my_results %>%
   # Define the shapes
   scale_shape_manual(values = c(21, 8),
                      name = 'Post-hoc logFC\nthresh. sig. only') + 
+  guides(fill = guide_legend(override.aes = list(shape=21))) +
   theme_bw()
+
 
 limma_results_treat %>%
   mutate(highlight = Protein %in% sig_post_hoc_only) %>% 
@@ -555,6 +552,7 @@ limma_results_treat %>%
   geom_point(stroke = 0.25, size = 3) +
   scale_shape_manual(values = c(21, 8),
                      name = 'Post-hoc logFC\nthresh. sig. only') + 
+  guides(fill = guide_legend(override.aes = list(shape=21))) +
   theme_bw()
 
 
