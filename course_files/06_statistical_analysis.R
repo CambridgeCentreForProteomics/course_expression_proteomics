@@ -7,22 +7,16 @@
 ## Load R/Bioconductor libraries
 ## ---------------------------------------------------------------------------------------------------------
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
-library("factoextra")
-library("org.Hs.eg.db")
-library("clusterProfiler")
-library("enrichplot")
-library("patchwork")
 library("tidyverse")
 library("pheatmap")
-
+library("here")
 
 ## ---------------------------------------------------------------------------------------------------------
 ## Loading data from lesson 4
 ## ---------------------------------------------------------------------------------------------------------
 
-load("preprocessed/lesson04.rda", verbose = TRUE)
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 
 
 
@@ -101,10 +95,10 @@ limma_results %>%
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Limma: Interpreting the results of a SINGLE contrast
+## Limma: Interpreting the results 
 ## ---------------------------------------------------------------------------------------------------------
 
-## We can look at individual contrasts by passing the contrast name to 
+## Take a look at the results of our tests
 limma_results %>% head()
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -131,12 +125,19 @@ limma_results %>%
   theme_bw()
 
 
+## ---------------------------------------------------------------------------------------------------------
+## Challenge - Volcano plots: playing with thresholds
+## ---------------------------------------------------------------------------------------------------------
+
+# Re-generate your volcano plot defining significance based on an adjusted 
+# P-value < 0.05 and a log2 fold-change of > 1.
+
 
 ## --------------------------------------------------------------------------------------------------------
 ## Fold-change thresholds 
 ## --------------------------------------------------------------------------------------------------------
 
-## Use treat to add post-hoc fold change threshold
+## Use treat to specify fold change threshold for statistical testing
 final_model_treat <- treat(final_model, 
                            lfc = 0.5,
                            trend = TRUE, 
@@ -147,15 +148,17 @@ limma_results_treat <- topTreat(final_model_treat,
                                 n = Inf) %>%
   rownames_to_column("Protein")
 
-
-
-
 ## ---------------------------------------------------------------------------------------------------------
-## Challenge - playing with thresholds
+## Challenge - Compare logFC thresholding post-hoc with LogFC null hypothesis
 ## ---------------------------------------------------------------------------------------------------------
 
-# Re-generate your table of results defining significance based on an adjusted 
-# P-value < 0.05 and a log2 fold-change of > 1.
+# - Compare the overall results for each logFC thresholding approach by creating a 2 x 2 table
+# with the number of proteins with increased/decreased abundance and significant/not significant change,
+# for each approach.
+# - Identify the proteins which are significant when thresholding on the logFC post-hoc, 
+# but not when using the TREAT functions to define a logFC threshold for the null hypothesis. 
+# - Re-make the volcano plots for the two logFC thresholding approaches, but this time with the proteins
+# identified above highlighted by the point shape.
 
 
 ## --------------------------------------------------------------------------------------------------------
