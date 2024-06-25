@@ -24,6 +24,20 @@ load("preprocessed/lesson04.rda", verbose = TRUE)
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Add explicit link between final protein data and raw PSM data
+## ---------------------------------------------------------------------------------------------------------
+
+cc_qf <- addAssayLink(object = cc_qf, 
+                      from = "psms_raw", 
+                      to = "log_norm_proteins",
+                      varFrom = "Master.Protein.Accessions",
+                      varTo = "Master.Protein.Accessions")
+
+## Verify
+assayLink(x = cc_qf,
+          i = "log_norm_proteins")
+
+## ---------------------------------------------------------------------------------------------------------
 ## Exploring the dimensions of our protein level data
 ## ---------------------------------------------------------------------------------------------------------
 

@@ -44,6 +44,41 @@ knitr::include_graphics("figs/flow_chart/flow_chart.009.png", error = FALSE)
 ```
 
 
+## Adding assay links
+
+One of the main benefits of using `QFeatures` is that the hierarchical links
+between quantitative levels are maintained whilst allowing easy access to all
+data levels for individual features (PSMs, peptides and proteins) of interest. 
+These links are generated and maintained when aggregating using the
+`aggregateFeatures` function, as well as the `logTransform` and `normalize`
+functions - all functions that take one experimental assay within a `QFeatures`
+object and create a new experimental assay in the same `QFeatures` object.
+However, before we started filtering the data, we created a copy of the raw data
+and added this back to our `QFeatures` object using the `addAssay` function,
+which does not maintain the links. Hence, our `"raw_psms"` experimental assay is
+not currently linked to any of our higher level experimental assays.
+
+It may be beneficial to add a link between our final protein level data and the
+raw PSM data. This can be achieved using the `addAssayLink` function as 
+demonstrated below.
+
+
+```{r}
+## Create assay link
+cc_qf <- addAssayLink(object = cc_qf, 
+                      from = "psms_raw", 
+                      to = "log_norm_proteins",
+                      varFrom = "Master.Protein.Accessions",
+                      varTo = "Master.Protein.Accessions")
+
+## Verify
+assayLink(x = cc_qf,
+          i = "log_norm_proteins")
+```
+
+Adding a relation between these two `experimental assays` ensure traceability. 
+
+
 ## Determining the dimensions of our final protein data
 
 Given that we started from the PSM level and did extensive data cleaning, 

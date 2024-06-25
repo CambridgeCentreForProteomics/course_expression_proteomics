@@ -37,12 +37,6 @@ cc_qf <- addAssay(x = cc_qf,
                   y = raw_data_copy, 
                   name = "psms_filtered")
 
-## Create assay link between two experiments
-cc_qf <- addAssayLink(object = cc_qf, 
-                      from = "psms_raw", 
-                      to = "psms_filtered",
-                      varFrom = "Master.Protein.Accessions",
-                      varTo = "Master.Protein.Accessions")
 
 
 ## ---------------------------------------------------------------------------------------------------------

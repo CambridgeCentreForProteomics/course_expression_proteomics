@@ -63,34 +63,7 @@ cc_qf
 We now see that a second `experimental assay` has been added to the `QFeatures`
 object. When we use `addAssay` to add to a `QFeatures` object, the newly created
 `experimental assay` does not automatically have links to the pre-existing 
-`experimental assay`s. We can use the `assayLink()` function to check which links
-exist for `psms_filtered`.
-
-
-```{r}
-## Check which assay links exist for the psms_filtered assay
-assayLink(x = cc_qf,
-          i = "psms_filtered")
-```
-
-As we expected, no links exist. If we wanted to explicitly add links between two
-data we could do so using the `addAssayLink` function, as demonstrated below.
-
-```{r}
-## Create assay link
-cc_qf <- addAssayLink(object = cc_qf, 
-                      from = "psms_raw", 
-                      to = "psms_filtered",
-                      varFrom = "Master.Protein.Accessions",
-                      varTo = "Master.Protein.Accessions")
-
-## Verify
-assayLink(x = cc_qf,
-          i = "psms_filtered")
-```
-
-Adding a relation between these two `experimental assays` ensure traceability. We
-will learn more about assay links as we progress through this course.
+`experimental assay`s. 
 
 ::: {.callout-note}
 #### Assay links
