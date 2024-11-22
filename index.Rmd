@@ -55,12 +55,14 @@ This workshop will be run by:
 
 * Charlotte Hutchings - Cambridge Centre for Proteomcis, University of Cambridge
 * Lisa M. Breckels - Cambridge Centre for Proteomcis, University of Cambridge
-* Tom Smith - Bioinformatics Facility, MRC Toxicology Unit, University of Cambridge
-* Charlotte S. Dawson - Cambridge Centre for Proteomcis, University of Cambridge
+* Tom Smith - MRC Laboratory of Molecular Biology, Cambridge
+* Alistair Hines - The Open University and Cambridge Centre for Proteomics, University of Cambridge
+* Kieran McCaskie - Cambridge Centre for Proteomcis, University of Cambridge
 
 Previous instructors include:
 
 * Thomas Krueger - Department of Biochemistry, University of Cambridge
+* Charlotte S. Dawson - Cambridge Centre for Proteomcis, University of Cambridge
 
 ## Authors
 <!-- 
