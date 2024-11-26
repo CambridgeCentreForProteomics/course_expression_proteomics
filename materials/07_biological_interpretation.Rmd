@@ -280,8 +280,7 @@ Make a heatmap with the protein abundances in all samples for those proteins wit
 get the GO term for 'cell division', or, failing that, your favourite search engine.
 For the heatmap plotting, you can refer back to the end of the previous session where we used `pheatmap`.
 
-- How do you interpret this heatmap?
-- How does the protein abundance in the desyncronised cells compare to the M/G1 phases? What does this tell you about the 
+- How does the protein abundance in the desyncronised cells compare to the M/G1 phases? How does this inform your interpretation?
 
 
 ::: {.callout-answer collapse="true"}
