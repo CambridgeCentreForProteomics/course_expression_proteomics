@@ -21,16 +21,15 @@ knitr::include_graphics("figs/flow_chart/flow_chart.012.png", error = FALSE)
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
-library("limma")
-library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-library("patchwork")
-library("tidyverse")
+library("dplyr")
+library("ggplot2")
 library("here")
+library('pheatmap')
 
+load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 load(here("course_files/preprocessed/lesson06.rda"), verbose = TRUE)
 ```
 
@@ -50,7 +49,7 @@ we must match the protein names between them.
 To do this, let's extract information the `Master.Protein.Descriptions` from the original
 data we have created called `all_proteins`. 
 
-Recall that `all_protiens` is `SummarizedExperiment` object,
+Recall that `all_proteins` is a `SummarizedExperiment` object,
 
 ```{r}
 all_proteins
@@ -119,7 +118,7 @@ cycle. We can get an initial idea about what these proteins are and do by
 looking at the protein descriptions. 
 
 ```{r}
-## Look at descriptions of proteins upregulated in M relative to deysnchronized cells
+## Look at descriptions of proteins upregulated in M relative to G1
 sig_up %>%
   pull(protein_description) %>%
   head()
@@ -183,30 +182,32 @@ and full tutorials for using the package [here](https://yulab-smu.top/biomedical
 ::: {.callout-note}
 #### Annotation packages in Bioconductor
 The `enrichGO` function uses the [`org.Hs.eg.db`](https://bioconductor.org/packages/release/data/annotation/html/org.Hs.eg.db.html) Bioconductor package that has
-genome wide annotation for human, primarily based on mapping using Entrez Gene
-identifiers. It also uses the [`GO.db`](`https://bioconductor.org/packages/release/data/annotation/html/GO.db.html`) package
+genome wide annotation for human. It also uses the [`GO.db`](`https://bioconductor.org/packages/release/data/annotation/html/GO.db.html`) package
 which is a set of annotation maps describing the entire Gene Ontology assembled using data from GO.
+
+Unfortunately, because GO annotations are by design at the gene level, performing analyses with proteomics data can be more tricky. 
 
 :::
 
-In the next code chunk we call the `enrichGO` function,
+In the next code chunk we call the `enrichGO` function.
 
 ```{r} 
 ego_down <- enrichGO(gene = sig_down$Protein,               # list of down proteins
                      universe = limma_results$Protein,      # all proteins 
                      OrgDb = org.Hs.eg.db,                  # database to query
-                     keyType = "UNIPROT",                   # protein ID encoding
-                     pvalueCutoff = 0.05, 
+                     keyType = "UNIPROT",                   # protein ID encoding 
                      qvalueCutoff = 0.05,
-                     ont = "MF",                            # can be CC, MF, BP, or ALL
+                     ont = "BP",                            # can be CC, MF, BP, or ALL
                      readable = TRUE)
+
 ``` 
 
 
 Let's take a look at the output.
 
 ```{r}
-ego_down
+head(ego_down@result)
+
 ```
 
 The output of the `enrichGO` function is an object of class `enrichResult` that
@@ -216,6 +217,7 @@ are annotated with each of the enriched GO terms. Let's take a look at the
 descriptions.
 
 ```{r}
+
 ego_down$Description %>% 
   head(10)
 ```
@@ -224,24 +226,113 @@ There is a long list because of the hierarchical nature of GO terms. The results
 of GO enrichment analysis can be visualised in many different ways. For a full
 overview of GO enrichment visualisation tools see [*Visualization of functional enrichment result*](https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html).
 
+Here, we'll use a 'dotplot' first
 
 ```{r}
-dotplot(ego_down, 
+
+p <- dotplot(ego_down, 
         x = "Count", 
-        showCategory = 10, 
+        showCategory = 20, 
         font.size = 10,
         label_format = 100,
         color = "p.adjust")
+
+print(p)
 ```
+
+The dotplot gives a good overview of the over-representation results for the top GO terms, but it's not clear how much overlap there is between the proteins annotated with each term. For this, we can use an 'upset' plot. 
+
+
+```{r}
+upsetplot(ego_down, n=10)
+```
+
+
+It's usually informative to explore the proteins with the over-represented GO terms further. For this, we need to know which proteins have a particular GO term. This is where is gets a little more tricky, since we need to map between Uniprot IDs and Entrez gene IDs for this.
+
+We start by using the `toTable` method to turn the UNIPROT map into a `data.frame`.
+```{r}
+## Obtain a gene to protein mapping for the proteins in our QFeatures
+## org.Hs.egUNIPROT is part of org.Hs.eg.db
+g2p_map_df <- toTable(org.Hs.egUNIPROT) %>%
+  filter(uniprot_id %in% rownames(cc_qf[['log_norm_proteins']]))
+
+## Obtain the GO terms for each gene
+go_submap <- org.Hs.egGO[g2p_map_df$gene_id]
+
+## Merge the gene to protein map and GO terms for
+## genes to get GO terms for proteins
+p2go <- toTable(go_submap) %>%
+  left_join(g2p_map_df, by='gene_id')
+
+
+```
+
+Now we can visualise the proteins with a particular GO term. Here, we will use a heatmap to see the patterns in protein abundance differences between the conditions for a given GO term.
+
+::: callout-exercise
+#### Challenge: Plot a heatmap for the significant cell division proteins
+
+{{< level 2 >}} 
+
+Make a heatmap with the protein abundances in all samples for those proteins with
+'cell division' GO annotation. You can use the `ego_down@result` `data.frame` to 
+get the GO term for 'cell division', or, failing that, your favourite search engine.
+For the heatmap plotting, you can refer back to the end of the previous session where we used `pheatmap`.
+
+- How do you interpret this heatmap?
+- How does the protein abundance in the desyncronised cells compare to the M/G1 phases? What does this tell you about the 
+
+
+::: {.callout-answer collapse="true"}
+
+```{r}
+## Get the GO ID for 'cell division'
+cell_division_go <- ego_down@result %>%
+  filter(Description=='cell division') %>%
+  rownames()
+
+## Get the Uniprot IDs for cell division annotated proteins
+cell_division_uniprot_ids <- p2go %>%
+  filter(go_id==cell_division_go) %>%
+  pull(uniprot_id) %>%
+  unique()
+
+## Extract quant data
+quant_data <- cc_qf[["log_norm_proteins"]] %>% assay()
+
+## Plot heatmap
+pheatmap(mat = quant_data, 
+         scale = "row",
+         show_rownames = FALSE)
+
+## Extract quant data for the significant proteins
+quant_data_cd <- quant_data[intersect(sig_changing$Protein, cell_division_uniprot_ids), ]
+
+## Plot heatmap
+pheatmap(mat = quant_data_cd, 
+         scale = "row",
+         show_rownames = TRUE)
+
+```
+
+:::
+
+:::
+
+
 
 
 ::: {.callout-tip}
 #### Key Points
 
-- Gene ontology (GO) terms described the molecular function (MF), biological processes (BP) and cellular component (CC) of proteins.
+- Gene ontology (GO) terms described the molecular function (MF), biological processes (BP) and cellular component (CC) of genes (and their protein products).
 - GO terms are hierarchical and generic. They do not relate to specific biological systems e.g., cell type or condition.
 - GO enrichment analysis aims to identify GO terms that are present in a list of proteins of interest (foreground) at a higher frequency than expected by chance based on their frequency in a background list of proteins (universe). The universe should be a list of all proteins included identified and quantified in your experiment.
 - The `enrichGO` function from the `clusterProfiler` package provides a convenient way to carry out reproducible GO enrichment analysis in R.
+- There are many ways to visualise the results from functional enrichment analyses. With GO terms in particular, it's important to consider the relationships between the gene sets we are testing for over-representation.
+- 
+
 :::
 
 ## References {-}

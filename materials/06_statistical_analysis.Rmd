@@ -430,7 +430,7 @@ limma_results %>%
 {{< level 2 >}} 
 
 Re-generate your volcano plot defining significance
-based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
+based on an adjusted P-value \< 0.01 and a log2 fold-change of \> 1.
 
 ::: {.callout-answer collapse="true"}
 
@@ -438,7 +438,7 @@ based on an adjusted P-value \< 0.05 and a log2 fold-change of \> 1.
 my_results <- 
   limma_results %>%
   mutate(direction = ifelse(logFC > 0, "up", "down"), 
-         significance = ifelse(adj.P.Val < 0.05 & abs(logFC) > 1, "sig", "not.sig"))
+         significance = ifelse(adj.P.Val < 0.01 & abs(logFC) > 1, "sig", "not.sig"))
 
 my_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
@@ -495,7 +495,7 @@ limma_results_treat %>%
 {{< level 3 >}} 
 
 - Compare the overall results for each logFC thresholding approach by creating a 2 x 2 table with the number of proteins with increased/decreased abundance and significant/not significant change, for each approach. 
-- Identify the proteins which are significant when thresholding on the logFC post-hoc, but not when using the TREAT functions to define a logFC threshold for the null hypothesis. You can use the existing `my_results` and `limma_results_treat` objects for this. 
+- Identify the proteins which are significant when using the TREAT functions to define a logFC threshold for the null hypothesis but not when thresholding on the logFC post-hoc. You can use the existing `my_results` and `limma_results_treat` objects for this. 
 - Re-make the volcano plots for the two logFC thresholding approaches, but this time with the proteins identified above highlighted by the point shape.
 \> 1.
 
@@ -513,17 +513,17 @@ table(limma_results_treat$direction,
 ```
 
 ```{r}
-# Identify the proteins which are significant only
-# when thresholding on logFC post-hoc
-post_hoc_sig <- my_results %>%
-  filter(significance == 'sig') %>%
-  pull(Protein)
-
-treat_not_sig <- limma_results_treat %>% 
+# Identify the proteins which are significant using 
+# TREAT, but not with the post hoc threshold on fold-change
+post_hoc_not_sig <- my_results %>%
   filter(significance == 'not.sig') %>%
   pull(Protein)
 
-sig_post_hoc_only <- intersect(post_hoc_sig, treat_not_sig)
+treat_sig <- limma_results_treat %>% 
+  filter(significance == 'sig') %>%
+  pull(Protein)
+
+sig_treat_only <- intersect(post_hoc_not_sig, treat_sig)
 ```
 
 ```{r}
@@ -531,7 +531,7 @@ sig_post_hoc_only <- intersect(post_hoc_sig, treat_not_sig)
 # Make a volcano plot highlighting these proteins
 my_results %>%
   # Add a new column to annotate the proteins to highlight
-  mutate(highlight = Protein %in% sig_post_hoc_only) %>% 
+  mutate(highlight = Protein %in% sig_treat_only) %>% 
   # Use the highlight column to control the shape aesthetic
   ggplot(aes(x = logFC, y = -log10(P.Value),
              fill = significance,
@@ -545,7 +545,7 @@ my_results %>%
 
 
 limma_results_treat %>%
-  mutate(highlight = Protein %in% sig_post_hoc_only) %>% 
+  mutate(highlight = Protein %in% sig_treat_only) %>% 
   ggplot(aes(x = logFC, y = -log10(P.Value),
              fill = significance,
              shape = highlight)) + 
@@ -593,8 +593,8 @@ Now we use the quantitative data to plot a heatmap using `pheatmap`. We will nor
 ```{r}
 pheatmap(mat = quant_data,
          scale = 'row', # Z-score normalise across the rows (proteins)
-         show_rownames = FALSE) # Too many proteins to show all their names!
-         
+         show_rownames = FALSE)  # Too many proteins to show all their names!
+
 ```
 
 A more in-depth overview of `pheatmap` and how to customise these plots further
@@ -627,7 +627,7 @@ save(limma_results, all_proteins, file = here("course_files/preprocessed/lesson0
     to use the TREAT functions in `limma` and define a null hypothesis that the
     change is below a given value.
 -   The results of differential expression and abundance analyses are
-    often summarised on volcano plots and heatmaps.
+    often summarised with volcano plots and heatmaps.
 :::
 
 ## References {.unnumbered}
