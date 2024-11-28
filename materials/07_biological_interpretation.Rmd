@@ -27,7 +27,8 @@ library("enrichplot")
 library("dplyr")
 library("ggplot2")
 library("here")
-library('pheatmap')
+library("pheatmap")
+library("ggupset")
 
 load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 load(here("course_files/preprocessed/lesson06.rda"), verbose = TRUE)
@@ -199,7 +200,6 @@ ego_down <- enrichGO(gene = sig_down$Protein,               # list of down prote
                      qvalueCutoff = 0.05,
                      ont = "BP",                            # can be CC, MF, BP, or ALL
                      readable = TRUE)
-
 ``` 
 
 
@@ -207,7 +207,6 @@ Let's take a look at the output.
 
 ```{r}
 head(ego_down@result)
-
 ```
 
 The output of the `enrichGO` function is an object of class `enrichResult` that
@@ -217,7 +216,6 @@ are annotated with each of the enriched GO terms. Let's take a look at the
 descriptions.
 
 ```{r}
-
 ego_down$Description %>% 
   head(10)
 ```
@@ -229,7 +227,6 @@ overview of GO enrichment visualisation tools see [*Visualization of functional 
 Here, we'll use a 'dotplot' first
 
 ```{r}
-
 p <- dotplot(ego_down, 
         x = "Count", 
         showCategory = 20, 
@@ -264,8 +261,6 @@ go_submap <- org.Hs.egGO[g2p_map_df$gene_id]
 ## genes to get GO terms for proteins
 p2go <- toTable(go_submap) %>%
   left_join(g2p_map_df, by='gene_id')
-
-
 ```
 
 Now we can visualise the proteins with a particular GO term. Here, we will use a heatmap to see the patterns in protein abundance differences between the conditions for a given GO term.
@@ -312,7 +307,6 @@ quant_data_cd <- quant_data[intersect(sig_changing$Protein, cell_division_unipro
 pheatmap(mat = quant_data_cd, 
          scale = "row",
          show_rownames = TRUE)
-
 ```
 
 :::
