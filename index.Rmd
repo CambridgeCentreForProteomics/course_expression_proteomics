@@ -34,7 +34,7 @@ Proteomics practitioners or data analysts/bioinformaticians that would like to l
 ### Prerequisites
 
 * Basic understanding of mass spectometry.
-  * Watch this [iBiology video](https://youtu.be/eNKMdVMglvI) for an excellent overview. 
+  * Watch [this video](https://www.youtube.com/watch?v=wx4F6kGy1Fs) for an excellent overview. 
 * A working knowledge of R and the tidyverse.
 * Familiarity with other Bioconductor data classes, such as those used for RNA-seq analysis, is useful but not required. 
 
