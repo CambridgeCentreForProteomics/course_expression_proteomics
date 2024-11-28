@@ -53,11 +53,11 @@ Exercises in these materials are labelled according to their level of difficulty
 
 This workshop will be run by: 
 
-* Charlotte Hutchings - Cambridge Centre for Proteomcis, University of Cambridge
-* Lisa M. Breckels - Cambridge Centre for Proteomcis, University of Cambridge
-* Tom Smith - MRC Laboratory of Molecular Biology, Cambridge
-* Alistair Hines - Cambridge Centre for Proteomics, University of Cambridge
-* Kieran McCaskie - Cambridge Centre for Proteomcis, University of Cambridge
+- **Charlotte Hutchings** - Cambridge Centre for Proteomcis, University of Cambridge
+- **Lisa Breckels** - Cambridge Centre for Proteomcis, University of Cambridge
+- **Tom Smith** - MRC Laboratory of Molecular Biology, Cambridge
+- **Alistair Hines** - Cambridge Centre for Proteomics, University of Cambridge
+- **Kieran McCaskie** - Cambridge Centre for Proteomcis, University of Cambridge
 
 Previous instructors include:
 
