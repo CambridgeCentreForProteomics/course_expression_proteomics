@@ -112,7 +112,9 @@ BiocManager::install(c("QFeatures",
                        "clusterProfiler",
                        "enrichplot",
                        "patchwork",
-                       "tidyverse"))
+                       "tidyverse",
+                       "pheatmap",
+                       "ggupset"))
 ```
 
 After installation, each package must be loaded before it can be used in the R
@@ -129,6 +131,8 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
+library("pheatmap")
+library("ggupset")
 ```
 
 

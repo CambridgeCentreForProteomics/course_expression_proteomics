@@ -21,14 +21,17 @@ knitr::include_graphics("figs/flow_chart/flow_chart.012.png", error = FALSE)
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
+library("NormalyzerDE")
+library("limma")
+library("factoextra")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-library("dplyr")
-library("ggplot2")
-library("here")
+library("patchwork")
+library("tidyverse")
 library("pheatmap")
 library("ggupset")
+library("here")
 
 load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
 load(here("course_files/preprocessed/lesson06.rda"), verbose = TRUE)
@@ -65,7 +68,7 @@ protein_info <- all_proteins %>%
   rowData() %>%
   as_tibble() %>%
   select(Protein = Master.Protein.Accessions, 
-         protein_description = Master.Protein.Descriptions)
+         Protein_description = Master.Protein.Descriptions)
 
 protein_info %>% head()
 ```
@@ -78,7 +81,7 @@ descriptions to the protein IDs,
 
 ```{r, message=FALSE, warning=FALSE}
 limma_results <- limma_results %>% 
-  left_join(protein_info, by = "Protein")
+  left_join(protein_info, by = "Protein", suffix = c(".left", ".right"))
 
 # Verify
 limma_results %>%
@@ -121,7 +124,7 @@ looking at the protein descriptions.
 ```{r}
 ## Look at descriptions of proteins upregulated in M relative to G1
 sig_up %>%
-  pull(protein_description) %>%
+  pull(Protein_description) %>%
   head()
 ```
 

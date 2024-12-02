@@ -26,9 +26,10 @@ library("clusterProfiler")
 library("enrichplot")
 library("patchwork")
 library("tidyverse")
+library("pheatmap")
+library("ggupset")
 library("here")
-
-load(here("course_files/preprocessed//lesson03.rda"), verbose = TRUE)
+load(here("course_files/preprocessed/lesson03.rda"), verbose = TRUE)
 ```
 
 Let's start by recapping which stage we have reached in the processing of our 
@@ -76,10 +77,10 @@ the explicit step of PSM to peptide aggregation.
 ### Step 1: Sum aggregation of PSMs to peptides
 
 In your console run the `aggregateFeatures` function on your `QFeatures` object.
-We wish to aggregate from PSM to peptide level so pass the argument 
-`i = "psms_filtered"` to specify we wish to aggregate the log transformed PSM
-data, and then pass `fcol = "Sequence"` to specify we wish to
-group by the peptide amino acid sequence.
+We wish to aggregate from PSM to peptide level so pass the argument `i =
+"psms_filtered"` to specify we wish to aggregate the PSM data, and then pass
+`fcol = "Sequence"` to specify we wish to group by the peptide amino acid
+sequence.
 
 ```{r, warning = FALSE, message=FALSE}
 cc_qf <- aggregateFeatures(cc_qf, 

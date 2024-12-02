@@ -35,6 +35,7 @@ library("enrichplot")
 library("patchwork")
 library("tidyverse")
 library("pheatmap")
+library("ggupset")
 library("here")
 
 load(here("course_files/preprocessed/lesson04.rda"), verbose = TRUE)
