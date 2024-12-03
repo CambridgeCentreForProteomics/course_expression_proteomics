@@ -67,8 +67,8 @@ As outlined above, the use-case experiment made use of tandem mass tag (TMT)
 labelling. TMT reagents are **isobaric** chemical labels that can be covalently
 linked to peptide amine groups, either at the peptide N-terminus or at lysine
 (K) residues. These reagents are currently available in kits (referred to as
-TMTplexes) containing 6 (TMT6plex(TM)), 10 (TMT10plex(TM)), 16 (TMTpro
-16plex(TM)), 18 (TMTpro 18plex(TM)) or 32 (TMTpro 32plex(TM)) TMT labels.
+TMTplexes) containing 6 (TMT6plex(^TM)), 10 (TMT10plex(^TM)), 16 (TMTpro
+16plex(^TM)), 18 (TMTpro 18plex(^TM)) or 32 (TMTpro 32plex(^TM)) TMT labels.
 Further, kits can be combined to multiplex up to 35 samples. The isobaric nature
 of TMT reagents means that all of the labels within a TMTplex have the same
 overall mass. However, they differ in how this mass is distributed between their

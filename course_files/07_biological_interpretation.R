@@ -15,9 +15,10 @@ library("enrichplot")
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Loading data from lesson 6
+## Loading data from lesson 4, 5, 6
 ## ---------------------------------------------------------------------------------------------------------
 
+load("preprocessed/lesson04.rda", verbose = TRUE)
 load("preprocessed/lesson06.rda", verbose = TRUE)
 
 
