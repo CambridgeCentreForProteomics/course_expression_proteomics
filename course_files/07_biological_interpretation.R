@@ -7,14 +7,11 @@
 ## Load R/Bioconductor libraries
 ## ---------------------------------------------------------------------------------------------------------
 library("QFeatures")
-library("NormalyzerDE")
-library("limma")
-library("factoextra")
+library("patchwork")
+library("tidyverse")
 library("org.Hs.eg.db")
 library("clusterProfiler")
 library("enrichplot")
-library("patchwork")
-library("tidyverse")
 
 
 ## ---------------------------------------------------------------------------------------------------------

@@ -26,5 +26,8 @@ _site
 # Output from normalyzer
 normalyzer*
 
+# Directory for testing course materials
+course_files/output
+
 # Mac folder attributes file
 .DS_Store

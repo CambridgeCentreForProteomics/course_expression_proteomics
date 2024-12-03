@@ -8,13 +8,6 @@
 ## ---------------------------------------------------------------------------------------------------------
 
 library("QFeatures")
-library("NormalyzerDE")
-library("limma")
-library("factoextra")
-library("org.Hs.eg.db")
-library("clusterProfiler")
-library("enrichplot")
-library("patchwork")
 library("tidyverse")
 
 
