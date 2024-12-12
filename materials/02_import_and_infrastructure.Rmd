@@ -1,6 +1,8 @@
 ---
 title: Import and infrastructure
 bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ::: {.callout-tip}
@@ -558,11 +560,13 @@ and TMT tag used or we can read in this information into R from a spreadsheet or
 .csv. 
 
 Let's open the file `coldata.csv` and then read it into R and add it to
-our `QFeatures` object.
+our `QFeatures` object. We use the `read.csv` function and pass the argument
+`row.names = 1` which tells the function that the in the .csv file the row
+names are located in column 1.
 
 ```{r}
 ## Read in coldata .csv
-metadata_df <- read.csv("data/samples_meta_data.csv")
+metadata_df <- read.csv("data/samples_meta_data.csv", row.names = 1)
 
 ## View data
 metadata_df
@@ -570,21 +574,14 @@ metadata_df
 
 This .csv file has 10 rows, importantly the rows are annotated using the
 names of the `rowData` of our object, e.g. "Abundance.126", "Abundance.127N" etc.
+These names must match exactly to the column names of the samples we have 
+in our existing `QFeatures` object.
 
 We can add information from this .csv to our `colData`
 
 ```{r}
-## Annotate colData with condition information
-cc_qf$sample <- metadata_df$sample
-
-## Now add replicate information
-cc_qf$rep <- metadata_df$rep
-
-## And condition information
-cc_qf$condition <- metadata_df$condition
-
-## Add the TMT information
-cc_qf$tag <- metadata_df$tag
+## Annotate colData with the sample data
+colData(cc_qf) <- metadata_df
 
 ## Verify
 colData(cc_qf)
