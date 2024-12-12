@@ -391,7 +391,7 @@ The quantitation of a TMT experiment is dependent upon the measurement of
 reporter ion signals from either the MS2 or MS3 spectra. Since reporter ion
 measurements derived from a small number of ions are more prone to stochastic
 ion effects and reduced quantitative accuracy, we want to remove PSMs that rely 
-such quantitation to ensure high data quality. When using an orbitrap analyser, 
+such quantitation to ensure high data quality. When using an Orbitrap analyser, 
 the number of ions is proportional to the S/N ratio of a peak. Hence, removing
 PSMs that have a low S/N value acts as a proxy for removing low quality
 quantitation. 
@@ -701,7 +701,7 @@ important to be aware that missing values can arise for different reasons in
 MS data, and these reasons determine the best way to deal with the missing data.
 
 * Biological reasons - a peptide may be genuinely absent from a sample or have such low abundance that it is below the limit of MS detection
-* Technical reasons - technical variation and the stocastic nature of MS (particularly using DDA) may lead to some peptides not being quantified. Some peptides have a lower ionization efficiency which makes them less compatible with MS analysis
+* Technical reasons - technical variation and the stochastic nature of MS (particularly using DDA) may lead to some peptides not being quantified. Some peptides have a lower ionization efficiency which makes them less compatible with MS analysis
 
 Missing values that arise for different reasons can generally be deciphered by 
 their pattern. For example, peptides that have missing quantitation values for
