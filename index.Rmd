@@ -53,14 +53,14 @@ Exercises in these materials are labelled according to their level of difficulty
 
 This workshop will be run by: 
 
-- **Charlotte Hutchings** - Cambridge Centre for Proteomics, University of Cambridge
 - **Lisa Breckels** - Cambridge Centre for Proteomics, University of Cambridge
 - **Tom Smith** - MRC Laboratory of Molecular Biology, Cambridge
 - **Alistair Hines** - Cambridge Centre for Proteomics, University of Cambridge
-- **Kieran McCaskie** - Cambridge Centre for Proteomics, University of Cambridge
+- **Oliver Crook** - Kavli Institute for NanoScience Discovery, University of Oxford
 
 Previous instructors include:
 
+* Charlotte Hutchings - Cambridge Centre for Proteomics, University of Cambridge
 * Thomas Krueger - Department of Biochemistry, University of Cambridge
 * Charlotte S. Dawson - Cambridge Centre for Proteomics, University of Cambridge
 
