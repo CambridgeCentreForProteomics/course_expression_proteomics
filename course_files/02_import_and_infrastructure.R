@@ -39,32 +39,71 @@ cc_qf <- readQFeatures(assayData = df,
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Extract the rowData and find information
+## Accessing and indexing SEs/datasets
 ## ---------------------------------------------------------------------------------------------------------
 
-rd <- cc_qf[["psms_raw"]] %>% 
+
+
+## ---------------------------------------------------------------------------------------------------------
+## The quantitation data
+## ---------------------------------------------------------------------------------------------------------
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge 1: Accessing information
+##
+## 1. Explore the QFeatures object you have just created.
+## 2. How many sets/SEs do we currently have in the object?
+## 3. How many PSMs have been identified in the data?
+## 4. How do you access and view the quantitation/abundance?
+##
+## ---------------------------------------------------------------------------------------------------------
+
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## The rowData container
+## ---------------------------------------------------------------------------------------------------------
+
+cc_qf[["psms_raw"]] %>% 
   rowData()
 
-rd %>%
-  as_tibble() %>%
-  pull(Sequence) %>%
-  unique() %>%
-  length() 
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge 2: Calculating the number of peptides
+## and proteins of in the dataset
+##
+## Explore the information stored in the rowData from the 
+## Proteome Discoverer search.
+##
+## 1. What class is the rowData container? 
+##    How many rows and columns are in this data structure?
+##
+## 2. (i) Extract the rowData and convert it to a tibble or data.frame
+##    (ii) Find a column that contains the peptide sequence.
+##    (iii) Pull and find how many unique peptide sequences we have
+##
+## 3. How many protein groups (master proteins) are there?
+## ---------------------------------------------------------------------------------------------------------
+
 
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Read in some information to add to the empty colData
+## The colData slot
 ## ---------------------------------------------------------------------------------------------------------
+
+cc_qf[["psms_raw"]] %>%
+  colData()
 
 ## Read in coldata .csv
 metadata_df <- read.csv("data/samples_meta_data.csv")
 
-## Annotate colData with sample, replicate, condition and tag nformation
-cc_qf$sample <- metadata_df$sample
-cc_qf$rep <- metadata_df$rep
-cc_qf$condition <- metadata_df$condition
-cc_qf$tag <- metadata_df$tag
+## Annotate the colData with experiment info
+colData(cc_qf) <- metadata_df
 
 ## Apply this to the first assay so that it is carried up
 colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
@@ -77,6 +116,18 @@ colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
 
 colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
 
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge 3: Miscleavages
+##
+## One of the pieces of information given by the 3rd party
+## software used is the number of missed cleavages. This is 
+## stored in a rowData column named "Number.of.Missed.Cleavages". 
+##
+## Can you count how many occurrences of missed cleavages 
+## there are in our data?
+## ---------------------------------------------------------------------------------------------------------
 
 
 
