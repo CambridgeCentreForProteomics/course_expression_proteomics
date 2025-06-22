@@ -104,9 +104,9 @@ knitr::include_graphics("figs/qfeatures.png", error = FALSE)
 ```
 
 :::{.callout-note}
-#### QFeatures
+#### QFeatures nomenclature
 When talking about a `QFeatures` object, each dataset (individual
-`SummarizedExperiment`) can be referred to as an `experiment`. Previously, each
+`SummarizedExperiment`) can be referred to as an `set` (short for dataset). Previously, each
 dataset was referred to as an `experimental assay`, and some older resources 
 may still use this term. However, the `experimental assay` should not be confused 
 with the quantitative matrix section of a `SummarizedExperiment`, which is 
@@ -134,7 +134,6 @@ environment.
 
 ```{r load_packages, message = FALSE, results = "hide", warning=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
 library("factoextra")
 library("org.Hs.eg.db")
@@ -237,7 +236,7 @@ that there are `r  ncol(cc_qf[["psms_raw"]])` columns representing our 10 sample
 We can access individual `SummarizedExperiment`s within a `QFeatures` object
 using standard double bracket nomenclature (this is how you would normally
 access items of a `list` in R). As with all indexing we can use the list
-position or assay name.
+position or dataset name.
 
 
 ```{r}
@@ -301,7 +300,7 @@ multiple lines of code. For more information see Hadley Wickham's Tidyverse at
 
 Explore the `QFeatures` object you have just created. 
 
-1. How many experimental assays do we currently have in the object? 
+1. How many "sets" (`SummarizedExperiments`) do we currently have in the object? 
 
 2. How many PSMs have been identified in the data?
 
@@ -314,8 +313,7 @@ of each PSM across the samples?
 **Task 1**
 
 When we type the name of the the object `cc_qf` a summary of the data is 
-printed to the screen. This summary shows us a summary of the number of experimental
-assays we have in the data.
+printed to the screen. This summary shows us a summary of the number of sets (`SummarizedExperiments`) we have in the data.
 
 ```{r}
 cc_qf
@@ -586,7 +584,7 @@ colData(cc_qf) <- metadata_df
 ## Verify
 colData(cc_qf)
 
-## Apply this to the first assay so that it is carried up
+## Apply this to the first set so that it is carried up
 colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
 ```
 
@@ -637,10 +635,10 @@ maximum of 2 missed cleavage sites. This is typical in bottom-up proteomics.
 - The `QFeatures` infrastructure provides a convenient and transparent way to 
 store proteomics data across multiple levels.
 - A `QFeatures` object stores each data level as a `SummarizedExperiment`, 
-also called an ` experimental assay`, with explicit links maintained between 
-features across different `experimental assay`s (e.g., links between all PSMs 
+also called an `set` (dataset), with explicit links maintained between 
+features across different `sets` (e.g., links between all PSMs 
 contributing to a peptide).
-- Explicit links between `experimental assay`s are (i) generated automatically when 
+- Explicit links between `sets` are (i) generated automatically when 
 aggregating data using `aggregateFeatures` or (ii) added manually using the 
 `addAssayLinks` function, as we will see later on.
 - Within each `SummarizedExperiment` the feature data is stored within the 
