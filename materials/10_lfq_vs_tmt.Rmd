@@ -20,7 +20,6 @@ from that of the TMT use-case data.
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
 library("factoextra")
 library("org.Hs.eg.db")

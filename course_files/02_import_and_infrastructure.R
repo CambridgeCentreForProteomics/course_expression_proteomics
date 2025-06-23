@@ -18,7 +18,7 @@ library("tidyverse")
 ## ---------------------------------------------------------------------------------------------------------
 
 ## Please check you are in the correct working directory and create a
-## subdirectory called ouptut to store your analysis results
+## subdirectory called output to store your analysis results
 
 dir.create("output", showWarnings = FALSE)
 
@@ -53,10 +53,10 @@ cc_qf <- readQFeatures(assayData = df,
 ## ---------------------------------------------------------------------------------------------------------
 ## Challenge 1: Accessing information
 ##
-## 1. Explore the QFeatures object you have just created.
-## 2. How many sets/SEs do we currently have in the object?
-## 3. How many PSMs have been identified in the data?
-## 4. How do you access and view the quantitation/abundance?
+## Explore the QFeatures object you have just created.
+## 1. How many sets/SEs do we currently have in the QF object?
+## 2. How many PSMs have been identified in the data?
+## 3. How do you access and view the quantitation/abundance?
 ##
 ## ---------------------------------------------------------------------------------------------------------
 
@@ -102,10 +102,10 @@ cc_qf[["psms_raw"]] %>%
 ## Read in coldata .csv
 metadata_df <- read.csv("data/samples_meta_data.csv")
 
-## Annotate the colData with experiment info
+## Annotate the global colData with experiment info
 colData(cc_qf) <- metadata_df
 
-## Apply this to the first assay so that it is carried up
+## Annotate the first SE/set with experiment info
 colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
 
 

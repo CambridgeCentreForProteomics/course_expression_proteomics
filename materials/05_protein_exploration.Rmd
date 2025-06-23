@@ -19,7 +19,6 @@ editor_options:
 
 ```{r, eval=TRUE, include=FALSE}
 library("QFeatures")
-library("NormalyzerDE")
 library("limma")
 library("factoextra")
 library("org.Hs.eg.db")
