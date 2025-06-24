@@ -59,22 +59,22 @@ and added this back to our `QFeatures` object using the `addAssay` function,
 which does not maintain the links. Hence, our `"raw_psms"` experimental assay is
 not currently linked to any of our higher level experimental assays.
 
-It may be beneficial to add a link between our final protein level data and the
-raw PSM data. This can be achieved using the `addAssayLink` function as 
-demonstrated below.
+```{r}
+plot(cc_qf)
+```
+
+It may be beneficial to add a link between our raw and filtered PSM data. 
+This can be achieved using the `addAssayLink` function as demonstrated below.
 
 
 ```{r}
 ## Create assay link
 cc_qf <- addAssayLink(object = cc_qf, 
                       from = "psms_raw", 
-                      to = "log_norm_proteins",
-                      varFrom = "Master.Protein.Accessions",
-                      varTo = "Master.Protein.Accessions")
+                      to = "psms_filtered")
 
 ## Verify
-assayLink(x = cc_qf,
-          i = "log_norm_proteins")
+plot(cc_qf)
 ```
 
 Adding a relation between these two `experimental assays` ensure traceability. 
@@ -479,8 +479,8 @@ removed using `filterNA` to facilitate compatibility with PCA.
 
 ```{r}
 protein_pca <- cc_qf[["log_norm_proteins"]] %>%
+  filterNA() %>%
   assay() %>%
-# filterNA() %>%
   t() %>%
   prcomp(scale = TRUE, center = TRUE)
 
