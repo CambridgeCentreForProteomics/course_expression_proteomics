@@ -8,7 +8,7 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Know how to determine the number of PSMs, peptides, proteins and protein groups (i.e., master proteins) in an experimental assay of a `QFeatures` object
+* Know how to determine the number of PSMs, peptides, proteins and protein groups (i.e., master proteins) in an `SummarizedExperimetn` of a `QFeatures` object
 * Understand what the `.n` column corresponds to when using the `aggregateFeatures` function to aggregate features
 * Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
 * Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation 
@@ -52,12 +52,12 @@ between quantitative levels are maintained whilst allowing easy access to all
 data levels for individual features (PSMs, peptides and proteins) of interest. 
 These links are generated and maintained when aggregating using the
 `aggregateFeatures` function, as well as the `logTransform` and `normalize`
-functions - all functions that take one experimental assay within a `QFeatures`
-object and create a new experimental assay in the same `QFeatures` object.
+functions - all functions that take one `SummarizedExperiment` within a `QFeatures`
+object and create a new `SummarizedExperiment` in the same `QFeatures` object.
 However, before we started filtering the data, we created a copy of the raw data
 and added this back to our `QFeatures` object using the `addAssay` function,
-which does not maintain the links. Hence, our `"raw_psms"` experimental assay is
-not currently linked to any of our higher level experimental assays.
+which does not maintain the links. Hence, our `"raw_psms"` dataset is
+not currently linked to any of our higher level data.
 
 ```{r}
 plot(cc_qf)
@@ -77,7 +77,7 @@ cc_qf <- addAssayLink(object = cc_qf,
 plot(cc_qf)
 ```
 
-Adding a relation between these two `experimental assays` ensure traceability. 
+Adding a relation between these two `sets` ensures traceability. 
 
 
 ## Determining the dimensions of our final protein data
@@ -166,8 +166,8 @@ message(psm_count - psm_final, " PSMs, ",
 ## The `.n` column created by `aggregateFeatures`
 
 If we look at the names of the columns within our "`peptides"` and
-`"proteins"` experimental assays we see that there is a column called `.n`. 
-This column was not present in the PSM level experimental assays.
+`"proteins"` datasets we see that there is a column called `.n`. 
+This column was not present in the PSM level datasets.
 
 For example,
 
