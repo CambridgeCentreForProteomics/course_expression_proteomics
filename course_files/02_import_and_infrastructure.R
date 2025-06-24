@@ -90,8 +90,6 @@ cc_qf[["psms_raw"]] %>%
 ## ---------------------------------------------------------------------------------------------------------
 
 
-
-
 ## ---------------------------------------------------------------------------------------------------------
 ## The colData slot
 ## ---------------------------------------------------------------------------------------------------------
@@ -100,13 +98,10 @@ cc_qf[["psms_raw"]] %>%
   colData()
 
 ## Read in coldata .csv
-metadata_df <- read.csv("data/samples_meta_data.csv")
 
 ## Annotate the global colData with experiment info
-colData(cc_qf) <- metadata_df
 
 ## Annotate the first SE/set with experiment info
-colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
 
 
 
