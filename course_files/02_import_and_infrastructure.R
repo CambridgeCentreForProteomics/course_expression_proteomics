@@ -11,8 +11,6 @@ library("QFeatures")
 library("tidyverse")
 
 
-
-
 ## ---------------------------------------------------------------------------------------------------------
 ## Create a directory to store your analysis results
 ## ---------------------------------------------------------------------------------------------------------
@@ -28,15 +26,6 @@ dir.create("output", showWarnings = FALSE)
 ## Import data into QF object
 ## ---------------------------------------------------------------------------------------------------------
 
-df <- read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt")
-
-df %>%
-  names()
-
-cc_qf <- readQFeatures(assayData = df,
-                       quantCols = 47:56, 
-                       name = "psms_raw")
-
 
 ## ---------------------------------------------------------------------------------------------------------
 ## Accessing and indexing SEs/datasets
@@ -50,44 +39,11 @@ cc_qf <- readQFeatures(assayData = df,
 
 
 
-## ---------------------------------------------------------------------------------------------------------
-## Challenge 1: Accessing information
-##
-## Explore the QFeatures object you have just created.
-## 1. How many sets/SEs do we currently have in the QF object?
-## 2. How many PSMs have been identified in the data?
-## 3. How do you access and view the quantitation/abundance?
-##
-## ---------------------------------------------------------------------------------------------------------
-
-
-
 
 ## ---------------------------------------------------------------------------------------------------------
 ## The rowData container
 ## ---------------------------------------------------------------------------------------------------------
 
-cc_qf[["psms_raw"]] %>% 
-  rowData()
-
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Challenge 2: Calculating the number of peptides
-## and proteins of in the dataset
-##
-## Explore the information stored in the rowData from the 
-## Proteome Discoverer search.
-##
-## 1. What class is the rowData container? 
-##    How many rows and columns are in this data structure?
-##
-## 2. (i) Extract the rowData and convert it to a tibble or data.frame
-##    (ii) Find a column that contains the peptide sequence.
-##    (iii) Pull and find how many unique peptide sequences we have
-##
-## 3. How many protein groups (master proteins) are there?
-## ---------------------------------------------------------------------------------------------------------
 
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -110,6 +66,38 @@ cc_qf[["psms_raw"]] %>%
 ## ---------------------------------------------------------------------------------------------------------
 
 colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge 1: Accessing information
+##
+## Explore the QFeatures object you have just created.
+## 1. How many sets/SEs do we currently have in the QF object?
+## 2. How many PSMs have been identified in the data?
+## 3. How do you access and view the quantitation/abundance?
+##
+## ---------------------------------------------------------------------------------------------------------
+
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge 2: Calculating the number of peptides
+## and proteins of in the dataset
+##
+## Explore the information stored in the rowData from the 
+## Proteome Discoverer search.
+##
+## 1. What class is the rowData container? 
+##    How many rows and columns are in this data structure?
+##
+## 2. (i) Extract the rowData and convert it to a tibble or data.frame
+##    (ii) Find a column that contains the peptide sequence.
+##    (iii) Pull and find how many unique peptide sequences we have
+##
+## 3. How many protein groups (master proteins) are there?
+## ---------------------------------------------------------------------------------------------------------
+
+
 
 
 

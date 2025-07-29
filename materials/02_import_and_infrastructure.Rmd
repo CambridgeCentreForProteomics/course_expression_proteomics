@@ -283,6 +283,17 @@ The first code chunk uses nested functions and the second uses pipes. Throughout
 this course for ease of coding and clarity we will use pipes and where 
 appropriate follow the `tidyverse` style of coding for clarity. 
 
+```{r}
+cc_qf[["psms_raw"]] %>% 
+  assay() %>% 
+  ncol()
+```
+
+We see the `assay` slot contains 10 quantitative columns corresponding to
+the 10 samples in our experiment. We see some quantitative values and some 
+missing values, here denotated `NA`.
+
+
 ::: {.callout-note}
 #### The dplyr pipe
 In this course we will frequently use pipes, specifically the `dplyr` pipe part
@@ -293,6 +304,120 @@ multiple lines of code. For more information see Hadley Wickham's Tidyverse at
 [https://www.tidyverse.org](https://www.tidyverse.org).
 
 :::
+
+
+### The `rowData` container
+
+Now let's examine the the `rowData` slot,
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  names()
+```
+
+The columns of our `rowData` contain non-quantitative information derived from 
+the third party identification search. The exact names of variables will differ
+between software and change over time, but the key information that we need to
+know about each feature (here PSMs) will always be here. 
+
+This information includes the sequence of the peptide to which each PSM
+corresponds (`"Sequence"`) as well as the master protein to which the peptide is
+assigned (`"Master.Protein.Accessions"`). We will come across more of the
+variables stored in the `rowData` when we come to data cleaning and filtering.
+
+We again use the `head` command to print the first 6 rows of the `rowData`
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  rowData() %>%
+  head()
+```
+
+### The `colData` container
+
+The final slot within our `SummarizedExperiment` is the `colData`.
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  colData()
+```
+
+We see this is also a `DataFrame` structure. 
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  colData() %>% 
+  class()
+```
+
+It has 10 rows, one per sample, but no columns yet. This is because the sample
+metadata is not derived from an identification search and does not appear in our
+output `.txt` file. If we want to store extra information about our samples, we
+need to add this to the `colData` ourselves.
+
+Each row of this 10 by 0 `DataFrame` corresponds to some feature of the 
+quantitation channel. The names of these rows are the TMT sample names,
+
+```{r}
+cc_qf[["psms_raw"]] %>%
+  colData() %>% 
+  rownames()
+```
+
+### Annotating samples by adding meta-data
+
+The `colData` contains information about the samples. We can create a
+`data.frame` in R with information regarding the samples, replicates, conditions
+and TMT tag used or we can read in this information into R from a spreadsheet or
+.csv. 
+
+Let's open the file `coldata.csv` and then read it into R and add it to
+our `QFeatures` object. We use the `read.csv` function and pass the argument
+`row.names = 1` which tells the function that the in the .csv file the row
+names are located in column 1.
+
+```{r}
+## Read in coldata .csv
+metadata_df <- read.csv("data/samples_meta_data.csv", row.names = 1)
+
+## View data
+metadata_df
+```
+
+This .csv file has 10 rows, importantly the rows are annotated using the
+names of the `rowData` of our object, e.g. "Abundance.126", "Abundance.127N" etc.
+These names must match exactly to the column names of the samples we have 
+in our existing `QFeatures` object.
+
+We can add information from this .csv to our `colData`
+
+```{r}
+## Annotate colData with the sample data
+colData(cc_qf) <- metadata_df
+
+## Verify
+colData(cc_qf)
+
+## Apply this to the first set so that it is carried up
+colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
+```
+
+We can also change the names of our samples to simplify our downstream coding
+as well as our visualisation. This is done by changing the `colnames`.
+
+```{r}
+ ## Change col names to represent the sample
+colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
+
+## Verify
+colData(cc_qf[["psms_raw"]])
+```
+
+```{r, include=FALSE, eval=TRUE}
+save(cc_qf, file = here("course_files/preprocessed/lesson02.rda"))
+```
+
 
 :::{.callout-exercise}
 #### Challenge 1: Accessing information
@@ -365,39 +490,6 @@ assay(cc_qf[["psms_raw"]])
 
 :::
 :::
-
-As expected, the `assay` slot contains 10 quantitative columns corresponding to
-the 10 samples in our experiment. We see some quantitative values and some 
-missing values, here denotated `NA`.
-
-### The `rowData` container
-
-Now let's examine the the `rowData` slot,
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  rowData() %>%
-  names()
-```
-
-The columns of our `rowData` contain non-quantitative information derived from 
-the third party identification search. The exact names of variables will differ
-between software and change over time, but the key information that we need to
-know about each feature (here PSMs) will always be here. 
-
-This information includes the sequence of the peptide to which each PSM
-corresponds (`"Sequence"`) as well as the master protein to which the peptide is
-assigned (`"Master.Protein.Accessions"`). We will come across more of the
-variables stored in the `rowData` when we come to data cleaning and filtering.
-
-We again use the `head` command to print the first 6 rows of the `rowData`
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  rowData() %>%
-  head()
-```
-
 
 :::{.callout-exercise}
 #### Challenge 2: Calculating the number of peptides and proteins in our dataset
@@ -518,90 +610,6 @@ proteins.
 
 :::
 :::
-
-### The `colData` container
-
-The final slot within our `SummarizedExperiment` is the `colData`.
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  colData()
-```
-
-We see this is also a `DataFrame` structure. 
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  colData() %>% 
-  class()
-```
-
-It has 10 rows, one per sample, but no columns yet. This is because the sample
-metadata is not derived from an identification search and does not appear in our
-output `.txt` file. If we want to store extra information about our samples, we
-need to add this to the `colData` ourselves.
-
-Each row of this 10 by 0 `DataFrame` corresponds to some feature of the 
-quantitation channel. The names of these rows are the TMT sample names,
-
-```{r}
-cc_qf[["psms_raw"]] %>%
-  colData() %>% 
-  rownames()
-```
-
-### Annotating samples by adding meta-data
-
-The `colData` contains information about the samples. We can create a
-`data.frame` in R with information regarding the samples, replicates, conditions
-and TMT tag used or we can read in this information into R from a spreadsheet or
-.csv. 
-
-Let's open the file `coldata.csv` and then read it into R and add it to
-our `QFeatures` object. We use the `read.csv` function and pass the argument
-`row.names = 1` which tells the function that the in the .csv file the row
-names are located in column 1.
-
-```{r}
-## Read in coldata .csv
-metadata_df <- read.csv("data/samples_meta_data.csv", row.names = 1)
-
-## View data
-metadata_df
-```
-
-This .csv file has 10 rows, importantly the rows are annotated using the
-names of the `rowData` of our object, e.g. "Abundance.126", "Abundance.127N" etc.
-These names must match exactly to the column names of the samples we have 
-in our existing `QFeatures` object.
-
-We can add information from this .csv to our `colData`
-
-```{r}
-## Annotate colData with the sample data
-colData(cc_qf) <- metadata_df
-
-## Verify
-colData(cc_qf)
-
-## Apply this to the first set so that it is carried up
-colData(cc_qf[["psms_raw"]]) <- colData(cc_qf)
-```
-
-We can also change the names of our samples to simplify our downstream coding
-as well as our visualisation. This is done by changing the `colnames`.
-
-```{r}
- ## Change col names to represent the sample
-colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
-
-## Verify
-colData(cc_qf[["psms_raw"]])
-```
-
-```{r, include=FALSE, eval=TRUE}
-save(cc_qf, file = here("course_files/preprocessed/lesson02.rda"))
-```
 
 
 :::{.callout-exercise}
