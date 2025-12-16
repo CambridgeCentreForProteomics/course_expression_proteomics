@@ -31,3 +31,5 @@ course_files/output
 
 # Mac folder attributes file
 .DS_Store
+
+**/*.quarto_ipynb
