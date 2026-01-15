@@ -77,9 +77,12 @@ data, you can adapt the code to use your data files.
 
 ## Packages
 
-Let's begin by loading the required packages.
+Let's begin by loading the required packages and setting a seed for reproducibility.
 
 ```{r load_packages, message = FALSE, results = "hide", warning=FALSE}
+## Set seed for reproducibility of all random operations
+set.seed(123)
+
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -124,7 +127,6 @@ data that mirrors the structure of real DIA-NN output:
 ```{r create_sim_data}
 ## Create simulated DIA-NN data for demonstration
 ## This mirrors the structure of real DIA-NN main report output
-set.seed(123)
 
 ## Define samples (fractions for subcellular proteomics)
 sample_names <- paste0("Fraction", 1:6)

@@ -37,6 +37,9 @@ The workflow for correlation profiling includes:
 
 
 ```{r, eval=TRUE, include=FALSE}
+## Set seed for reproducibility at the start
+set.seed(123)
+
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -46,10 +49,6 @@ library("pheatmap")
 library("corrplot")
 library("dendextend")
 library("here")
-
-## For this tutorial, we'll create example data since the actual data
-## may not be available
-set.seed(123)
 ```
 
 
@@ -307,9 +306,12 @@ Using the correlation with marker proteins:
 ::: {.callout-answer collapse=true}
 
 ```{r}
+## Get organelle names dynamically from the profile definition
+organelle_names <- names(organelle_profiles)
+
 ## Assign based on maximum correlation
 assignments <- organelle_cor_wide %>%
-  pivot_longer(cols = c(cytoplasm, nucleus, mitochondria, ER, golgi),
+  pivot_longer(cols = all_of(organelle_names),
                names_to = "Assigned_Organelle",
                values_to = "Correlation") %>%
   group_by(Protein) %>%
@@ -531,10 +533,12 @@ t-SNE is another popular method for visualizing high-dimensional data.
 
 ```{r, eval=FALSE}
 ## Install if needed: install.packages("Rtsne")
-if (requireNamespace("Rtsne", quietly = TRUE)) {
-  library(Rtsne)
+## Note: This section is optional and requires the Rtsne package
+if (!requireNamespace("Rtsne", quietly = TRUE)) {
+  message("Rtsne package not installed. Install with: install.packages('Rtsne')")
+  message("Skipping t-SNE visualization...")
 } else {
-  stop("Please install Rtsne package: install.packages('Rtsne')")
+  library(Rtsne)
 }
 
 ## Run t-SNE
@@ -558,6 +562,7 @@ ggplot(tsne_scores, aes(x = tSNE1, y = tSNE2, color = True_Organelle)) +
   theme_bw() +
   labs(title = "t-SNE of protein profiles",
        color = "Organelle")
+}
 ```
 
 t-SNE often provides better local structure visualization and can separate clusters
@@ -574,14 +579,16 @@ scores based on correlation strength.
 
 ```{r confidence}
 ## Calculate confidence based on correlation with best organelle
+## Using dynamically defined organelle names
 confidence_scores <- organelle_cor_wide %>%
   rowwise() %>%
   mutate(
-    Max_Cor = max(c(cytoplasm, nucleus, mitochondria, ER, golgi)),
-    Second_Cor = sort(c(cytoplasm, nucleus, mitochondria, ER, golgi), 
-                      decreasing = TRUE)[2],
+    cor_values = list(c_across(all_of(organelle_names))),
+    Max_Cor = max(cor_values),
+    Second_Cor = sort(cor_values, decreasing = TRUE)[2],
     Confidence = Max_Cor - Second_Cor
   ) %>%
+  select(-cor_values) %>%
   ungroup()
 
 ## Examine confidence distribution
