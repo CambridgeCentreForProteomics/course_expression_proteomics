@@ -531,7 +531,11 @@ t-SNE is another popular method for visualizing high-dimensional data.
 
 ```{r, eval=FALSE}
 ## Install if needed: install.packages("Rtsne")
-library(Rtsne)
+if (requireNamespace("Rtsne", quietly = TRUE)) {
+  library(Rtsne)
+} else {
+  stop("Please install Rtsne package: install.packages('Rtsne')")
+}
 
 ## Run t-SNE
 set.seed(42)
@@ -676,8 +680,9 @@ analysis:
 
 ```{r}
 ## Task 1: Export results
+## Use tempdir() for a portable temporary directory
 write.csv(localization_report, 
-          file = "/tmp/localization_results.csv", 
+          file = file.path(tempdir(), "localization_results.csv"), 
           row.names = FALSE)
 
 ## Task 2: Summary figure

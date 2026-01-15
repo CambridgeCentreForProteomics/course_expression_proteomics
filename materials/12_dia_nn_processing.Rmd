@@ -621,11 +621,13 @@ pheatmap(
 The normalized protein data is now ready for correlation profiling analysis
 in the next lesson. Let's save the processed data.
 
-```{r save_data, include=FALSE, eval=FALSE}
-## Save the QFeatures object for use in the next lesson
-## This would be saved to: course_files/preprocessed/lesson12.rda
-## save(dia_qf, file = here("course_files/preprocessed/lesson12.rda"))
+::: {.callout-note}
+#### Saving your work
+To save the processed `QFeatures` object for use in downstream analysis:
+```r
+save(dia_qf, file = here("course_files/preprocessed/lesson12.rda"))
 ```
+:::
 
 
 ## Summary
