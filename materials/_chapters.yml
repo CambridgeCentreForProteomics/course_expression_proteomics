@@ -19,3 +19,7 @@ book:
         - materials/09_normalyzer.Rmd
         - materials/10_lfq_vs_tmt.Rmd
         - materials/11_statistical_analysis_all_stages.Rmd
+    - part: "DIA and Subcellular Proteomics"
+      chapters:
+        - materials/12_dia_nn_processing.Rmd
+        - materials/13_correlation_profiling.Rmd
