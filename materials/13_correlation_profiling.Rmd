@@ -687,10 +687,16 @@ analysis:
 
 ```{r}
 ## Task 1: Export results
-## Use tempdir() for a portable temporary directory
+## Create results directory if needed
+results_dir <- here("results")
+dir.create(results_dir, showWarnings = FALSE)
+
+## Save the localization results
+output_file <- file.path(results_dir, "localization_results.csv")
 write.csv(localization_report, 
-          file = file.path(tempdir(), "localization_results.csv"), 
+          file = output_file, 
           row.names = FALSE)
+message("Results saved to: ", output_file)
 
 ## Task 2: Summary figure
 p1 <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = True_Organelle)) +

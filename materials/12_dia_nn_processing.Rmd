@@ -625,9 +625,14 @@ in the next lesson. Let's save the processed data.
 
 ::: {.callout-note}
 #### Saving your work
-To save the processed `QFeatures` object for use in downstream analysis:
+To save the processed `QFeatures` object for use in downstream analysis, you can
+use your working directory or create a results folder:
 ```r
-save(dia_qf, file = here("course_files/preprocessed/lesson12.rda"))
+## Create a results directory if it doesn't exist
+dir.create(here("results"), showWarnings = FALSE)
+
+## Save the processed data
+save(dia_qf, file = here("results/dia_processed.rda"))
 ```
 :::
 
