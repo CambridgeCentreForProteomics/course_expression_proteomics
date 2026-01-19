@@ -182,7 +182,7 @@ transparency throughout the process.
 For TMT data we can start our data analysis from the PSM level. However, it is
 not always possible to start at this level. Some algorithms used to process 
 label-free data may require the data to be analysed from the peptide-level. See
-[Adapting this workflow to label-free proteomics](./11_lfq_vs_tmt.html) for 
+[Adapting this workflow to label-free proteomics](./10_lfq_vs_tmt.html) for 
 more details.
 
 ## Summary
@@ -197,8 +197,8 @@ also applicable to other types of proteomics datasets (particularly label-free
 DDA bottom-up proteomics), there is no one-size-fits-all workflow for expression
 proteomics. Some aspects of the workflow would need to be adapted for other
 types of proteomics experiment. We have provided details on how this workflow 
-could be adapted to [label-free data](./11_lfq_vs_tmt.html) or 
-[data processed using MaxQuant](./10_maxquant_notes.html) rather than Proteome Discoverer.
+could be adapted to [label-free data](./10_lfq_vs_tmt.html) or 
+[data processed using MaxQuant](./08_maxquant_notes.html) rather than Proteome Discoverer.
 
 
 ## Glossary
