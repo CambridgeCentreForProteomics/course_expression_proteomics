@@ -31,6 +31,19 @@ Download and unzip the folder to your Desktop to follow along with the materials
 <button class="btn"><i class="fa fa-download"></i> Download</button>
 </a>
 
+### DIA data for subcellular proteomics lessons
+
+For the DIA-NN processing and correlation profiling lessons (Lessons 12-13),
+additional data can be downloaded from Zenodo:
+[https://zenodo.org/records/15537457](https://zenodo.org/records/15537457)
+
+This data corresponds to the DIA proteomics workflow described in the appendix 
+of the F1000Research article "A Bioconductor workflow for processing, evaluating, 
+and interpreting expression proteomics data".
+
+The tutorial notebooks can also be run using the simulated data provided within 
+the notebooks themselves if you do not wish to download the real data.
+
 ## Working on your own laptop
 
 If you wish to work on your own laptop during the course and not the training
@@ -114,7 +127,10 @@ BiocManager::install(c("QFeatures",
                        "patchwork",
                        "tidyverse",
                        "pheatmap",
-                       "ggupset"))
+                       "ggupset",
+                       "corrplot",
+                       "dendextend",
+                       "here"))
 ```
 
 After installation, each package must be loaded before it can be used in the R
@@ -133,6 +149,19 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
+library("corrplot")
+library("dendextend")
+library("here")
+```
+
+### Optional packages
+
+For some advanced exercises in the DIA and correlation profiling lessons, you may 
+want to install these optional packages:
+
+```{r install_optional, eval = FALSE}
+## For t-SNE visualization (optional)
+install.packages("Rtsne")
 ```
 
 

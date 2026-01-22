@@ -1,0 +1,799 @@
+---
+title: Correlation profiling for subcellular proteomics
+number-sections: true
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+::: callout-tip
+#### Learning Objectives
+
+-   Understand the principle of correlation profiling for protein localization
+-   Create and interpret protein distribution profiles across subcellular fractions
+-   Calculate and visualize correlation matrices for protein co-localization
+-   Apply clustering methods to identify organelle-specific protein groups
+-   Use marker proteins to validate and annotate protein clusters
+:::
+
+
+## Introduction to correlation profiling
+
+Correlation profiling is a powerful approach for determining protein subcellular
+localization based on quantitative proteomics data from fractionation experiments.
+The key principle is that proteins residing in the same organelle will have similar
+distribution profiles across the fractions.
+
+The workflow for correlation profiling includes:
+
+1. **Profile generation**: Calculate protein distribution across fractions
+2. **Correlation calculation**: Measure similarity between protein profiles
+3. **Clustering**: Group proteins with similar profiles
+4. **Annotation**: Use marker proteins to identify organelle clusters
+5. **Validation**: Assess the quality of localization assignments
+
+
+```{r, eval=TRUE, include=FALSE}
+## Set seed for reproducibility at the start
+set.seed(123)
+
+library("QFeatures")
+library("limma")
+library("factoextra")
+library("patchwork")
+library("tidyverse")
+library("pheatmap")
+library("corrplot")
+library("dendextend")
+library("here")
+```
+
+
+## Example data preparation
+
+For this tutorial, we'll create simulated subcellular fractionation data
+to demonstrate the correlation profiling workflow.
+
+```{r create_example_data}
+## Create example subcellular proteomics data
+## Simulating 6 fractions with different organelle compositions
+n_proteins <- 500
+n_fractions <- 6
+
+## Define fraction names
+fraction_names <- paste0("F", 1:n_fractions)
+
+## Create base profiles for different organelles
+## Each profile represents how an organelle distributes across fractions
+organelle_profiles <- list(
+  cytoplasm = c(0.7, 0.15, 0.05, 0.05, 0.03, 0.02),
+  nucleus = c(0.05, 0.1, 0.6, 0.15, 0.05, 0.05),
+  mitochondria = c(0.05, 0.05, 0.1, 0.65, 0.1, 0.05),
+  ER = c(0.1, 0.15, 0.1, 0.1, 0.45, 0.1),
+  golgi = c(0.05, 0.1, 0.05, 0.05, 0.15, 0.6)
+)
+
+## Assign proteins to organelles
+organelle_assignment <- sample(names(organelle_profiles), 
+                               n_proteins, 
+                               replace = TRUE,
+                               prob = c(0.35, 0.2, 0.2, 0.15, 0.1))
+
+## Generate protein abundance profiles based on organelle
+protein_matrix <- matrix(nrow = n_proteins, ncol = n_fractions)
+colnames(protein_matrix) <- fraction_names
+rownames(protein_matrix) <- paste0("P", sprintf("%04d", 1:n_proteins))
+
+for (i in 1:n_proteins) {
+  base_profile <- organelle_profiles[[organelle_assignment[i]]]
+  ## Add noise to create realistic variation
+  noisy_profile <- base_profile * (1 + rnorm(n_fractions, 0, 0.15))
+  noisy_profile[noisy_profile < 0] <- 0.001
+  protein_matrix[i, ] <- noisy_profile
+}
+
+## Normalize rows to sum to 1 (relative abundances)
+protein_matrix <- protein_matrix / rowSums(protein_matrix)
+
+## Create annotation data
+protein_annotation <- data.frame(
+  Protein = rownames(protein_matrix),
+  True_Organelle = organelle_assignment,
+  stringsAsFactors = FALSE
+)
+
+## Select some proteins as known markers
+marker_proteins <- data.frame(
+  Protein = c(paste0("P", sprintf("%04d", c(1, 50, 100, 150, 200))),
+              paste0("P", sprintf("%04d", c(25, 75, 125, 175, 225))),
+              paste0("P", sprintf("%04d", c(30, 80, 130, 180, 230))),
+              paste0("P", sprintf("%04d", c(35, 85, 135, 185, 235))),
+              paste0("P", sprintf("%04d", c(40, 90, 140, 190, 240)))),
+  Organelle = rep(c("cytoplasm", "nucleus", "mitochondria", "ER", "golgi"), 
+                  each = 5),
+  stringsAsFactors = FALSE
+)
+
+## Log2 transform for better visualization
+log_protein_matrix <- log2(protein_matrix + 0.0001)
+```
+
+
+## Visualizing protein distribution profiles
+
+The first step in correlation profiling is to visualize how proteins distribute
+across the fractions.
+
+
+### Overall profile distribution
+
+```{r viz_profiles}
+## Convert to long format for ggplot
+profile_long <- as_tibble(protein_matrix, rownames = "Protein") %>%
+  pivot_longer(cols = starts_with("F"), 
+               names_to = "Fraction", 
+               values_to = "Abundance") %>%
+  left_join(protein_annotation, by = "Protein")
+
+## Plot average profiles by organelle
+profile_long %>%
+  group_by(True_Organelle, Fraction) %>%
+  summarise(Mean_Abundance = mean(Abundance), .groups = "drop") %>%
+  ggplot(aes(x = Fraction, y = Mean_Abundance, 
+             color = True_Organelle, group = True_Organelle)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  theme_bw() +
+  labs(x = "Fraction", y = "Mean relative abundance",
+       title = "Average protein profiles by organelle",
+       color = "Organelle") +
+  theme(legend.position = "bottom")
+```
+
+
+### Individual protein profiles
+
+```{r viz_individual}
+## Plot profiles of marker proteins
+marker_data <- profile_long %>%
+  filter(Protein %in% marker_proteins$Protein) %>%
+  left_join(marker_proteins %>% rename(Known_Organelle = Organelle), 
+            by = "Protein")
+
+ggplot(marker_data, aes(x = Fraction, y = Abundance, 
+                        color = Known_Organelle, group = Protein)) +
+  geom_line(alpha = 0.6) +
+  geom_point(size = 2) +
+  facet_wrap(~Known_Organelle, ncol = 3) +
+  theme_bw() +
+  labs(x = "Fraction", y = "Relative abundance",
+       title = "Distribution profiles of marker proteins") +
+  theme(legend.position = "none")
+```
+
+
+:::{.callout-exercise}
+#### Challenge 1: Profile visualization
+{{< level 2 >}}
+
+1. Create a heatmap showing the distribution profiles of the first 50 proteins
+2. Add annotations to show the true organelle assignment
+3. Do you observe clustering of proteins from the same organelle?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Create annotation for heatmap
+annotation_row <- protein_annotation %>%
+  filter(Protein %in% rownames(protein_matrix)[1:50]) %>%
+  column_to_rownames("Protein") %>%
+  select(True_Organelle)
+
+## Plot heatmap
+pheatmap(
+  protein_matrix[1:50, ],
+  annotation_row = annotation_row,
+  scale = "none",
+  cluster_cols = FALSE,
+  cluster_rows = TRUE,
+  show_rownames = FALSE,
+  main = "Protein distribution profiles"
+)
+```
+
+Yes, proteins from the same organelle tend to cluster together because they have 
+similar distribution profiles across the fractions.
+
+:::
+:::
+
+
+## Calculating correlation matrices
+
+The core of correlation profiling is measuring the similarity between protein
+distribution profiles. Pearson correlation is commonly used.
+
+
+### Protein-protein correlation
+
+```{r calc_correlation}
+## Calculate Pearson correlation between all protein profiles
+protein_cor <- cor(t(protein_matrix), method = "pearson")
+
+## Examine the correlation matrix
+dim(protein_cor)
+
+## Summary statistics
+summary(as.vector(protein_cor))
+```
+
+
+### Visualizing the correlation structure
+
+```{r viz_correlation}
+## Subset for visualization (too many proteins to show all)
+subset_proteins <- c(
+  marker_proteins$Protein,
+  sample(setdiff(rownames(protein_matrix), marker_proteins$Protein), 50)
+)
+
+cor_subset <- protein_cor[subset_proteins, subset_proteins]
+
+## Add annotation
+annotation_cor <- protein_annotation %>%
+  filter(Protein %in% subset_proteins) %>%
+  column_to_rownames("Protein") %>%
+  select(True_Organelle)
+
+## Create heatmap of correlations
+pheatmap(
+  cor_subset,
+  color = colorRampPalette(c("blue", "white", "red"))(100),
+  breaks = seq(-1, 1, length.out = 101),
+  annotation_row = annotation_cor,
+  annotation_col = annotation_cor,
+  show_rownames = FALSE,
+  show_colnames = FALSE,
+  main = "Protein-protein correlation"
+)
+```
+
+
+### Correlation with marker proteins
+
+A key strategy is to correlate unknown proteins with known organelle markers.
+
+```{r marker_correlation}
+## Calculate correlation of all proteins with markers
+marker_cor <- protein_cor[, marker_proteins$Protein]
+
+## Add organelle annotation to marker correlations
+marker_cor_annotated <- as_tibble(marker_cor, rownames = "Protein") %>%
+  pivot_longer(cols = -Protein, 
+               names_to = "Marker", 
+               values_to = "Correlation") %>%
+  left_join(marker_proteins %>% rename(Marker_Organelle = Organelle), 
+            by = c("Marker" = "Protein")) %>%
+  left_join(protein_annotation, by = "Protein")
+
+## Calculate average correlation with each organelle's markers
+organelle_cor <- marker_cor_annotated %>%
+  group_by(Protein, Marker_Organelle, True_Organelle) %>%
+  summarise(Mean_Correlation = mean(Correlation), .groups = "drop")
+
+## Pivot to wide format
+organelle_cor_wide <- organelle_cor %>%
+  pivot_wider(names_from = Marker_Organelle, 
+              values_from = Mean_Correlation)
+
+head(organelle_cor_wide)
+```
+
+
+:::{.callout-exercise}
+#### Challenge 2: Assigning proteins to organelles
+{{< level 2 >}}
+
+Using the correlation with marker proteins:
+
+1. Assign each protein to the organelle with which it has the highest correlation
+2. Calculate the accuracy of these assignments compared to the true labels
+3. Which organelles are easiest/hardest to predict?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Get organelle names dynamically from the profile definition
+organelle_names <- names(organelle_profiles)
+
+## Assign based on maximum correlation
+assignments <- organelle_cor_wide %>%
+  pivot_longer(cols = all_of(organelle_names),
+               names_to = "Assigned_Organelle",
+               values_to = "Correlation") %>%
+  group_by(Protein) %>%
+  slice_max(Correlation, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+## Calculate accuracy
+accuracy_table <- assignments %>%
+  mutate(Correct = True_Organelle == Assigned_Organelle) %>%
+  group_by(True_Organelle) %>%
+  summarise(
+    N = n(),
+    Correct = sum(Correct),
+    Accuracy = mean(Correct)
+  )
+
+print(accuracy_table)
+
+## Overall accuracy
+mean(assignments$True_Organelle == assignments$Assigned_Organelle)
+```
+
+The accuracy varies by organelle. Organelles with very distinct profiles (like 
+nucleus and cytoplasm) are typically easier to predict, while organelles with 
+overlapping profiles may be harder to distinguish.
+
+:::
+:::
+
+
+## Hierarchical clustering
+
+Clustering provides an unsupervised way to group proteins with similar profiles.
+
+### Performing hierarchical clustering
+
+```{r clustering}
+## Calculate distance matrix from correlations
+## Convert correlation to distance: dist = 1 - cor
+dist_matrix <- as.dist(1 - protein_cor)
+
+## Perform hierarchical clustering
+hc <- hclust(dist_matrix, method = "ward.D2")
+
+## Cut tree into k clusters
+k <- 5  # Number of expected organelles
+clusters <- cutree(hc, k = k)
+
+## Add cluster information to annotation
+protein_annotation$Cluster <- factor(clusters[protein_annotation$Protein])
+
+## Examine cluster composition
+table(protein_annotation$True_Organelle, protein_annotation$Cluster)
+```
+
+
+### Visualizing clusters
+
+```{r viz_clusters}
+## Dendrogram with clusters highlighted
+dend <- as.dendrogram(hc)
+dend <- dend %>% 
+  set("branches_k_color", k = k)
+
+## Plot (subset for visibility)
+plot(dend %>% prune(setdiff(labels(dend), subset_proteins)), 
+     main = "Hierarchical clustering of proteins")
+```
+
+
+### Cluster profiles
+
+```{r cluster_profiles}
+## Calculate average profile per cluster
+cluster_profiles <- profile_long %>%
+  left_join(protein_annotation %>% select(Protein, Cluster), by = "Protein") %>%
+  group_by(Cluster, Fraction) %>%
+  summarise(Mean_Abundance = mean(Abundance), 
+            SD = sd(Abundance),
+            .groups = "drop")
+
+## Plot cluster profiles
+ggplot(cluster_profiles, aes(x = Fraction, y = Mean_Abundance, 
+                              color = Cluster, group = Cluster)) +
+  geom_ribbon(aes(ymin = Mean_Abundance - SD, 
+                  ymax = Mean_Abundance + SD,
+                  fill = Cluster), alpha = 0.2) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  theme_bw() +
+  labs(x = "Fraction", y = "Mean relative abundance",
+       title = "Average profiles by cluster")
+```
+
+
+:::{.callout-exercise}
+#### Challenge 3: Cluster annotation
+{{< level 3 >}}
+
+1. For each cluster, identify which organelle's markers are most enriched
+2. Create a confusion matrix comparing cluster assignments to true organelles
+3. Calculate the Adjusted Rand Index to measure clustering quality
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Enrichment of markers in clusters
+marker_cluster <- protein_annotation %>%
+  filter(Protein %in% marker_proteins$Protein) %>%
+  left_join(marker_proteins, by = "Protein")
+
+table(marker_cluster$Cluster, marker_cluster$Organelle)
+
+## Confusion matrix
+confusion <- table(protein_annotation$True_Organelle, 
+                   protein_annotation$Cluster)
+print(confusion)
+
+## Calculate Adjusted Rand Index
+## Using a simple implementation
+calculate_ari <- function(labels1, labels2) {
+  contingency <- table(labels1, labels2)
+  n <- sum(contingency)
+  
+  a <- sum(choose(contingency, 2))
+  b <- sum(choose(rowSums(contingency), 2))
+  c <- sum(choose(colSums(contingency), 2))
+  
+  expected <- (b * c) / choose(n, 2)
+  max_index <- (b + c) / 2
+  
+  ari <- (a - expected) / (max_index - expected)
+  return(ari)
+}
+
+ari <- calculate_ari(protein_annotation$True_Organelle, 
+                     protein_annotation$Cluster)
+cat("Adjusted Rand Index:", round(ari, 3), "\n")
+```
+
+An ARI close to 1 indicates excellent agreement between clusters and true labels.
+Values around 0 indicate random assignment.
+
+:::
+:::
+
+
+## Dimensionality reduction for visualization
+
+PCA and other dimensionality reduction methods help visualize protein
+localization patterns.
+
+### PCA of protein profiles
+
+```{r pca}
+## Perform PCA
+pca_result <- prcomp(protein_matrix, scale. = TRUE, center = TRUE)
+
+## Summary
+summary(pca_result)
+
+## Scree plot
+fviz_screeplot(pca_result, addlabels = TRUE)
+```
+
+
+### Visualizing proteins in PCA space
+
+```{r viz_pca}
+## Extract PC scores
+pca_scores <- as_tibble(pca_result$x, rownames = "Protein") %>%
+  left_join(protein_annotation, by = "Protein")
+
+## Plot PC1 vs PC2 colored by true organelle
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = True_Organelle)) +
+  geom_point(alpha = 0.6, size = 2) +
+  theme_bw() +
+  labs(title = "PCA of protein profiles",
+       color = "Organelle")
+
+## Plot with clusters
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = Cluster)) +
+  geom_point(alpha = 0.6, size = 2) +
+  theme_bw() +
+  labs(title = "PCA colored by cluster assignment")
+```
+
+
+### Highlighting marker proteins
+
+```{r pca_markers}
+## Add marker information
+pca_scores <- pca_scores %>%
+  mutate(Is_Marker = Protein %in% marker_proteins$Protein)
+
+## Plot with markers highlighted
+ggplot(pca_scores, aes(x = PC1, y = PC2)) +
+  geom_point(data = filter(pca_scores, !Is_Marker),
+             aes(color = True_Organelle), alpha = 0.3, size = 1.5) +
+  geom_point(data = filter(pca_scores, Is_Marker),
+             aes(color = True_Organelle), size = 4, shape = 17) +
+  theme_bw() +
+  labs(title = "PCA with marker proteins highlighted",
+       subtitle = "Triangles = marker proteins")
+```
+
+
+:::{.callout-exercise}
+#### Challenge 4: Alternative dimensionality reduction
+{{< level 3 >}}
+
+t-SNE is another popular method for visualizing high-dimensional data.
+
+1. Apply t-SNE to the protein profiles (you may need to install the Rtsne package)
+2. Compare the t-SNE visualization to PCA
+3. Which method better separates the organelles?
+
+::: {.callout-answer collapse=true}
+
+```{r, eval=FALSE}
+## Install if needed: install.packages("Rtsne")
+## Note: This section is optional and requires the Rtsne package
+if (!requireNamespace("Rtsne", quietly = TRUE)) {
+  message("Rtsne package not installed. Install with: install.packages('Rtsne')")
+  message("Skipping t-SNE visualization...")
+} else {
+  library(Rtsne)
+}
+
+## Run t-SNE
+set.seed(42)
+tsne_result <- Rtsne(protein_matrix, 
+                     perplexity = 30, 
+                     dims = 2,
+                     check_duplicates = FALSE)
+
+## Extract coordinates
+tsne_scores <- data.frame(
+  Protein = rownames(protein_matrix),
+  tSNE1 = tsne_result$Y[, 1],
+  tSNE2 = tsne_result$Y[, 2]
+) %>%
+  left_join(protein_annotation, by = "Protein")
+
+## Plot t-SNE
+ggplot(tsne_scores, aes(x = tSNE1, y = tSNE2, color = True_Organelle)) +
+  geom_point(alpha = 0.6, size = 2) +
+  theme_bw() +
+  labs(title = "t-SNE of protein profiles",
+       color = "Organelle")
+}
+```
+
+t-SNE often provides better local structure visualization and can separate clusters
+more clearly, but it doesn't preserve global distances like PCA does.
+
+:::
+:::
+
+
+## Confidence scoring
+
+Not all protein assignments have equal confidence. We can assign confidence
+scores based on correlation strength.
+
+```{r confidence}
+## Calculate confidence based on correlation with best organelle
+## Using dynamically defined organelle names
+confidence_scores <- organelle_cor_wide %>%
+  rowwise() %>%
+  mutate(
+    cor_values = list(c_across(all_of(organelle_names))),
+    Max_Cor = max(cor_values),
+    Second_Cor = sort(cor_values, decreasing = TRUE)[2],
+    Confidence = Max_Cor - Second_Cor
+  ) %>%
+  select(-cor_values) %>%
+  ungroup()
+
+## Examine confidence distribution
+ggplot(confidence_scores, aes(x = Confidence)) +
+  geom_histogram(bins = 50, fill = "steelblue", color = "black") +
+  theme_bw() +
+  labs(x = "Confidence score (correlation difference)",
+       y = "Count",
+       title = "Distribution of assignment confidence")
+
+## High confidence assignments
+high_conf <- confidence_scores %>%
+  filter(Confidence > 0.2)
+
+cat("Proteins with high confidence:", nrow(high_conf), 
+    "(", round(100 * nrow(high_conf) / nrow(confidence_scores), 1), "%)\n")
+```
+
+
+### Accuracy by confidence level
+
+```{r accuracy_confidence}
+## Merge with assignments
+confidence_assignments <- confidence_scores %>%
+  left_join(assignments %>% select(Protein, Assigned_Organelle), 
+            by = "Protein") %>%
+  mutate(
+    Correct = True_Organelle == Assigned_Organelle,
+    Confidence_Bin = cut(Confidence, 
+                         breaks = c(-Inf, 0.1, 0.2, 0.3, Inf),
+                         labels = c("Low", "Medium", "High", "Very High"))
+  )
+
+## Accuracy by confidence
+confidence_accuracy <- confidence_assignments %>%
+  group_by(Confidence_Bin) %>%
+  summarise(
+    N = n(),
+    Accuracy = mean(Correct)
+  )
+
+print(confidence_accuracy)
+
+## Plot
+ggplot(confidence_accuracy, aes(x = Confidence_Bin, y = Accuracy, fill = Confidence_Bin)) +
+  geom_col() +
+  geom_text(aes(label = paste0("n=", N)), vjust = -0.5) +
+  ylim(0, 1.1) +
+  theme_bw() +
+  labs(x = "Confidence level", y = "Accuracy",
+       title = "Assignment accuracy by confidence level") +
+  theme(legend.position = "none")
+```
+
+
+## Generating a final localization report
+
+```{r final_report}
+## Create comprehensive localization report
+localization_report <- confidence_assignments %>%
+  select(Protein, True_Organelle, Assigned_Organelle, 
+         Max_Cor, Confidence, Correct) %>%
+  arrange(desc(Confidence))
+
+## Summary statistics
+cat("\n=== Localization Report Summary ===\n")
+cat("Total proteins analyzed:", nrow(localization_report), "\n")
+cat("Overall accuracy:", round(mean(localization_report$Correct) * 100, 1), "%\n")
+cat("High confidence assignments:", 
+    sum(localization_report$Confidence > 0.2), "\n")
+cat("Accuracy of high confidence:", 
+    round(mean(localization_report$Correct[localization_report$Confidence > 0.2]) * 100, 1), 
+    "%\n")
+
+## Top assignments
+head(localization_report, 20)
+```
+
+
+:::{.callout-exercise}
+#### Challenge 5: Complete analysis pipeline
+{{< level 3 >}}
+
+You now have all the tools to perform correlation profiling. For a complete
+analysis:
+
+1. Export the localization assignments to a CSV file
+2. Create a summary figure showing:
+   - PCA plot with true vs predicted labels
+   - Accuracy by organelle
+   - Confidence distribution
+3. Identify proteins that may be mis-localized (incorrect assignment despite
+   high confidence)
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Task 1: Export results
+## Create results directory if needed
+results_dir <- here("results")
+dir.create(results_dir, showWarnings = FALSE)
+
+## Save the localization results
+output_file <- file.path(results_dir, "localization_results.csv")
+write.csv(localization_report, 
+          file = output_file, 
+          row.names = FALSE)
+message("Results saved to: ", output_file)
+
+## Task 2: Summary figure
+p1 <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = True_Organelle)) +
+  geom_point(alpha = 0.6) +
+  theme_bw() +
+  labs(title = "True labels") +
+  theme(legend.position = "bottom")
+
+# Add predicted to pca_scores
+pca_scores_pred <- pca_scores %>%
+  left_join(assignments %>% select(Protein, Assigned_Organelle), by = "Protein")
+
+p2 <- ggplot(pca_scores_pred, aes(x = PC1, y = PC2, color = Assigned_Organelle)) +
+  geom_point(alpha = 0.6) +
+  theme_bw() +
+  labs(title = "Predicted labels") +
+  theme(legend.position = "bottom")
+
+p3 <- ggplot(accuracy_table, aes(x = True_Organelle, y = Accuracy, fill = True_Organelle)) +
+  geom_col() +
+  theme_bw() +
+  labs(title = "Accuracy by organelle") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+p4 <- ggplot(confidence_scores, aes(x = Confidence)) +
+  geom_histogram(bins = 30, fill = "steelblue") +
+  theme_bw() +
+  labs(title = "Confidence distribution")
+
+(p1 + p2) / (p3 + p4)
+
+## Task 3: Mis-localized proteins
+mislocalized_high_conf <- localization_report %>%
+  filter(!Correct, Confidence > 0.2)
+
+cat("\nPotentially mis-annotated proteins (incorrect but high confidence):\n")
+print(mislocalized_high_conf)
+```
+
+These proteins may represent:
+- Proteins that genuinely relocalize
+- Proteins with dual localization
+- Errors in the "true" annotation
+- Edge cases where correlation profiling fails
+
+:::
+:::
+
+
+## Summary
+
+In this lesson, we learned:
+
+1. **Profile generation**: How to calculate and visualize protein distribution
+   profiles across subcellular fractions
+
+2. **Correlation analysis**: Using Pearson correlation to measure similarity
+   between protein profiles and identify co-localizing proteins
+
+3. **Clustering**: Applying hierarchical clustering to group proteins with
+   similar localization patterns
+
+4. **Marker-based annotation**: Using known marker proteins to annotate
+   clusters with organelle identities
+
+5. **Quality assessment**: Confidence scoring and accuracy evaluation of
+   localization assignments
+
+6. **Visualization**: Multiple approaches including heatmaps, PCA, and
+   profile plots
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Correlation profiling uses the principle that co-localized proteins have 
+  similar distribution profiles across fractions
+- Marker proteins are essential for annotating clusters with organelle identities
+- Confidence scoring helps identify reliable vs uncertain assignments
+- Not all proteins can be reliably localized - some may have dual localization
+  or be in transition between compartments
+- Dimensionality reduction (PCA, t-SNE) helps visualize the localization landscape
+:::
+
+
+## Extensions and future directions
+
+This workflow can be extended in several ways:
+
+1. **Supervised machine learning**: Train classifiers on marker proteins for
+   more accurate predictions
+2. **Semi-supervised approaches**: Use both labeled markers and unlabeled proteins
+3. **Bayesian methods**: Incorporate prior knowledge about organelle composition
+4. **Relocalization analysis**: Compare profiles between conditions to identify
+   proteins that change localization
+5. **Multi-localization**: Allow proteins to be assigned to multiple compartments
+
+
+## References {-}

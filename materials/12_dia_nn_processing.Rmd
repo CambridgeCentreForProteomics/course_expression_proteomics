@@ -1,0 +1,669 @@
+---
+title: Processing DIA data from DIA-NN
+number-sections: true
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+::: callout-tip
+#### Learning Objectives
+
+-   Understand the structure of DIA-NN output files and how DIA differs from DDA
+-   Import DIA-NN precursor-level data into a `QFeatures` object
+-   Apply appropriate data cleaning and filtering steps for DIA data
+-   Aggregate from precursor to protein level
+-   Normalize and transform data ready for downstream analysis
+:::
+
+
+## Introduction to DIA proteomics
+
+Data-Independent Acquisition (DIA) is an alternative MS acquisition strategy
+to the Data-Dependent Acquisition (DDA) approach used in the main course materials.
+In DIA, all precursor ions within a defined m/z window are fragmented simultaneously,
+rather than selecting the most abundant precursors as in DDA. This results in:
+
+- More consistent and reproducible quantification across samples
+- Fewer missing values compared to DDA label-free experiments  
+- Complex chimeric spectra that require specialized analysis software
+
+[DIA-NN](https://github.com/vdemichev/DiaNN) is a widely-used, open-source software 
+for processing DIA proteomics data. It uses neural networks and advanced algorithms
+to identify and quantify peptides from DIA spectra.
+
+In this lesson, we will work through the processing of DIA-NN output data,
+following a similar workflow to the DDA TMT data, but with adaptations specific
+to the DIA data structure.
+
+
+## The use-case data: Subcellular proteomics
+
+The data we will process in this and the following lesson comes from a subcellular
+fractionation experiment. In such experiments, cells are lysed and separated into
+fractions representing different subcellular compartments (e.g., cytoplasm, nucleus,
+mitochondria, etc.). 
+
+By quantifying proteins across these fractions, we can:
+
+1. Determine the subcellular localization of proteins
+2. Identify proteins that relocalize between conditions
+3. Apply correlation profiling to assign proteins to organelles based on their
+   distribution patterns
+
+This type of experiment is often referred to as "spatial proteomics" or 
+"subcellular proteomics".
+
+
+## Data availability
+
+::: {.callout-important}
+#### Data Download
+The example DIA data for this tutorial can be downloaded from:
+[https://zenodo.org/records/15537457](https://zenodo.org/records/15537457)
+
+This corresponds to the DIA data described in the appendix of the F1000Research
+article "A Bioconductor workflow for processing, evaluating, and interpreting 
+expression proteomics data".
+
+For this tutorial, we will demonstrate the workflow using simulated data that
+mirrors the structure of real DIA-NN output. If you have downloaded the real
+data, you can adapt the code to use your data files.
+:::
+
+
+## Packages
+
+Let's begin by loading the required packages and setting a seed for reproducibility.
+
+```{r load_packages, message = FALSE, results = "hide", warning=FALSE}
+## Set seed for reproducibility of all random operations
+set.seed(123)
+
+library("QFeatures")
+library("limma")
+library("factoextra")
+library("patchwork")
+library("tidyverse")
+library("pheatmap")
+library("here")
+```
+
+
+## Understanding DIA-NN output structure
+
+DIA-NN produces several output files. The main report file contains quantification
+data at the precursor level (similar to PSM level in DDA). Key columns include:
+
+- **Protein.Group**: The protein group to which the precursor belongs
+- **Protein.Names**: Description of the protein
+- **Genes**: Gene names associated with the protein
+- **Precursor.Id**: Unique identifier for the precursor (peptide + charge + modifications)
+- **Modified.Sequence**: The peptide sequence with modifications
+- **Precursor.Quantity**: The quantified abundance of the precursor
+- **Q.Value**: False discovery rate for the precursor identification
+- **Proteotypic**: Whether the peptide is unique to the protein (1) or shared (0)
+- **Run**: The sample/run identifier
+
+::: {.callout-note}
+#### DIA-NN file formats
+DIA-NN can output data in different formats including the main report (.tsv), 
+matrix format, and specialized formats for downstream tools. The main report 
+is typically the most flexible starting point for analysis in R.
+:::
+
+
+## Importing DIA-NN data
+
+For this lesson, we'll work with example DIA-NN output. The data is in "long"
+format where each row represents a precursor measurement in a specific sample.
+
+First, let's examine what example DIA-NN data looks like. We'll create simulated
+data that mirrors the structure of real DIA-NN output:
+
+```{r create_sim_data}
+## Create simulated DIA-NN data for demonstration
+## This mirrors the structure of real DIA-NN main report output
+
+## Define samples (fractions for subcellular proteomics)
+sample_names <- paste0("Fraction", 1:6)
+n_precursors <- 800
+n_proteins <- 200
+
+## Generate protein and precursor identifiers
+proteins <- paste0("P", sprintf("%04d", rep(1:n_proteins, each = 4)))
+precursors <- paste0(proteins, "_", rep(1:4, n_proteins))
+sequences <- paste0("SEQ", rep(1:4, n_proteins))
+
+## Create long format data (as DIA-NN outputs)
+diann_data <- expand.grid(
+  Precursor.Id = precursors[1:n_precursors],
+  Run = sample_names,
+  stringsAsFactors = FALSE
+) %>%
+  as_tibble() %>%
+  mutate(
+    Protein.Group = gsub("_[0-9]+$", "", Precursor.Id),
+    Protein.Names = paste("Protein", Protein.Group),
+    Genes = paste0("GENE", gsub("P", "", Protein.Group)),
+    Modified.Sequence = paste0("PEPTIDE", gsub(".*_", "", Precursor.Id)),
+    Proteotypic = sample(c(0, 1), n(), replace = TRUE, prob = c(0.2, 0.8)),
+    Q.Value = runif(n(), 0.001, 0.1),
+    Precursor.Quantity = rlnorm(n(), meanlog = 15, sdlog = 2)
+  )
+
+## Add some structured variation based on fraction (for subcellular profiling)
+## Different proteins have different distribution profiles
+diann_data <- diann_data %>%
+  group_by(Protein.Group) %>%
+  mutate(
+    ## Assign each protein a "home" fraction
+    home_fraction = sample(1:6, 1),
+    ## Increase signal in home fraction
+    Precursor.Quantity = ifelse(
+      Run == paste0("Fraction", home_fraction),
+      Precursor.Quantity * runif(n(), 2, 5),
+      Precursor.Quantity
+    )
+  ) %>%
+  ungroup() %>%
+  select(-home_fraction)
+
+## Examine the structure
+head(diann_data)
+colnames(diann_data)
+```
+
+::: {.callout-note}
+#### Working with your own data
+If you have your own DIA-NN output, replace the simulated data above with:
+```r
+diann_data <- read.delim("data/diann_report.tsv")
+```
+DIA-NN outputs a tab-separated file by default.
+:::
+
+
+### Converting from long to wide format
+
+DIA-NN output is typically in long format (one row per precursor per sample).
+For import into `QFeatures`, we need to convert this to wide format where each
+sample has its own column.
+
+```{r convert_wide}
+## Pivot from long to wide format
+diann_wide <- diann_data %>%
+  select(Protein.Group, Protein.Names, Genes, 
+         Precursor.Id, Modified.Sequence,
+         Proteotypic, Q.Value, Run, Precursor.Quantity) %>%
+  ## Keep only one Q.Value per precursor (e.g., minimum)
+  group_by(Precursor.Id) %>%
+  mutate(Global.Q.Value = min(Q.Value)) %>%
+  ungroup() %>%
+  ## Pivot to wide format
+  select(-Q.Value) %>%
+  pivot_wider(
+    names_from = Run,
+    values_from = Precursor.Quantity,
+    values_fill = NA
+  )
+
+## View result
+head(diann_wide)
+dim(diann_wide)
+```
+
+
+### Importing into QFeatures
+
+Once in wide format, we can import into `QFeatures` using `readQFeatures`.
+We need to identify which columns contain the quantitative data.
+
+```{r import_qf}
+## Identify quantification columns (these will be sample names from your data)
+quant_cols <- colnames(diann_wide)[!colnames(diann_wide) %in% 
+                                     c("Protein.Group", "Protein.Names", "Genes",
+                                       "Precursor.Id", "Modified.Sequence", 
+                                       "Proteotypic", "Global.Q.Value")]
+
+## Verify we identified the right columns
+print(quant_cols)
+
+## Import to QFeatures
+dia_qf <- readQFeatures(
+  assayData = as.data.frame(diann_wide),
+  quantCols = quant_cols,
+  name = "precursors_raw"
+)
+
+## View the object
+dia_qf
+```
+
+
+:::{.callout-exercise}
+#### Challenge 1: Exploring the QFeatures structure
+{{< level 1 >}}
+
+After importing DIA-NN data into a `QFeatures` object:
+
+1. How many precursors are in the dataset?
+2. How many samples are there?
+3. What information is stored in the `rowData`?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Task 1: Number of precursors
+dia_qf[["precursors_raw"]] %>% nrow()
+
+## Task 2: Number of samples
+dia_qf[["precursors_raw"]] %>% ncol()
+
+## Task 3: rowData contents
+dia_qf[["precursors_raw"]] %>%
+  rowData() %>%
+  names()
+```
+
+:::
+:::
+
+
+## Adding sample metadata
+
+As with the DDA workflow, we need to add information about our samples. For 
+subcellular fractionation experiments, this typically includes the fraction
+identity.
+
+```{r add_metadata}
+## Create sample metadata
+## This would be specific to your experiment
+sample_metadata <- data.frame(
+  row.names = colnames(assay(dia_qf[["precursors_raw"]])),
+  fraction = paste0("F", 1:6),
+  replicate = rep(1, 6)
+)
+
+## Add to QFeatures
+colData(dia_qf) <- sample_metadata
+colData(dia_qf[["precursors_raw"]]) <- colData(dia_qf)
+
+## Verify
+colData(dia_qf)
+```
+
+
+## Data cleaning for DIA data
+
+### Standard filtering steps
+
+Many filtering steps are similar to DDA data processing:
+
+```{r filter_standard}
+## Make a copy for filtering
+raw_copy <- dia_qf[["precursors_raw"]]
+dia_qf <- addAssay(dia_qf, raw_copy, name = "precursors_filtered")
+
+## Remove precursors without protein assignment
+dia_qf <- dia_qf %>%
+  filterFeatures(~ Protein.Group != "", i = "precursors_filtered")
+
+## Check result
+dia_qf
+```
+
+
+### DIA-specific filtering
+
+DIA-NN provides specific quality metrics that we can use for filtering:
+
+1. **Q.Value filtering**: Control the false discovery rate at precursor level
+2. **Proteotypic filtering**: Keep only peptides unique to a single protein
+
+```{r filter_dia_specific}
+## Filter on global Q.Value (FDR)
+dia_qf <- dia_qf %>%
+  filterFeatures(~ Global.Q.Value < 0.01, i = "precursors_filtered")
+
+## Optional: Keep only proteotypic peptides
+## This is important for subcellular proteomics where accurate quantification
+## per protein is critical
+dia_qf <- dia_qf %>%
+  filterFeatures(~ Proteotypic == 1, i = "precursors_filtered")
+
+## Verify filtering
+dia_qf
+```
+
+::: {.callout-note}
+#### Q.Value threshold selection
+A Q.Value threshold of 0.01 (1% FDR) is commonly used, but you may choose
+stricter (0.005) or more relaxed (0.05) thresholds depending on your needs.
+For correlation profiling, higher stringency is often preferred.
+:::
+
+
+:::{.callout-exercise}
+#### Challenge 2: Evaluating filter impact
+{{< level 2 >}}
+
+Before and after applying the DIA-specific filters:
+
+1. How many precursors were removed by Q.Value filtering?
+2. What proportion of precursors are proteotypic vs non-proteotypic?
+3. How many unique proteins remain after filtering?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Task 1: Q.Value filtering impact
+## Count precursors that would pass the Q.Value filter from raw data
+n_before_qval <- dia_qf[["precursors_raw"]] %>% 
+  rowData() %>% 
+  as_tibble() %>% 
+  filter(Global.Q.Value < 0.01) %>%
+  nrow()
+
+cat("Precursors passing Q.Value filter:", n_before_qval, "\n")
+
+## Task 2: Proteotypic proportion
+dia_qf[["precursors_raw"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  count(Proteotypic) %>%
+  mutate(proportion = n / sum(n))
+
+## Task 3: Unique proteins after filtering
+n_proteins <- dia_qf[["precursors_filtered"]] %>%
+  rowData() %>%
+  as_tibble() %>%
+  pull(Protein.Group) %>%
+  unique() %>%
+  length()
+
+cat("Unique proteins after filtering:", n_proteins, "\n")
+```
+
+:::
+:::
+
+
+## Managing missing values in DIA data
+
+DIA data typically has fewer missing values than DDA label-free data, but they
+can still occur. Let's explore the missing value pattern.
+
+```{r explore_mv}
+## Explore missing values
+mv_info <- nNA(dia_qf, i = "precursors_filtered")
+
+## Overall missingness
+mv_info$nNA
+
+## Per sample
+mv_info$nNAcols
+
+## Per precursor - tabulate
+mv_info$nNArows %>%
+  as_tibble() %>%
+  count(nNA) %>%
+  head(10)
+```
+
+
+### Filtering based on missing values
+
+For subcellular fractionation and correlation profiling, we need robust 
+quantification across fractions. We should remove precursors with too many
+missing values.
+
+```{r filter_mv}
+## Remove precursors with more than 50% missing values
+## Adjust threshold based on your needs
+dia_qf <- dia_qf %>%
+  filterNA(pNA = 0.5, i = "precursors_filtered")
+
+## Check remaining missingness
+nNA(dia_qf, i = "precursors_filtered")$nNA
+```
+
+
+:::{.callout-exercise}
+#### Challenge 3: Missing value analysis
+{{< level 2 >}}
+
+Create a visualization showing:
+
+1. The distribution of missing values per sample (bar plot)
+2. The distribution of missing values per precursor (histogram)
+
+What patterns do you observe? Are there samples with unusually high missingness?
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Task 1: Missing values per sample
+mv_info <- nNA(dia_qf, i = "precursors_filtered")
+
+p1 <- mv_info$nNAcols %>%
+  as_tibble() %>%
+  ggplot(aes(x = name, y = pNA)) +
+  geom_col(fill = "steelblue") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Sample", y = "Proportion missing values",
+       title = "Missing values per sample")
+
+## Task 2: Missing values per precursor
+p2 <- mv_info$nNArows %>%
+  as_tibble() %>%
+  ggplot(aes(x = nNA)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  theme_bw() +
+  labs(x = "Number of missing values", y = "Count",
+       title = "Missing values per precursor")
+
+p1 + p2
+```
+
+:::
+:::
+
+
+## Aggregation to protein level
+
+For correlation profiling, we need protein-level quantification. We aggregate
+precursors to proteins.
+
+```{r aggregate, warning=FALSE, message=FALSE}
+## First, aggregate to peptide level using the modified sequence
+dia_qf <- aggregateFeatures(
+  dia_qf,
+  i = "precursors_filtered",
+  fcol = "Modified.Sequence",
+  name = "peptides",
+  fun = base::colMeans,
+  na.rm = TRUE
+)
+
+## Then aggregate to protein level
+dia_qf <- aggregateFeatures(
+  dia_qf,
+  i = "peptides",
+  fcol = "Protein.Group",
+  name = "proteins",
+  fun = base::colMeans,
+  na.rm = TRUE
+)
+
+## View the structure
+dia_qf
+```
+
+::: {.callout-note}
+#### Aggregation method for DIA
+We use `colMeans` here for simplicity. Alternatives include `robustSummary` for 
+data with missing values (from `MsCoreUtils`), or `colMedians` for outlier
+robustness. The `medianPolish` method is also appropriate for DIA data.
+:::
+
+
+## Log transformation and normalisation
+
+```{r transform_norm}
+## Log2 transform
+dia_qf <- logTransform(
+  object = dia_qf,
+  base = 2,
+  i = "proteins",
+  name = "log_proteins"
+)
+
+## Normalize using center.median
+dia_qf <- normalize(
+  dia_qf,
+  i = "log_proteins",
+  name = "log_norm_proteins",
+  method = "center.median"
+)
+
+## View all assays
+experiments(dia_qf)
+```
+
+
+### Visualizing the effect of transformation and normalization
+
+```{r viz_norm}
+## Before normalization
+pre_norm <- dia_qf[["log_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot(fill = "steelblue") +
+  labs(x = "Sample", y = "Log2 abundance", title = "Pre-normalization") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## After normalization
+post_norm <- dia_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  longFormat() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot(fill = "steelblue") +
+  labs(x = "Sample", y = "Log2 abundance", title = "Post-normalization") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+pre_norm + post_norm
+```
+
+
+:::{.callout-exercise}
+#### Challenge 4: Quality control visualizations
+{{< level 3 >}}
+
+Create the following quality control visualizations:
+
+1. Density plots comparing the distribution before and after normalization
+2. A PCA plot of the normalized protein data, colored by fraction
+3. A correlation heatmap of samples
+
+::: {.callout-answer collapse=true}
+
+```{r}
+## Task 1: Density plots
+par(mfrow = c(1, 2))
+
+dia_qf[["log_proteins"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, main = "Pre-normalization")
+
+dia_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, main = "Post-normalization")
+
+## Task 2: PCA plot
+protein_pca <- dia_qf[["log_norm_proteins"]] %>%
+  filterNA() %>%
+  assay() %>%
+  t() %>%
+  prcomp(scale = TRUE, center = TRUE)
+
+protein_pca$x %>%
+  as_tibble(rownames = "sample") %>%
+  mutate(fraction = dia_qf[["log_norm_proteins"]]$fraction) %>%
+  ggplot(aes(x = PC1, y = PC2, color = fraction)) +
+  geom_point(size = 4) +
+  theme_bw() +
+  labs(title = "PCA of normalized proteins")
+
+## Task 3: Correlation heatmap
+cor_matrix <- dia_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  cor(use = "pairwise.complete.obs")
+
+pheatmap(
+  cor_matrix,
+  color = colorRampPalette(c("blue", "white", "red"))(100),
+  main = "Sample correlation"
+)
+```
+
+:::
+:::
+
+
+## Preparing data for correlation profiling
+
+The normalized protein data is now ready for correlation profiling analysis
+in the next lesson. Let's save the processed data.
+
+::: {.callout-note}
+#### Saving your work
+To save the processed `QFeatures` object for use in downstream analysis, you can
+use your working directory or create a results folder:
+```r
+## Create a results directory if it doesn't exist
+dir.create(here("results"), showWarnings = FALSE)
+
+## Save the processed data
+save(dia_qf, file = here("results/dia_processed.rda"))
+```
+:::
+
+
+## Summary
+
+In this lesson, we learned how to:
+
+1. Import DIA-NN output data into R and convert to `QFeatures` format
+2. Apply appropriate filtering for DIA data including Q.Value and proteotypic filtering
+3. Handle missing values specific to DIA experiments
+4. Aggregate from precursor to protein level
+5. Normalize and transform data for downstream analysis
+
+The key differences from DDA TMT processing include:
+
+- Different input format (long format from DIA-NN)
+- Different quality metrics (Q.Value instead of PSM confidence)
+- Typically fewer missing values than DDA label-free
+- Emphasis on proteotypic peptides for accurate protein quantification
+
+
+::: {.callout-tip}
+#### Key Points
+
+- DIA data from DIA-NN requires conversion from long to wide format for `QFeatures` import
+- Q.Value filtering controls the precursor-level FDR
+- Proteotypic peptide filtering is important for accurate protein-level quantification
+- DIA data typically has fewer missing values than DDA label-free data
+- The normalized protein data is suitable for correlation profiling analysis
+:::
+
+
+## References {-}
