@@ -132,7 +132,7 @@ metrics for quantitation and associated metadata. As such, users following
 this course with their own data should be mindful of this and adapt the 
 proposed filters and steps accordingly. MaxQuant is a free, open-source alternative
 software for database searches of MS data. We have provided details on the
-MaxQuant equivalent column names to those used in this course [here](./10_maxquant_notes.html).
+MaxQuant equivalent column names to those used in this course [here](./08_maxquant_notes.html).
 
 :::
 
@@ -953,7 +953,7 @@ Unfortunately, not all datasets benefit from having so few missing values. Label
 proteomics experiments in particular have many more missing values than their
 label-based equivalents. For a more in-depth discussion of imputation and how to
 complete this within the `QFeatures` infrastructure, please see the
-[Adapting this workflow to label-free proteomics data](./11_lfq_vs_tmt.html) section.
+[Adapting this workflow to label-free proteomics data](./10_lfq_vs_tmt.html) section.
 
 
 

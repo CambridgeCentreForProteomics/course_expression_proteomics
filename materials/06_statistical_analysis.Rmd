@@ -49,7 +49,7 @@ out statistical analysis.
 
 To simply the statistical analysis, we will focus on just two conditions here:
 M and G1 cell cycle stages. For a more complete statistical analysis of all cell
-cycles stages, please see the [Statistical analysis of all 3 cell cycle stages](./08_statistical_analysis_all_stages.html) section.
+cycles stages, please see the [Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html) section.
 
 The aim of this section is to answer the
 question: *"Which proteins show a significant change in abundance
@@ -91,7 +91,7 @@ expression (abundance) analysis on proteomics data. Here we will use
 **empirical Bayes-moderated linear model**. A simple example of the empirical
 Bayes-moderated linear model is provided in @Hutchings2023. 
 
-Here, we will perform a comparison between two groups (M and G1 phases) for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./08_statistical_analysis_all_stages.html).
+Here, we will perform a comparison between two groups (M and G1 phases) for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html).
 
 
 ### What does the empirical Bayes part mean?
