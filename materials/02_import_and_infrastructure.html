@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Import and infrastructure</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/03_data_processing.html" rel="next">
+<link href="../materials/01_intro.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ea09eef7b0cb5c467d6c72feca1362d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-b23311a1332ed0b32f0ad3100ce46f78.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-3.0.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Analysis of expression proteomics data in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_expression_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="Cambridge Centre for Proteomics GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://proteomics.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CCP Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    
+    <style>
+    #version-dropdown {
+      list-style: none;
+    }
+    </style>
+    
+
+  <li id="version-dropdown" class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-versions" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="menu-text">Version:</span> <span class="version-badge" aria-hidden="true">Latest</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-versions">
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/index.html">
+          <span class="dropdown-text">Latest</span>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/archive/2026.01.20/index.html">
+          <span class="dropdown-text">2026.01.20</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+</nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/01_intro.html">Expression proteomics</a></li><li class="breadcrumb-item"><a href="../materials/02_import_and_infrastructure.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Welcome</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Expression proteomics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/03_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/04_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data normalisation and data aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/05_protein_exploration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/06_statistical_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/07_biological_interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Biological interpretation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Extended materials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/08_maxquant_notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Adapting this workflow to MaxQuant processed data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/09_normalyzer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Exploring normalisation methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/10_lfq_vs_tmt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/11_statistical_analysis_all_stages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Statistical analysis of all cell cycle stages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../versions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Archived Versions</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-data-structure" id="toc-the-data-structure" class="nav-link active" data-scroll-target="#the-data-structure"><span class="header-section-number">2.1</span> The data structure</a></li>
+  <li><a href="#the-structure-of-a-summarizedexperiment" id="toc-the-structure-of-a-summarizedexperiment" class="nav-link" data-scroll-target="#the-structure-of-a-summarizedexperiment"><span class="header-section-number">2.2</span> The structure of a <code>SummarizedExperiment</code></a></li>
+  <li><a href="#the-structure-of-a-qfeatures-object" id="toc-the-structure-of-a-qfeatures-object" class="nav-link" data-scroll-target="#the-structure-of-a-qfeatures-object"><span class="header-section-number">2.3</span> The structure of a <code>QFeatures</code> object</a></li>
+  <li><a href="#packages-and-working-directory" id="toc-packages-and-working-directory" class="nav-link" data-scroll-target="#packages-and-working-directory"><span class="header-section-number">2.4</span> Packages and working directory</a></li>
+  <li><a href="#importing-data-into-r" id="toc-importing-data-into-r" class="nav-link" data-scroll-target="#importing-data-into-r"><span class="header-section-number">2.5</span> Importing data into R</a></li>
+  <li><a href="#accessing-information-within-a-qfeatures-object" id="toc-accessing-information-within-a-qfeatures-object" class="nav-link" data-scroll-target="#accessing-information-within-a-qfeatures-object"><span class="header-section-number">2.6</span> Accessing information within a <code>QFeatures</code> object</a>
+  <ul class="collapse">
+  <li><a href="#the-assay-container" id="toc-the-assay-container" class="nav-link" data-scroll-target="#the-assay-container"><span class="header-section-number">2.6.1</span> The <code>assay</code> container</a></li>
+  <li><a href="#the-rowdata-container" id="toc-the-rowdata-container" class="nav-link" data-scroll-target="#the-rowdata-container"><span class="header-section-number">2.6.2</span> The <code>rowData</code> container</a></li>
+  <li><a href="#the-coldata-container" id="toc-the-coldata-container" class="nav-link" data-scroll-target="#the-coldata-container"><span class="header-section-number">2.6.3</span> The <code>colData</code> container</a></li>
+  <li><a href="#annotating-samples-by-adding-meta-data" id="toc-annotating-samples-by-adding-meta-data" class="nav-link" data-scroll-target="#annotating-samples-by-adding-meta-data"><span class="header-section-number">2.6.4</span> Annotating samples by adding meta-data</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/01_intro.html">Expression proteomics</a></li><li class="breadcrumb-item"><a href="../materials/02_import_and_infrastructure.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Understand the structure of <code>SummarizedExperiment</code> and <code>QFeatures</code> objects and how the two are related</li>
+<li>Know how to import data into a <code>QFeatures</code> object</li>
+<li>Demonstrate how to access information from each part of a <code>QFeatures</code> object by indexing and using <code>assay</code>, <code>rowData</code> and <code>colData</code></li>
+</ul>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/flow_chart/flow_chart.001.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="figs/flow_chart/flow_chart.001.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="the-data-structure" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="the-data-structure"><span class="header-section-number">2.1</span> The data structure</h2>
+<p>MS-based quantitative proteomics data is typically represented as a matrix in which the rows represent features (PSMs, peptides or proteins) and the columns contain information about these features, including their quantification measurements across several samples. As we saw before, this type of quantitative proteomics matrix can be generated by using third party softwares to process raw MS data. Moreover, the software usually outputs a quantitative matrix for each data level (e.g., PSM, peptide, peptide groups, protein groups). In this lesson we will explain how we can make use of R/Bioconductor packages with dedicated functions and data structures to store and manipulate quantitative proteomics data.</p>
+<p>We begin with exporting our data at the lowest data-level. In this DDA TMT experiment this is the PSM level. This .txt file contains for every PSM identified the relative abundance of each PSMs across each sample as well as columns with PSM meta-data.</p>
+<p>We will be using the Quantitative features for mass spectrometry, or <code>QFeatures</code>, Bioconductor package to import, store, and manipulate our data. Before we import the data into R using <code>QFeatures</code> it is first necessary to understand the structure of a <code>QFeatures</code> object and <code>SummarizedExperiment</code> object.</p>
+</section>
+<section id="the-structure-of-a-summarizedexperiment" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="the-structure-of-a-summarizedexperiment"><span class="header-section-number">2.2</span> The structure of a <code>SummarizedExperiment</code></h2>
+<p>To simplify the storage of quantitative proteomics data we can store the data as a <a href="https://bioconductor.org/packages/release/bioc/html/SummarizedExperiment.html"><code>SummarizedExperiment</code></a> object (as shown in <a href="#fig-summarized-experiment" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>).<code>SummarizedExperiment</code> objects can be conceptualised as data containers made up of three different parts:</p>
+<ol type="1">
+<li><p>The <code>assay</code> - a matrix which contains the quantitative data from a proteomics experiment. Each row represents a feature (a PSM, peptide or protein) and each column contains the quantitative data (measurements) from one experimental sample.</p></li>
+<li><p>The <code>rowData</code> - a table (data frame) which contains all remaining information derived from an identification search (i.e.&nbsp;every column from your identification search output that was not a quantification column). Rows represent features but columns inform about different attributes of the feature (e.g., its sequence, name, modifications).</p></li>
+<li><p>The <code>colData</code> - a table (data frame) to store sample metadata that would not appear in the output of your identification search. This could be for example, the cell line used, which condition, which replicate each sample corresponds to etc. Again, this information is stored in a matrix-like data structure.</p></li>
+</ol>
+<p>Finally, there is also an additional container called <code>metadata</code> which is a place for users to store experimental metadata. For example, this could be which instrument the samples were run on, the operators name, the date the samples were run and so forth. We will focus on populating and understanding the above 3 main containers within a <code>SummarizedExperiment</code>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-summarized-experiment" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-summarized-experiment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figs/summarized-experiment-modified.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2.1: Diagramatic representation of the structure of a SummarizedExperiment object in R (modified from the SummarizedExperiment package)"><img src="figs/summarized-experiment-modified.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-summarized-experiment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Diagramatic representation of the structure of a <code>SummarizedExperiment</code> object in R (modified from the SummarizedExperiment package)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Data stored in these three main areas can be easily accessed using the <code>assay()</code>, <code>rowData()</code> and <code>colData()</code> functions, as we will see later.</p>
+</section>
+<section id="the-structure-of-a-qfeatures-object" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="the-structure-of-a-qfeatures-object"><span class="header-section-number">2.3</span> The structure of a <code>QFeatures</code> object</h2>
+<p>Whilst a <code>SummarizedExperiment</code> is able to neatly store quantitative proteomics data at a single data level (i.e., PSM, peptide or protein), a typical data analysis workflow requires us to look across multiple levels. For example, it is common to start an analysis with a lower data level and then aggregate upward towards a final protein-level dataset. Doing this allows for greater flexibility and understanding of the processes required to clean and aggregate the data.</p>
+<p>A <a href="https://bioconductor.org/packages/release/bioc/html/QFeatures.html"><code>QFeatures</code></a> object is essentially a list of <code>SummarizedExperiment</code> objects. However, the main benefit of using a <code>QFeatures</code> object over storing each data level as an independent <code>SummarizedExperiment</code> is that the <code>QFeatures</code> infrastructure maintains explicit links between the <code>SummarizedExperiment</code>s that it stores. This allows for maximum traceability when processing data across multiple levels e.g., tracking which PSMs contribute to each peptide and which peptides contribute to a protein (<a href="#fig-qfeatures" class="quarto-xref">Figure&nbsp;<span>2.2</span></a>, modified from the <a href="https://bioconductor.org/packages/release/bioc/vignettes/QFeatures/inst/doc/QFeatures.html"><code>QFeatures</code> vignette</a> with permission).</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-qfeatures" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-qfeatures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figs/qfeatures.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;2.2: Graphic representation of the explicit links between data levels when stored in a QFeatures object."><img src="figs/qfeatures.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-qfeatures-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Graphic representation of the explicit links between data levels when stored in a <code>QFeatures</code> object.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>QFeatures nomenclature
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When talking about a <code>QFeatures</code> object, each dataset (individual <code>SummarizedExperiment</code>) can be referred to as an <code>set</code> (short for dataset). Previously, each dataset was referred to as an <code>experimental assay</code>, and some older resources may still use this term. However, the <code>experimental assay</code> should not be confused with the quantitative matrix section of a <code>SummarizedExperiment</code>, which is called the <code>assay</code> data.</p>
+</div>
+</div>
+<p>In order to generate the explicit links between data levels, we need to import the lowest desired data level into a <code>QFeatures</code> object and aggregate upwards within the <code>QFeatures</code> infrastructure using the <code>aggregateFeatures</code> function, as we will later see in this course. If two <code>SummarizedExperiments</code> are generated separately and then added into the same <code>QFeatures</code> object, there will not automatically be links between them. In this case, if links are required, we can manually add links using the <code>addAssayLink()</code> function.</p>
+<p>The best way to get our head around the <code>QFeatures</code> infrastructure is to import our data into a <code>QFeatures</code> object and start exploring.</p>
+</section>
+<section id="packages-and-working-directory" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="packages-and-working-directory"><span class="header-section-number">2.4</span> Packages and working directory</h2>
+<p>During this course we will use several R/Bioconductor packages.</p>
+<p>Let’s begin by opening RStudio and loading these packages into our working environment.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"QFeatures"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"limma"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"factoextra"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"org.Hs.eg.db"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"clusterProfiler"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"enrichplot"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"patchwork"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"pheatmap"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"ggupset"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"here"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Set your working directory to <code>Course_Materials</code> where you will find all the relevant data and R code files for this course. This can be achieved using the <code>setwd</code> function or by going to the menu Session -&gt; Set Working Directory -&gt; Choose Directory, in RStudio. Type <code>list.files</code> into your R console to check you can see the materials.</p>
+</section>
+<section id="importing-data-into-r" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="importing-data-into-r"><span class="header-section-number">2.5</span> Importing data into R</h2>
+<p>There are several ways in which data can be imported into a <code>QFeatures</code> object. The most straightforward way is to first read the data into R as a <code>data.frame</code> using the <code>read.delim</code> function, and then import this <code>data.frame</code> into a <code>QFeatures</code> object.</p>
+<p>Arguments to pass to <code>readQFeatures</code>:</p>
+<ul>
+<li><code>assayData</code> = A <code>data.frame</code>, or any object that can be coerced into a <code>data.frame</code>, holding the data</li>
+<li><code>quantCols</code> = an index for columns containing quantitative data. Can be a numeric index of the columns or a character vector containing the column names</li>
+<li><code>name</code> = name we want to give our first <code>experiment</code>, in the <code>QFeatures</code> object</li>
+</ul>
+<p>Let’s read in the total proteome dataset from our experiment which is has been output from Proteome Discoverer at the PSM level. The file is called <code>cell_cycle_total_proteome_analysis_PSMs.txt</code>.</p>
+<p>The first step is to read the data into R as a <code>data.frame</code>. We use the <code>read.delim</code> function.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"data/cell_cycle_total_proteome_analysis_PSMs.txt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Before we can create a <code>QFeatures</code> object we need to first identify which columns the quantitation data is stored in.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span> <span class="fu">names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Checked"                           "Tags"                             
+ [3] "Confidence"                        "Identifying.Node.Type"            
+ [5] "Identifying.Node"                  "Search.ID"                        
+ [7] "Identifying.Node.No"               "PSM.Ambiguity"                    
+ [9] "Sequence"                          "Annotated.Sequence"               
+[11] "Modifications"                     "Number.of.Proteins"               
+[13] "Master.Protein.Accessions"         "Master.Protein.Descriptions"      
+[15] "Protein.Accessions"                "Protein.Descriptions"             
+[17] "Number.of.Missed.Cleavages"        "Charge"                           
+[19] "Original.Precursor.Charge"         "Delta.Score"                      
+[21] "Delta.Cn"                          "Rank"                             
+[23] "Search.Engine.Rank"                "Concatenated.Rank"                
+[25] "mz.in.Da"                          "MHplus.in.Da"                     
+[27] "Theo.MHplus.in.Da"                 "Delta.M.in.ppm"                   
+[29] "Delta.mz.in.Da"                    "Ions.Matched"                     
+[31] "Matched.Ions"                      "Total.Ions"                       
+[33] "Intensity"                         "Activation.Type"                  
+[35] "NCE.in.Percent"                    "MS.Order"                         
+[37] "Isolation.Interference.in.Percent" "SPS.Mass.Matches.in.Percent"      
+[39] "Average.Reporter.SN"               "Ion.Inject.Time.in.ms"            
+[41] "RT.in.min"                         "First.Scan"                       
+[43] "Last.Scan"                         "Master.Scans"                     
+[45] "Spectrum.File"                     "File.ID"                          
+[47] "Abundance.126"                     "Abundance.127N"                   
+[49] "Abundance.127C"                    "Abundance.128N"                   
+[51] "Abundance.128C"                    "Abundance.129N"                   
+[53] "Abundance.129C"                    "Abundance.130N"                   
+[55] "Abundance.130C"                    "Abundance.131"                    
+[57] "Quan.Info"                         "Peptides.Matched"                 
+[59] "XCorr"                             "Number.of.Protein.Groups"         
+[61] "Contaminant"                       "Percolator.q.Value"               
+[63] "Percolator.PEP"                    "Percolator.SVMScore"              </code></pre>
+</div>
+</div>
+<p>We can see the quantitation data is located in columns 47 - 56 which start with “Abundance…” followed by the identifying TMT tag. Naming of the abundance columns is dependent on the third party software used and version, please make sure you check you identify the relevant column numbers containing the quantitation data in your own data.</p>
+<p>We will pass this information to the <code>quantCols</code> argument when we use the <code>readQFeatures</code> function. As this is the first data import before any processing so let’s call this data level <code>"psms_raw"</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Import data into QF object</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> <span class="fu">readQFeatures</span>(<span class="at">assayData =</span> df,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">quantCols =</span> <span class="dv">47</span><span class="sc">:</span><span class="dv">56</span>, </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">name =</span> <span class="st">"psms_raw"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Checking arguments.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading data as a 'SummarizedExperiment' object.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Formatting sample annotations (colData).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Formatting data as a 'QFeatures' object.</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Finding help files
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>During this course we see many new functions. For more information on any R function type <code>?</code> and the name of the function in the R console to bring up the relevant documentation. Or go to the Help menu in RStudio and Help -&gt; Search R Help. For example, to see the help files and documentation for the <code>readQFeatures</code> function type <code>?readQFeatures</code> in your RStudio console. The help documentation highlights what structure the input data should be (a vector, dataframe or matrix etc.) as well as which arguments are required or optional. When using more complex functions, such as those which we will use for statistical analysis, it is advisable to consult the help documentation to ensure that you understand what the function’s default parameters are. This will help you to make sure that the function does what you are expecting it to do.</p>
+</div>
+</div>
+</section>
+<section id="accessing-information-within-a-qfeatures-object" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="accessing-information-within-a-qfeatures-object"><span class="header-section-number">2.6</span> Accessing information within a <code>QFeatures</code> object</h2>
+<p>Let’s take a look at our newly created object.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 1 set:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>We see that we have created a <code>QFeatures</code> object containing a single <code>SummarizedExperiment</code> called “psms_raw”. There are 45803 rows in the data, representing 45803 PSMs. We also see that there are 10 columns representing our 10 samples.</p>
+<p>We can access individual <code>SummarizedExperiment</code>s within a <code>QFeatures</code> object using standard double bracket nomenclature (this is how you would normally access items of a <code>list</code> in R). As with all indexing we can use the list position or dataset name.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Indexing using position</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="dv">1</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 45803 10 
+metadata(0):
+assays(1): ''
+rownames(45803): 1 2 ... 45802 45803
+rowData names(54): Checked Tags ... Percolator.PEP Percolator.SVMScore
+colnames(10): Abundance.126 Abundance.127N ... Abundance.130C
+  Abundance.131
+colData names(0):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Indexing using name</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 45803 10 
+metadata(0):
+assays(1): ''
+rownames(45803): 1 2 ... 45802 45803
+rowData names(54): Checked Tags ... Percolator.PEP Percolator.SVMScore
+colnames(10): Abundance.126 Abundance.127N ... Abundance.130C
+  Abundance.131
+colData names(0):</code></pre>
+</div>
+</div>
+<p>Within each <code>SummarizedExperiment</code>(SE), the <code>rowData</code>, <code>colData</code> and <code>assay</code> data are accessed using <code>rowData()</code>, <code>colData()</code> and <code>assay()</code>, respectively. Let’s use these functions to explore the data structure further.</p>
+<section id="the-assay-container" class="level3" data-number="2.6.1">
+<h3 data-number="2.6.1" class="anchored" data-anchor-id="the-assay-container"><span class="header-section-number">2.6.1</span> The <code>assay</code> container</h3>
+<p>Let’s start with the quantitation data of our SE called <code>psms_raw</code>. This is stored in the <code>assay</code> slot.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(cc_qf[[<span class="st">"psms_raw"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>You will see that the R console is populated with the quantitation data and the whole dataset is too big to print to the screen. Let’s use the <code>head</code> command to show only the 6 lines (default) of the quantitation data.</p>
+<p>Type into your R console,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">assay</span>(cc_qf[[<span class="st">"psms_raw"</span>]]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Abundance.126 Abundance.127N Abundance.127C Abundance.128N Abundance.128C
+1          22.3           48.6           15.1           26.8           39.0
+2          19.8           31.3           14.1           19.5           32.1
+3           2.4            7.9            1.2            2.3            4.1
+4           2.2             NA             NA             NA             NA
+5           2.2            4.2            2.2            1.6            5.7
+6            NA            1.7             NA             NA             NA
+  Abundance.129N Abundance.129C Abundance.130N Abundance.130C Abundance.131
+1           21.6           41.6           38.7           21.2          34.7
+2           29.2           37.1           41.2           30.0          34.9
+3            1.0            3.6            7.0            3.1           2.7
+4            2.3            3.1             NA            1.7            NA
+5            1.4             NA            3.6            4.0           4.0
+6             NA             NA             NA             NA           2.7</code></pre>
+</div>
+</div>
+<p>This is equivalent to,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Abundance.126 Abundance.127N Abundance.127C Abundance.128N Abundance.128C
+1          22.3           48.6           15.1           26.8           39.0
+2          19.8           31.3           14.1           19.5           32.1
+3           2.4            7.9            1.2            2.3            4.1
+4           2.2             NA             NA             NA             NA
+5           2.2            4.2            2.2            1.6            5.7
+6            NA            1.7             NA             NA             NA
+  Abundance.129N Abundance.129C Abundance.130N Abundance.130C Abundance.131
+1           21.6           41.6           38.7           21.2          34.7
+2           29.2           37.1           41.2           30.0          34.9
+3            1.0            3.6            7.0            3.1           2.7
+4            2.3            3.1             NA            1.7            NA
+5            1.4             NA            3.6            4.0           4.0
+6             NA             NA             NA             NA           2.7</code></pre>
+</div>
+</div>
+<p>The first code chunk uses nested functions and the second uses pipes. Throughout this course for ease of coding and clarity we will use pipes and where appropriate follow the <code>tidyverse</code> style of coding for clarity.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ncol</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10</code></pre>
+</div>
+</div>
+<p>We see the <code>assay</code> slot contains 10 quantitative columns corresponding to the 10 samples in our experiment. We see some quantitative values and some missing values, here denotated <code>NA</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The dplyr pipe
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In this course we will frequently use pipes, specifically the <code>dplyr</code> pipe part of the <code>dplyr</code> package and <code>tidyverse</code>. The pipe operator allows you to chain together multiple operations and code complex tasks in a more linear and understandable way, rather than having to nest multiple function calls or write multiple lines of code. For more information see Hadley Wickham’s Tidyverse at <a href="https://www.tidyverse.org">https://www.tidyverse.org</a>.</p>
+</div>
+</div>
+</section>
+<section id="the-rowdata-container" class="level3" data-number="2.6.2">
+<h3 data-number="2.6.2" class="anchored" data-anchor-id="the-rowdata-container"><span class="header-section-number">2.6.2</span> The <code>rowData</code> container</h3>
+<p>Now let’s examine the the <code>rowData</code> slot,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Checked"                           "Tags"                             
+ [3] "Confidence"                        "Identifying.Node.Type"            
+ [5] "Identifying.Node"                  "Search.ID"                        
+ [7] "Identifying.Node.No"               "PSM.Ambiguity"                    
+ [9] "Sequence"                          "Annotated.Sequence"               
+[11] "Modifications"                     "Number.of.Proteins"               
+[13] "Master.Protein.Accessions"         "Master.Protein.Descriptions"      
+[15] "Protein.Accessions"                "Protein.Descriptions"             
+[17] "Number.of.Missed.Cleavages"        "Charge"                           
+[19] "Original.Precursor.Charge"         "Delta.Score"                      
+[21] "Delta.Cn"                          "Rank"                             
+[23] "Search.Engine.Rank"                "Concatenated.Rank"                
+[25] "mz.in.Da"                          "MHplus.in.Da"                     
+[27] "Theo.MHplus.in.Da"                 "Delta.M.in.ppm"                   
+[29] "Delta.mz.in.Da"                    "Ions.Matched"                     
+[31] "Matched.Ions"                      "Total.Ions"                       
+[33] "Intensity"                         "Activation.Type"                  
+[35] "NCE.in.Percent"                    "MS.Order"                         
+[37] "Isolation.Interference.in.Percent" "SPS.Mass.Matches.in.Percent"      
+[39] "Average.Reporter.SN"               "Ion.Inject.Time.in.ms"            
+[41] "RT.in.min"                         "First.Scan"                       
+[43] "Last.Scan"                         "Master.Scans"                     
+[45] "Spectrum.File"                     "File.ID"                          
+[47] "Quan.Info"                         "Peptides.Matched"                 
+[49] "XCorr"                             "Number.of.Protein.Groups"         
+[51] "Contaminant"                       "Percolator.q.Value"               
+[53] "Percolator.PEP"                    "Percolator.SVMScore"              </code></pre>
+</div>
+</div>
+<p>The columns of our <code>rowData</code> contain non-quantitative information derived from the third party identification search. The exact names of variables will differ between software and change over time, but the key information that we need to know about each feature (here PSMs) will always be here.</p>
+<p>This information includes the sequence of the peptide to which each PSM corresponds (<code>"Sequence"</code>) as well as the master protein to which the peptide is assigned (<code>"Master.Protein.Accessions"</code>). We will come across more of the variables stored in the <code>rowData</code> when we come to data cleaning and filtering.</p>
+<p>We again use the <code>head</code> command to print the first 6 rows of the <code>rowData</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 6 rows and 54 columns
+      Checked      Tags  Confidence Identifying.Node.Type Identifying.Node
+  &lt;character&gt; &lt;logical&gt; &lt;character&gt;           &lt;character&gt;      &lt;character&gt;
+1       False        NA        High            Sequest HT    Sequest HT...
+2       False        NA        High            Sequest HT    Sequest HT...
+3       False        NA        High            Sequest HT    Sequest HT...
+4       False        NA        High            Sequest HT    Sequest HT...
+5       False        NA        High            Sequest HT    Sequest HT...
+6       False        NA        High            Sequest HT    Sequest HT...
+    Search.ID Identifying.Node.No PSM.Ambiguity      Sequence
+  &lt;character&gt;           &lt;integer&gt;   &lt;character&gt;   &lt;character&gt;
+1           A                   2 Unambiguou...        REEEMR
+2           A                   2 Unambiguou...     QQNGTASSR
+3           A                   2 Unambiguou...      CHMEENQR
+4           A                   2 Unambiguou...        QACQER
+5           A                   2 Unambiguou...     HSEAATAQR
+6           A                   2 Unambiguou... QQQQQQQHQQ...
+  Annotated.Sequence Modifications Number.of.Proteins Master.Protein.Accessions
+         &lt;character&gt;   &lt;character&gt;          &lt;integer&gt;               &lt;character&gt;
+1             rEEEmR N-Term(TMT...                  2             P49755; Q1...
+2          qQnGTASSR N-Term(TMT...                  1                    Q92917
+3           cHmEENQR N-Term(TMT...                  1                    Q96TC7
+4             qAcQER N-Term(TMT...                  1                    P26358
+5          hSEAATAQR N-Term(TMT...                  1                    Q14103
+6      qQQQQQQHQQ... N-Term(TMT...                  1                    Q6Y7W6
+  Master.Protein.Descriptions Protein.Accessions Protein.Descriptions
+                  &lt;character&gt;        &lt;character&gt;          &lt;character&gt;
+1               Transmembr...      P49755; Q1...        Transmembr...
+2               G-patch do...             Q92917        G-patch do...
+3               Regulator ...             Q96TC7        Regulator ...
+4               DNA (cytos...             P26358        DNA (cytos...
+5               Heterogene...             Q14103        Heterogene...
+6               GRB10-inte...             Q6Y7W6        GRB10-inte...
+  Number.of.Missed.Cleavages    Charge Original.Precursor.Charge Delta.Score
+                   &lt;integer&gt; &lt;integer&gt;                 &lt;integer&gt;   &lt;numeric&gt;
+1                          1         2                         2      0.1696
+2                          0         2                         2      0.1154
+3                          0         3                         3      1.0000
+4                          0         2                         2      0.2849
+5                          0         2                         2      0.4780
+6                          0         3                         3      0.4098
+   Delta.Cn      Rank Search.Engine.Rank Concatenated.Rank  mz.in.Da
+  &lt;numeric&gt; &lt;integer&gt;          &lt;integer&gt;         &lt;integer&gt; &lt;numeric&gt;
+1         0         1                  1                 3   547.776
+2         0         1                  1                 1   589.802
+3         0         1                  1                 1   450.202
+4         0         1                  1                 1   510.758
+5         0         1                  1                 1   600.320
+6         0         1                  1                 1   635.659
+  MHplus.in.Da Theo.MHplus.in.Da Delta.M.in.ppm Delta.mz.in.Da Ions.Matched
+     &lt;numeric&gt;         &lt;numeric&gt;      &lt;numeric&gt;      &lt;numeric&gt;  &lt;character&gt;
+1      1094.55           1094.55          -0.99       -0.00054          0/0
+2      1178.60           1178.60           0.06        0.00003          0/0
+3      1348.59           1348.59          -1.08       -0.00049          0/0
+4      1020.51           1020.51          -1.44       -0.00074          0/0
+5      1199.63           1199.63          -0.33       -0.00020          0/0
+6      1904.96           1904.96          -1.33       -0.00084          0/0
+  Matched.Ions Total.Ions Intensity Activation.Type NCE.in.Percent    MS.Order
+     &lt;integer&gt;  &lt;integer&gt; &lt;numeric&gt;     &lt;character&gt;      &lt;numeric&gt; &lt;character&gt;
+1            0          0  505446.3             CID             NA         MS2
+2            0          0  197059.8             CID             NA         MS2
+3            0          0   76685.6             CID             NA         MS2
+4            0          0  103765.7             CID             NA         MS2
+5            0          0  238514.8             CID             NA         MS2
+6            0          0   76203.7             CID             NA         MS2
+  Isolation.Interference.in.Percent SPS.Mass.Matches.in.Percent
+                          &lt;numeric&gt;                   &lt;integer&gt;
+1                           0.00000                          50
+2                          47.04837                          50
+3                          30.96584                          50
+4                           3.10827                          60
+5                          12.56510                          70
+6                           0.00000                          80
+  Average.Reporter.SN Ion.Inject.Time.in.ms RT.in.min First.Scan Last.Scan
+            &lt;numeric&gt;             &lt;numeric&gt; &lt;numeric&gt;  &lt;integer&gt; &lt;integer&gt;
+1                30.8                    60   39.4997       5816      5816
+2                28.7                    60   39.8252       5902      5902
+3                 3.5                    60   40.0773       5967      5967
+4                 0.9                    60   40.3077       6035      6035
+5                 2.8                    60   40.7688       6151      6151
+6                 0.4                    60   40.8788       6183      6183
+  Master.Scans Spectrum.File     File.ID Quan.Info Peptides.Matched     XCorr
+     &lt;integer&gt;   &lt;character&gt; &lt;character&gt; &lt;logical&gt;        &lt;integer&gt; &lt;numeric&gt;
+1         5810 NocArrest_...        F1.1        NA              104      1.71
+2         5898 NocArrest_...        F1.1        NA              125      1.82
+3         5961 NocArrest_...        F1.1        NA                4      0.94
+4         6031 NocArrest_...        F1.1        NA              105      1.86
+5         6147 NocArrest_...        F1.1        NA              136      1.82
+6         6177 NocArrest_...        F1.1        NA              285      1.22
+  Number.of.Protein.Groups Contaminant Percolator.q.Value Percolator.PEP
+                 &lt;integer&gt; &lt;character&gt;          &lt;numeric&gt;      &lt;numeric&gt;
+1                        2       False          0.0033430       0.030030
+2                        1       False          0.0009278       0.006729
+3                        1       False          0.0014400       0.012330
+4                        1       False          0.0009278       0.006435
+5                        1       False          0.0004399       0.002259
+6                        1       False          0.0006928       0.003668
+  Percolator.SVMScore
+            &lt;numeric&gt;
+1               0.132
+2               0.352
+3               0.260
+4               0.360
+5               0.536
+6               0.453</code></pre>
+</div>
+</div>
+</section>
+<section id="the-coldata-container" class="level3" data-number="2.6.3">
+<h3 data-number="2.6.3" class="anchored" data-anchor-id="the-coldata-container"><span class="header-section-number">2.6.3</span> The <code>colData</code> container</h3>
+<p>The final slot within our <code>SummarizedExperiment</code> is the <code>colData</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colData</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 10 rows and 0 columns</code></pre>
+</div>
+</div>
+<p>We see this is also a <code>DataFrame</code> structure.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "DFrame"
+attr(,"package")
+[1] "S4Vectors"</code></pre>
+</div>
+</div>
+<p>It has 10 rows, one per sample, but no columns yet. This is because the sample metadata is not derived from an identification search and does not appear in our output <code>.txt</code> file. If we want to store extra information about our samples, we need to add this to the <code>colData</code> ourselves.</p>
+<p>Each row of this 10 by 0 <code>DataFrame</code> corresponds to some feature of the quantitation channel. The names of these rows are the TMT sample names,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Abundance.126"  "Abundance.127N" "Abundance.127C" "Abundance.128N"
+ [5] "Abundance.128C" "Abundance.129N" "Abundance.129C" "Abundance.130N"
+ [9] "Abundance.130C" "Abundance.131" </code></pre>
+</div>
+</div>
+</section>
+<section id="annotating-samples-by-adding-meta-data" class="level3" data-number="2.6.4">
+<h3 data-number="2.6.4" class="anchored" data-anchor-id="annotating-samples-by-adding-meta-data"><span class="header-section-number">2.6.4</span> Annotating samples by adding meta-data</h3>
+<p>The <code>colData</code> contains information about the samples. We can create a <code>data.frame</code> in R with information regarding the samples, replicates, conditions and TMT tag used or we can read in this information into R from a spreadsheet or .csv.</p>
+<p>Let’s open the file <code>coldata.csv</code> and then read it into R and add it to our <code>QFeatures</code> object. We use the <code>read.csv</code> function and pass the argument <code>row.names = 1</code> which tells the function that the in the .csv file the row names are located in column 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Read in coldata .csv</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>metadata_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/samples_meta_data.csv"</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="do">## View data</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>metadata_df</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                sample rep     condition  tag
+Abundance.126  Control  NA Pre-treatment  126
+Abundance.127N     M_1   1             M 127N
+Abundance.127C     M_2   2             M 127C
+Abundance.128N     M_3   3             M 128N
+Abundance.128C    G1_1   1            G1 128C
+Abundance.129N    G1_2   2            G1 129N
+Abundance.129C    G1_3   3            G1 129C
+Abundance.130N    DS_1   1       Desynch 130N
+Abundance.130C    DS_2   2       Desynch 130C
+Abundance.131     DS_3   3       Desynch  131</code></pre>
+</div>
+</div>
+<p>This .csv file has 10 rows, importantly the rows are annotated using the names of the <code>rowData</code> of our object, e.g.&nbsp;“Abundance.126”, “Abundance.127N” etc. These names must match exactly to the column names of the samples we have in our existing <code>QFeatures</code> object.</p>
+<p>We can add information from this .csv to our <code>colData</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Annotate colData with the sample data</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(cc_qf) <span class="ot">&lt;-</span> metadata_df</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(cc_qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 10 rows and 4 columns
+                    sample       rep     condition         tag
+               &lt;character&gt; &lt;integer&gt;   &lt;character&gt; &lt;character&gt;
+Abundance.126      Control        NA Pre-treatm...         126
+Abundance.127N         M_1         1             M        127N
+Abundance.127C         M_2         2             M        127C
+Abundance.128N         M_3         3             M        128N
+Abundance.128C        G1_1         1            G1        128C
+Abundance.129N        G1_2         2            G1        129N
+Abundance.129C        G1_3         3            G1        129C
+Abundance.130N        DS_1         1       Desynch        130N
+Abundance.130C        DS_2         2       Desynch        130C
+Abundance.131         DS_3         3       Desynch         131</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Apply this to the first set so that it is carried up</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(cc_qf[[<span class="st">"psms_raw"</span>]]) <span class="ot">&lt;-</span> <span class="fu">colData</span>(cc_qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We can also change the names of our samples to simplify our downstream coding as well as our visualisation. This is done by changing the <code>colnames</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a> <span class="do">## Change col names to represent the sample</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cc_qf[[<span class="st">"psms_raw"</span>]]) <span class="ot">&lt;-</span> cc_qf<span class="sc">$</span>sample</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colData</span>(cc_qf[[<span class="st">"psms_raw"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 10 rows and 4 columns
+             sample       rep     condition         tag
+        &lt;character&gt; &lt;integer&gt;   &lt;character&gt; &lt;character&gt;
+Control     Control        NA Pre-treatm...         126
+M_1             M_1         1             M        127N
+M_2             M_2         2             M        127C
+M_3             M_3         3             M        128N
+G1_1           G1_1         1            G1        128C
+G1_2           G1_2         2            G1        129N
+G1_3           G1_3         3            G1        129C
+DS_1           DS_1         1       Desynch        130N
+DS_2           DS_2         2       Desynch        130C
+DS_3           DS_3         3       Desynch         131</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge 1: Accessing information
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>Explore the <code>QFeatures</code> object you have just created.</p>
+<ol type="1">
+<li><p>How many “sets” (<code>SummarizedExperiments</code>) do we currently have in the object?</p></li>
+<li><p>How many PSMs have been identified in the data?</p></li>
+<li><p>How do you access and view the quantitation data i.e.&nbsp;the relative abundance of each PSM across the samples?</p></li>
+</ol>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<p>When we type the name of the the object <code>cc_qf</code> a summary of the data is printed to the screen. This summary shows us a summary of the number of sets (<code>SummarizedExperiments</code>) we have in the data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 1 set:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>Since a <code>QFeatures</code> object is a list of <code>SummarizedExperiment</code> objects, we can use <code>length(cc_qf)</code> to check how many objects we have inside it</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(cc_qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+</div>
+<p>Alternatively, we can also extract the list of experiments directly using</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">experiments</span>(cc_qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ExperimentList class object of length 1:
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns</code></pre>
+</div>
+</div>
+<hr>
+<p><strong>Task 2</strong></p>
+<p>Similarly, the object summary also tells us the number of PSMs. We can also extract the number of rows (PSMs in our case) for a given level (i.e.&nbsp;<code>psms_raw</code>)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 45803</code></pre>
+</div>
+</div>
+<hr>
+<p><strong>Task 3</strong></p>
+<p>We can use the <code>assay</code> accessor,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assay</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>or equivalently,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">assay</span>(cc_qf[[<span class="st">"psms_raw"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 2 - Challenge 2: Calculating the number of peptides and proteins in our dataset
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>Explore the information stored in the <code>rowData</code> from the Proteome Discoverer search. Look at the first few rows of this data matrix by using the <code>head</code> function and find a column that related to the peptide sequence information.</p>
+<ol type="1">
+<li><p>What class is the <code>rowData</code> container? How many rows and columns are in this data structure?</p></li>
+<li><p>Extract the <code>rowData</code> and convert it to a <code>tibble</code> or <code>data.frame</code>. Find a column that contains information that relates to the peptide sequence. Pull this information and calculate how many unique peptide sequences we have in the dataset.</p></li>
+</ol>
+<details>
+<summary>
+Hint
+</summary>
+Using the <code>unique</code> function may be helpful.
+</details>
+<ol start="3" type="1">
+<li>How many protein groups (master proteins) have been identified in the dataset?</li>
+</ol>
+<details>
+<summary>
+Hint
+</summary>
+Again, convert the <code>rowData</code> to a <code>tibble</code> or <code>data.frame</code> and find a column that contains information that relates to protein identification.
+</details>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Task 1</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "DFrame"
+attr(,"package")
+[1] "S4Vectors"</code></pre>
+</div>
+</div>
+<p>We see that the <code>rowData</code> is of class <code>"DFrame"</code>. This is a type of data frame. Will will convert this to a <code>data.frame</code> or <code>tibble</code> throughout this couse to make use of <code>tidyverse</code> functions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dim</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 45803    54</code></pre>
+</div>
+</div>
+<p>We see we have 45803 PSMs and 54 columns of information relating to each PSM.</p>
+<hr>
+<p><strong>Task 2</strong></p>
+<p>There are many ways to extract the number of peptides from our datasets. The current data level shows the total number of PSMs (peptide spectrum matches). Although PSMs are fragments of identified peptide sequences, there can be many PSMs per unique peptide. The <code>rowData</code> is where we have stored information relating to our samples that are not quantitation data. The column <code>Sequence</code> contains the peptide sequence from which the PSM is is derived.</p>
+<p>In the following lines of code we, - Extract the <code>rowData</code> - Convert the <code>rowData</code> which is <code>DFrame</code> to either a <code>data.frame</code> or <code>tibble</code>. We could use the <code>as.data.frame</code> or <code>as_tibble</code> functions, respectively, which we will allow us to use pipes. - Extract the column <code>Sequence</code>. - Use the <code>unique</code> function to group together PSMs from the same peptide. - Finally, we use the <code>length</code> command to count the number of peptides.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Using pipes</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Sequence) <span class="sc">%&gt;%</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>() </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 26738</code></pre>
+</div>
+</div>
+<p>Alternative solution (among many others)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Without pipes</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>rd <span class="ot">&lt;-</span> <span class="fu">rowData</span>(cc_qf[[<span class="st">"psms_raw"</span>]])</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">unique</span>(rd<span class="sc">$</span>Sequence) </span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(tbl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 26738</code></pre>
+</div>
+</div>
+<p>We have 26738 peptides.</p>
+<hr>
+<p><strong>Task 3</strong></p>
+<p>Information regarding the protein groups is found in the <code>Master.Protein.Accessions</code> column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Using pipes</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Master.Protein.Accessions) <span class="sc">%&gt;%</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>() </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5267</code></pre>
+</div>
+</div>
+<p>Alternative solution (among many others)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Without pipes</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">unique</span>(rd<span class="sc">$</span>Master.Protein.Accessions) </span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(tbl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5267</code></pre>
+</div>
+</div>
+<p>We have 5267 protein groups represented by 5267 master proteins.</p>
+<hr>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 3 - Challenge 3: Miscleavages
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>One of the pieces of information given by the Proteome Discoverer software used to produce the TMT data is the number of missed cleavages. This is stored in a <code>rowData</code> column named <code>"Number.of.Missed.Cleavages"</code>. Can you count how many occurrences of missed cleavages there are in our data?</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Number.of.Missed.Cleavages)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  Number.of.Missed.Cleavages     n
+                       &lt;int&gt; &lt;int&gt;
+1                          0 34988
+2                          1  9709
+3                          2  1106</code></pre>
+</div>
+</div>
+<p>We see that during the identification search missed cleavages were limited to a maximum of 2 missed cleavage sites. This is typical in bottom-up proteomics.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>The <code>QFeatures</code> infrastructure provides a convenient and transparent way to store proteomics data across multiple levels.</li>
+<li>A <code>QFeatures</code> object stores each data level as a <code>SummarizedExperiment</code>, also called an <code>set</code> (dataset), with explicit links maintained between features across different <code>sets</code> (e.g., links between all PSMs contributing to a peptide).</li>
+<li>Explicit links between <code>sets</code> are (i) generated automatically when aggregating data using <code>aggregateFeatures</code> or (ii) added manually using the <code>addAssayLinks</code> function, as we will see later on.</li>
+<li>Within each <code>SummarizedExperiment</code> the feature data is stored within the <code>rowData</code>, quantitative data in the <code>assay</code>, and sample metadata in the <code>colData</code>. These slots are accessible using their corresponding functions.</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/01_intro.html" class="pagination-link" aria-label="The use-case data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/03_data_processing.html" class="pagination-link" aria-label="Data cleaning">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Bioinformatics Training Facility</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>10&nbsp; Adapting this workflow to label-free proteomics data</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/11_statistical_analysis_all_stages.html" rel="next">
+<link href="../materials/09_normalyzer.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ea09eef7b0cb5c467d6c72feca1362d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-b23311a1332ed0b32f0ad3100ce46f78.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-3.0.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Analysis of expression proteomics data in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_expression_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="Cambridge Centre for Proteomics GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://proteomics.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CCP Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    
+    <style>
+    #version-dropdown {
+      list-style: none;
+    }
+    </style>
+    
+
+  <li id="version-dropdown" class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-versions" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="menu-text">Version:</span> <span class="version-badge" aria-hidden="true">Latest</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-versions">
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/index.html">
+          <span class="dropdown-text">Latest</span>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/archive/2026.01.20/index.html">
+          <span class="dropdown-text">2026.01.20</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+</nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/08_maxquant_notes.html">Extended materials</a></li><li class="breadcrumb-item"><a href="../materials/10_lfq_vs_tmt.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Welcome</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Expression proteomics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/03_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/04_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data normalisation and data aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/05_protein_exploration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/06_statistical_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/07_biological_interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Biological interpretation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Extended materials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/08_maxquant_notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Adapting this workflow to MaxQuant processed data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/09_normalyzer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Exploring normalisation methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/10_lfq_vs_tmt.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/11_statistical_analysis_all_stages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Statistical analysis of all cell cycle stages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../versions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Archived Versions</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#data-import" id="toc-data-import" class="nav-link active" data-scroll-target="#data-import"><span class="header-section-number">10.1</span> Data import</a></li>
+  <li><a href="#data-cleaning-quality-control-filtering-and-fdr-control" id="toc-data-cleaning-quality-control-filtering-and-fdr-control" class="nav-link" data-scroll-target="#data-cleaning-quality-control-filtering-and-fdr-control"><span class="header-section-number">10.2</span> Data cleaning, quality control filtering and FDR control</a></li>
+  <li><a href="#managing-missing-data" id="toc-managing-missing-data" class="nav-link" data-scroll-target="#managing-missing-data"><span class="header-section-number">10.3</span> Managing missing data</a></li>
+  <li><a href="#sec-robust" id="toc-sec-robust" class="nav-link" data-scroll-target="#sec-robust"><span class="header-section-number">10.4</span> Summarisation to protein level</a></li>
+  <li><a href="#logarithmic-transformation" id="toc-logarithmic-transformation" class="nav-link" data-scroll-target="#logarithmic-transformation"><span class="header-section-number">10.5</span> Logarithmic transformation</a></li>
+  <li><a href="#normalisation" id="toc-normalisation" class="nav-link" data-scroll-target="#normalisation"><span class="header-section-number">10.6</span> Normalisation</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/08_maxquant_notes.html">Extended materials</a></li><li class="breadcrumb-item"><a href="../materials/10_lfq_vs_tmt.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Understand how experimental design influences data structure and the required processing steps. In particular, how the analysis of label-free data could differ from that of the TMT use-case data.</li>
+</ul>
+</div>
+</div>
+<p>The processing and analysis of label-free quantitative proteomics data to discover differentially abundant proteins follows the same overall workflow presented in this course for our TMT use-case.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/overall_flow_chart.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="figs/overall_flow_chart.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>However, some of the decisions made and exact approaches to each stage may differ when considering label-free data. These decisions are discussed below and summarised in <a href="#tbl-comparison" class="quarto-xref">Table&nbsp;<span>10.1</span></a>.</p>
+<div class="cell">
+<div id="tbl-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;10.1: Main differences between processing workflow for TMT and label-free quantitative proteomics data prior to differential expression analyses
+</figcaption>
+<div aria-describedby="tbl-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 39%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Data processing step</th>
+<th style="text-align: left;">TMT</th>
+<th style="text-align: left;">Label-free</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Import</td>
+<td style="text-align: left;">Import PSM-level data</td>
+<td style="text-align: left;">Import PSM- or peptide-level data, depending on how software outputs quantification data</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Data cleaning</td>
+<td style="text-align: left;">Standard data cleaning steps</td>
+<td style="text-align: left;">Standard data cleaning steps</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Quality control filtering</td>
+<td style="text-align: left;">Additional thresholds on reporter ion signal-to-noise ratio, co-isolation interference and SPS mass matches</td>
+<td style="text-align: left;">Additional quality control filters are software-specific and optional</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Managing missing data</td>
+<td style="text-align: left;">Low proportion of missing values - remove with minimal data loss</td>
+<td style="text-align: left;">Higher proportion of missing values - Don’t impute and use robustSummary summarisation to protein; If required, impute at lowest data level</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Transformation</td>
+<td style="text-align: left;">Log</td>
+<td style="text-align: left;">Log</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Summarisation to protein</td>
+<td style="text-align: left;">Summarisation using sum or robustSummary method</td>
+<td style="text-align: left;">Summarisation using robustSummary method</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Normalisation</td>
+<td style="text-align: left;">Median-based normalisation</td>
+<td style="text-align: left;">Median-based normalisation</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Statistics</td>
+<td style="text-align: left;">Linear model</td>
+<td style="text-align: left;">Linear model</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<section id="data-import" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="data-import"><span class="header-section-number">10.1</span> Data import</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These notes on data import are an adjunct to the <a href="./02_import_and_infrastructure.html">Import and infrastructure</a> section. Please first read through that material, since it includes background and clarifications which are not repeated here.</p>
+</div>
+</div>
+<p>As outlined in <a href="./02_import_and_infrastructure.html">Import and infrastructure</a>, we prefer to import the data into R at the lowest possible level. This allows us to have more control over and understanding of our data processing and analysis. For the TMT-labelled use-case data, the lowest possible level of data for import was the PSM-level. However, the analysis of label-free data often requires us to start one level up at the peptide-level. This is because most identification searches carried out on label-free MS data utilise an algorithm called retention time (RT) alignment, which uses the match between runs (MBR) function.</p>
+<p><strong>What problem does retention time alignment address?</strong></p>
+<p>Retention time alignment aims to deal with the problem of missing values in label-free data-dependent acquisition (DDA) MS data. Since label-free samples are all analysed by independent MS runs, the stochastic nature of DDA means that different peptides are identified and quantified between samples, hence there are a high number of missing values.</p>
+<p><strong>How does retention time alignment work?</strong></p>
+<p>Quantification of label-free samples is achieved at the MS1 level. This means that we have potentially useful quantitative information before we have any peptide identification (MS1 before MS2). In cases where a peptide is identified in some samples but not others, it is possible to align the retention times of each sample run and then compare the MS1 spectra. In this way, information can be shared across runs and a peptide identification made in one run can be assigned to an MS1 spectra from a completely independent run, even if this spectrum does not have a corresponding MS2 spectrum.</p>
+<p><strong>Why does retention time alignment prevent analysis from PSM level?</strong></p>
+<p>The process of RT alignment and MBRs occurs after the process of peptide spectrum matching. First, PSMs are derived from an identification search. This is done independently for each sample. The remaining spectra for which no PSM was identified are then included in the RT alignment algorithm in an attempt to assign an identification. If successful, this means that there may be peptide level data in the absence of PSM level data. Hence, if we used PSM level data for the processing and analysis of label-free data then we would lose out on the benefit of RT alignment.</p>
+<p><strong>When to use peptide-level data for label-free analysis?</strong></p>
+<p>Label-free data processed using Proteome Discoverer software should be processed from the peptide level. This means that we would use the file called <code>cell_cycle_total_proteome_analysis_PeptideGroups.txt</code> and import using <code>readQFeatures</code>, as outlined in <a href="./02_import_and_infrastructure.html">Import and infrastructure</a>. Other third party software, however, may still allow for label-free data to be processed from the PSM level. For example, MaxQuant users can still use the <code>evidence.txt</code> file.</p>
+</section>
+<section id="data-cleaning-quality-control-filtering-and-fdr-control" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="data-cleaning-quality-control-filtering-and-fdr-control"><span class="header-section-number">10.2</span> Data cleaning, quality control filtering and FDR control</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These notes on data import are an adjunct to the <a href="./03_data_processing.html">Data processing</a> section. Please first read through that material, since it includes background and clarifications which are not repeated here.</p>
+</div>
+</div>
+<p>Many of the basic data cleaning steps that we apply to TMT-labelled quantitative proteomics data are still applicable to label-free data. The following steps should still be completed using the <code>filterFeatures</code> function, as demonstrated in the <a href="./03_data_processing.html">Data processing</a> section.</p>
+<p>Removal of features:</p>
+<ol type="1">
+<li>Without a master protein accession = <code>filterFeatures(~ Master.Protein.Accessions != "")</code></li>
+<li>Associated with contaminant accessions = <code>filterFeatures(~ Contaminant == "False")</code></li>
+<li>Lacking quantitative data = <code>filterFeatures(~ Quan.Info != "NoQuanValues")</code></li>
+<li>Which are not unique (based on user’s definition) = <code>filterFeatures(~ Number.of.Protein.Groups == 1)</code></li>
+<li>Which are not allocated as rank 1 = <code>filterFeatures(~ Rank == 1)</code> and <code>filterFeatures(~ Search.Engine.Rank == 1)</code></li>
+<li>Which are not unambiguous matches = <code>filterFeatures(~ PSM.Ambiguity == "Unambiguous")</code></li>
+</ol>
+<p>In addition to these data cleaning steps, users may wish to remove features (peptides) which were not quantified based on a monoisotopic peak from their label-free dataset. This can be achieved using <code>filterFeatures(~ Quan.Info != "NoneMonoisotopic")</code>.</p>
+<p>The three quality control filters applied to the TMT use-case data (<code>Isolation.Interference.in.Percent</code>, <code>Average.Reporter.SN</code> and <code>SPS.Mass.Matches.in.Percent</code>) are TMT-specific and cannot be applied to label-free data.</p>
+<p>Protein-level FDR control should be carried out on label-free data in the same way as was demonstrated in the main course materials.</p>
+</section>
+<section id="managing-missing-data" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="managing-missing-data"><span class="header-section-number">10.3</span> Managing missing data</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These notes on management of missing data are an adjunct to the <a href="./03_data_processing.html">Data processing</a> section which demonstrates the exploration of missing values within <code>QFeatures</code>. Please first read through that material, since it includes background and clarifications which are not repeated here.</p>
+</div>
+</div>
+<p>Label-free DDA proteomics data suffers from a greater number of missing values than multiplexed label-based approaches (e.g., TMT). Indeed, this is one of the advantages of multi-plexing samples using TMT as multiple samples (10 in the use-case) can be run simultaneously on the MS and, therefore, the same peptides are selected for analysis across all samples. Since label-free samples are each analysed via independent MS runs, the stochastic nature of DDA MS means that different peptides may be identified and quantified across different runs, thus leading to a higher percentage of missing values.</p>
+<p>Management of missing data should still follow the same three steps as discussed in the <a href="./03_data_processing.html">Data processing</a> section:</p>
+<ol type="1">
+<li>Explore the presence and distribution of missing values</li>
+<li>Filter data to remove features (rows) or samples (columns) with excessive missing values</li>
+<li>Consider the use of imputation</li>
+</ol>
+<p>Steps 1 and 2 were outlined in the main course content. For the use-case TMT data we decided to remove all missing values rather than impute, since this would not represent a drastic data loss. For datasets with a higher proportion of missing data, imputation can be considered. However, protein summarisation using an approach that can handle missing values appropriately is likely to be the optimal approach (see <a href="#sec-robust" class="quarto-xref"><span>Section 10.4</span></a>).</p>
+<p><strong>How can I impute using QFeatures?</strong></p>
+<p>Imputation can be achieved within the <code>QFeatures</code> infrastructure using the <code>impute</code> function. To see what imputation methods this function facilitates we can use <code>MsCoreUtils::imputeMethods()</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>MsCoreUtils<span class="sc">::</span><span class="fu">imputeMethods</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "bpca"    "knn"     "QRILC"   "MLE"     "MLE2"    "MinDet"  "MinProb"
+ [8] "min"     "zero"    "mixed"   "nbavg"   "with"    "RF"      "none"   </code></pre>
+</div>
+</div>
+<p>For example, to impute using a k-NN method, we would use the following code,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> <span class="fu">impute</span>(<span class="at">object =</span> cc_qf,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"knn"</span>, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">i =</span> <span class="st">"psms_filtered"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">name =</span> <span class="st">"psms_imputed"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>Which imputation method should I use for my data?</strong></p>
+<p>Missing values exist in the data for different reasons and these reasons dictate the best way in which to impute. For example, if a value is missing because a peptide is completely absent or present at an abundance below the limit of detection then the most suitable replacement value is arguably the lowest abundance value recorded in the data set (since this represents the limit of detection). Alternatively, if a value is missing because of stochastic technical reasons then it might be more appropriate to replace it with a value derived from a similar peptide. Overall, left-censored methods such as minimal value and limit of detection approaches work best for data that is MNAR (intensity-dependent missing values). Hot deck methods such as k-nearest neighbors, random forest and maximum likelihood methods work better for data that is MCAR (intensity-independent). To confuse the situation further, most data sets contain missing values that are a mixture of MNAR and MCAR, so mixed imputation methods can be applied.</p>
+<p><strong>At what stage of the workflow should I impute?</strong></p>
+<p>There are two aspects to consider when deciding when to impute:</p>
+<ol type="1">
+<li>Which data level should be imputed - PSM, peptide or protein</li>
+<li>Whether the selected imputation method requires raw or log transformed quantitation data</li>
+</ol>
+<p>Missing values can be imputed at any data level e.g., PSM, peptide or protein. However, if missing values are not imputed in lower data levels then users should be aware of how their missing values are treated during summarisation. Data summarisation methods deal with missing values in different ways, either ignoring them, removing them, considering missing values to be zero, or propagating them. Thus, a combined strategy for imputation and summarisation must be arrived at. In general, we advise that where imputation is necessary, it should be completed at the lowest possible data level to maintain transparency and allow users to check that the data structure has not been drastically altered (e.g., by checking summary statistics or plotting density plots pre- and post-imputation). For LFQ, we advise summarisation using the <code>robustSummary</code> method (see <a href="#sec-robust" class="quarto-xref"><span>Section 10.4</span></a>), which negates the need to impute missing values.</p>
+</section>
+<section id="sec-robust" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="sec-robust"><span class="header-section-number">10.4</span> Summarisation to protein level</h2>
+<p>Summarisation of label-free data can still be achieved using <code>aggregateFeatures</code>. If imputation has been completed, there should be no missing values left to influence summarisation.</p>
+<p>Here we will use <code>robustSummary</code>, a state-of-the art summarisation method that is able to summarise effectively even in the presence of missing values <span class="citation" data-cites="Sticker2020">Sticker et al. (<a href="#ref-Sticker2020" role="doc-biblioref">2020</a>)</span>. <code>robustSummary</code> directly models the <strong>log</strong>-transformed peptide-level quantification as being dependent upon the protein-level abundance of the sample plus a peptide-level effect. Thus <code>robustSummary</code> estimates the protein-level abundances within the modelling. This modelling-based approach to protein summarisation can handle relatively sparse data as it only considers the finite data. The only requirement for a peptide to be informative for estimating protein-level abundances using <code>robustSummary</code> is that the peptide be quantified in at least two samples.</p>
+<p>Since the <code>robustSummary</code> can handle missing values, it negates the need to impute missing values. Indeed, for LFQ experiments, we recommend not imputing and using <code>robustSummary</code> to summarise to protein-level abundance. As expected, protein-level abundance estimates are less accurate the more sparse the data is, so removal of peptides with excessive missing values may be worthwhile.</p>
+</section>
+<section id="logarithmic-transformation" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="logarithmic-transformation"><span class="header-section-number">10.5</span> Logarithmic transformation</h2>
+<p>As discussed in the <a href="./04_normalisation_aggregation.html">Normalisation and data aggregation</a> section, logarithmic transformation of the data is required to give our data a Gaussian distribution, as required for downstream differential abundance analysis. This step can happen at any stage of the workflow, depending upon which imputation and summarisation methods are selected. If you impute or summarise the data using a method which requires log transformation, then this step should have been done above. If not, log2 transformation can be completed now.</p>
+</section>
+<section id="normalisation" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="normalisation"><span class="header-section-number">10.6</span> Normalisation</h2>
+<p>The rules when normalising label-free data are the same as the use-case TMT data. See <a href="./04_normalisation_aggregation.html">Data normalisation and data aggregation</a> and <a href="./09_normalyzer.html">Using NormalyzerDE to explore normalisation methods</a> for more discussion.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-Sticker2020" class="csl-entry" role="listitem">
+Sticker, Adriaan, Ludger Goeminne, Lennart Martens, and Lieven Clement. 2020. <span>“Robust Summarization and Inference in Proteome-Wide Label-Free Quantification.”</span> <em>Molecular and Cellular Proteomics</em> 19 (7): 1209–19. <a href="https://doi.org/10.1074/mcp.ra119.001624">https://doi.org/10.1074/mcp.ra119.001624</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/09_normalyzer.html" class="pagination-link" aria-label="Exploring normalisation methods">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Exploring normalisation methods</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/11_statistical_analysis_all_stages.html" class="pagination-link" aria-label="Statistical analysis of all cell cycle stages">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Statistical analysis of all cell cycle stages</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Bioinformatics Training Facility</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

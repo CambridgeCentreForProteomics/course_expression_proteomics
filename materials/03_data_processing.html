@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Data cleaning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../materials/04_normalisation_aggregation.html" rel="next">
+<link href="../materials/02_import_and_infrastructure.html" rel="prev">
+<link href="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ea09eef7b0cb5c467d6c72feca1362d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-b23311a1332ed0b32f0ad3100ce46f78.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/iconify-3.0.0/iconify-icon.min.js"></script>
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Analysis of expression proteomics data in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_expression_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="Cambridge Centre for Proteomics GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://proteomics.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CCP Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    
+    <style>
+    #version-dropdown {
+      list-style: none;
+    }
+    </style>
+    
+
+  <li id="version-dropdown" class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-versions" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="menu-text">Version:</span> <span class="version-badge" aria-hidden="true">Latest</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-versions">
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/index.html">
+          <span class="dropdown-text">Latest</span>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/archive/2026.01.20/index.html">
+          <span class="dropdown-text">2026.01.20</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+</nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/01_intro.html">Expression proteomics</a></li><li class="breadcrumb-item"><a href="../materials/03_data_processing.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Welcome</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Expression proteomics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/03_data_processing.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/04_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data normalisation and data aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/05_protein_exploration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/06_statistical_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/07_biological_interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Biological interpretation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Extended materials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/08_maxquant_notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Adapting this workflow to MaxQuant processed data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/09_normalyzer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Exploring normalisation methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/10_lfq_vs_tmt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../materials/11_statistical_analysis_all_stages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Statistical analysis of all cell cycle stages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../versions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Archived Versions</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#creating-a-copy-of-the-raw-data" id="toc-creating-a-copy-of-the-raw-data" class="nav-link active" data-scroll-target="#creating-a-copy-of-the-raw-data"><span class="header-section-number">3.1</span> Creating a copy of the raw data</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning"><span class="header-section-number">3.2</span> Data cleaning</a>
+  <ul class="collapse">
+  <li><a href="#non-specific-filtering" id="toc-non-specific-filtering" class="nav-link" data-scroll-target="#non-specific-filtering"><span class="header-section-number">3.2.1</span> Non-specific filtering</a></li>
+  <li><a href="#addititional-quality-control-filters-available-for-tmt-data" id="toc-addititional-quality-control-filters-available-for-tmt-data" class="nav-link" data-scroll-target="#addititional-quality-control-filters-available-for-tmt-data"><span class="header-section-number">3.2.2</span> Addititional quality control filters available for TMT data</a></li>
+  <li><a href="#controlling-false-discovery-rate-fdr" id="toc-controlling-false-discovery-rate-fdr" class="nav-link" data-scroll-target="#controlling-false-discovery-rate-fdr"><span class="header-section-number">3.2.3</span> Controlling false discovery rate (FDR)</a></li>
+  </ul></li>
+  <li><a href="#management-of-missing-data" id="toc-management-of-missing-data" class="nav-link" data-scroll-target="#management-of-missing-data"><span class="header-section-number">3.3</span> Management of missing data</a>
+  <ul class="collapse">
+  <li><a href="#influence-of-experimental-design" id="toc-influence-of-experimental-design" class="nav-link" data-scroll-target="#influence-of-experimental-design"><span class="header-section-number">3.3.1</span> Influence of experimental design</a></li>
+  <li><a href="#exploration-of-missing-data" id="toc-exploration-of-missing-data" class="nav-link" data-scroll-target="#exploration-of-missing-data"><span class="header-section-number">3.3.2</span> Exploration of missing data</a></li>
+  <li><a href="#removing-data-with-high-levels-of-missingness" id="toc-removing-data-with-high-levels-of-missingness" class="nav-link" data-scroll-target="#removing-data-with-high-levels-of-missingness"><span class="header-section-number">3.3.3</span> Removing data with high levels of missingness</a></li>
+  <li><a href="#imputation-of-missing-values" id="toc-imputation-of-missing-values" class="nav-link" data-scroll-target="#imputation-of-missing-values"><span class="header-section-number">3.3.4</span> Imputation of missing values</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../materials/01_intro.html">Expression proteomics</a></li><li class="breadcrumb-item"><a href="../materials/03_data_processing.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Be aware of key data cleaning steps which should or could be completed during the processing of expression proteomics data</li>
+<li>Make use of the <code>filterFeatures</code> function to conditionally remove data from (i) an entire <code>QFeatures</code> object or (ii) specified <code>SummarizedExperiment</code> of a <code>QFeatures</code> object</li>
+<li>Understand the difference between non-specific and data-dependent filtering<br>
+</li>
+<li>Be able to explore the feature data stored in the <code>rowData</code> and get a feel for how to make your own data-dependent decisions regarding data cleaning</li>
+<li>Understand the importance of dealing with missing values in expression proteomics datasets and be aware of different approaches to doing so</li>
+</ul>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/flow_chart/flow_chart.002.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="figs/flow_chart/flow_chart.002.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now that we have our PSM level quantitative data stored in a <code>QFeatures</code> object, the next step is to carry out some data cleaning. However, as with all data analyses, it is sensible to keep a copy of our raw data in case we need to refer back to it later.</p>
+<section id="creating-a-copy-of-the-raw-data" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="creating-a-copy-of-the-raw-data"><span class="header-section-number">3.1</span> Creating a copy of the raw data</h2>
+<p>To create a copy of the <code>psms_raw</code> data we can first extract the <code>SummarizedExperiment</code> and then add it back to our <code>QFeatures</code> object using the <code>addAssay</code> function. When we do this, we give the second <code>SummarizedExperiment</code> (our copy) a new name. Here we will call it <code>psms_filtered</code> as by the end of our data cleaning and filtering, this copy will have had the unwanted data removed.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Extract a copy of the raw PSM-level data</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>raw_data_copy <span class="ot">&lt;-</span> cc_qf[[<span class="st">"psms_raw"</span>]] </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="do">## Re-add the assay to our QFeatures object with a new name</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> <span class="fu">addAssay</span>(<span class="at">x =</span> cc_qf, </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> raw_data_copy, </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">name =</span> <span class="st">"psms_filtered"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 45803 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>We now see that a second <code>SummarizedExperiment</code> has been added to the <code>QFeatures</code> object. When we use <code>addAssay</code> to add to a <code>QFeatures</code> object, the newly created <code>SummarizedExperiment</code> does not automatically have links to the pre-existing <code>SummarizedExperiment</code>s.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Assay links
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>QFeatures</code> maintains the hierarchical links between quantitative levels whilst allowing easy access to all data levels for individual features (PSMs, peptides and proteins) of interest. This is fundamental to the <code>QFeatures</code> infrastructure and will be exemplified throughout this course.</p>
+</div>
+</div>
+</section>
+<section id="data-cleaning" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="data-cleaning"><span class="header-section-number">3.2</span> Data cleaning</h2>
+<p>Now that we have created a copy of our raw data, we can start the process of data cleaning. We will only remove data from the second copy of our data, the one which we have called <code>"psms_filtered"</code>. Standard data cleaning steps in proteomics include the removal of features which:</p>
+<ol type="1">
+<li><em>Do not have an associated master protein accession</em></li>
+<li><em>Have a (master) protein accession matching to a contaminant protein</em></li>
+<li><em>Do not have quantitative data</em></li>
+</ol>
+<p>The above steps are necessary for all quantitative proteomics datasets, regardless of the experimental goal or data level (PSM or peptide). If a feature cannot be identified and quantified then it does not contribute useful information to our analysis. Similarly, contaminant proteins that are introduced intentionally as reagents (e.g., trypsin) or accidentally (e.g., human keratins) do not contribute to our biological question as they were not originally present in the samples.</p>
+<p>We also have the option to get rid of any lower quality data by removing those features which:</p>
+<ol start="4" type="1">
+<li><em>Are not rank 1</em></li>
+<li><em>Are not unambiguous</em></li>
+</ol>
+<p>Since each spectrum can have multiple potential matches (PSMs), the software used for our identification search provides some parameters to help us decide how confident we are in a match. Firstly, each PSM is given a rank based on the probability of it being incorrect - the PSM with the lowest probability of being wrong is allocated rank 1. Secondly, each PSM is assigned a level of ambiguity to tell us whether it was easy to assign with no other options (unambiguous), whether it was selected as the best match from a series of potential matches (selected), or whether it was not possible to distinguish between potential matches (ambiguous). High quality identifications should be both rank 1 and unambiguous. The exact filters we set here would depend on how exploratory or stringent we wish to be.</p>
+<p>Finally, depending upon the experimental question and goal, we may also wish to remove features which:</p>
+<ol start="6" type="1">
+<li><em>Are not unique</em></li>
+</ol>
+<p>The information regarding each of these parameters is present as a column in the output of our identification search, hence is present in the <code>rowData</code> of our <code>QFeatures</code> object.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Third party software
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The use-case data was searched using the <a href="https://www.thermofisher.com/uk/en/home/industrial/mass-spectrometry/liquid-chromatography-mass-spectrometry-lc-ms/lc-ms-software/multi-omics-data-analysis/proteome-discoverer-software.html">Proteome Discoverer software</a> (Thermo Fisher Scientific). This is one among several third party softwares available for protein identification. Each software has it’s own naming conventions, formatting and metrics for quantitation and associated metadata. As such, users following this course with their own data should be mindful of this and adapt the proposed filters and steps accordingly. MaxQuant is a free, open-source alternative software for database searches of MS data. We have provided details on the MaxQuant equivalent column names to those used in this course <a href="./08_maxquant_notes.html">here</a>.</p>
+</div>
+</div>
+<section id="non-specific-filtering" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="non-specific-filtering"><span class="header-section-number">3.2.1</span> Non-specific filtering</h3>
+<p>To remove features based on variables within our <code>rowData</code> we make use of the <strong><code>filterFeatures</code></strong> function. This function takes a <code>QFeatures</code> object as its input and then filters this object against a condition based on the <code>rowData</code> (indicated by the <code>~</code> operator). If the condition is met and returns TRUE for a feature, this feature will be kept.</p>
+<p>The <code>filterFeatures</code> function provides the option to apply our filter (i) to the whole <code>QFeatures</code> object and all of its <code>SummarizedExperiment</code>s, or (ii) to specific <code>SummarizedExperiment</code>s within the <code>QFeatures</code> object. We wish to only filter on the data in our <code>QFeatures</code> object called <code>psms_filtered</code> (and not every dataset) so in the following code chunks we always pass the argument <code>i = "psms_filtered"</code>.</p>
+<p>Let’s begin by filtering out any PSMs that <strong>do not have a master protein</strong>. These instances are characterised by an empty <code>character</code> i.e.&nbsp;<code>""</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Before filtering</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 45803 rows and 10 columns </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Master.Protein.Accessions <span class="sc">!=</span> <span class="st">""</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Master.Protein.Accessions' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## After filtering</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 45691 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>We see a message printed to the screen <code>"Master.Protein.Accessions' found in 2 out of 2 assay(s)"</code> this is informing us that the column <code>"Master.Protein.Accessions"</code> is present in the <code>rowData</code> of the two <code>SummarizedExperiment</code>s in our <code>QFeatures</code> object. We can see from looking at our <code>cc_qf</code> object before and after filtering we have lost several hundred PSMs that do not have a master protein.</p>
+<p>As mentioned above it is standard practice in proteomics to filter MS data for <strong>common contaminants</strong>. This is done by using a carefully curated, sample-specific contaminant database. In this study the data was searched against the <a href="https://github.com/HaoGroup-ProtContLib/Protein-Contaminant-Libraries-for-DDA-and-DIA-Proteomics/">Hao Group’s Protein Contaminant Libraries for DDA and DIA Proteomics</a> <span class="citation" data-cites="Frankenfield2022">Frankenfield et al. (<a href="#ref-Frankenfield2022" role="doc-biblioref">2022</a>)</span> during the database search. The PD software flags PSMs that originate from proteins that match a contaminant and this is recorded in the “Contaminant” column in the PD output and propagated to the <code>rowData</code> of our <code>QFeatures</code> object.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge 1: Filtering for contaminants
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>The Proteome Discoverer software flags a potential contaminant in the <code>Contaminants</code> column found in the <code>rowData</code> of the <code>SummarizedExperiment</code>.</p>
+<p>We can count how many contaminants there are using,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span>  </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contaminant)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  Contaminant     n
+  &lt;chr&gt;       &lt;int&gt;
+1 False       42751
+2 True         2940</code></pre>
+</div>
+</div>
+<p>Examine the <code>class</code> of this column,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span>  </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Contaminant) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">class</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "character"</code></pre>
+</div>
+</div>
+<p>Careful: it is not a <code>logical</code> TRUE or FALSE. It is a <code>character</code> and takes two values, <code>"True"</code> or <code>"False"</code>.</p>
+<ol type="1">
+<li><p>Use the <code>filterFeatures</code> function on the <code>psms_filtered</code> dataset and filter out any contaminants which have been flagged as <code>"True"</code>.</p></li>
+<li><p>How many PSMs are left after this step?</p></li>
+</ol>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Contaminant <span class="sc">!=</span> <span class="st">"True"</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Contaminant' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## After filtering</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 42751 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>We now have 42751 PSMs.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>More on contaminants
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>It is also possible to filter against your own contaminants list uploaded into R. It may be that you have a second list or newer list you’d like to search against, or you perhaps did not add a contaminants list to filter against in the identification search (which was performed in third party software). Full details including code can be found in <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2024</a>)</span>.</p>
+<p>Note: Filtering on “Protein.Accessions”, rather than “Master.Protein.Accessions” ensures the removal of PSMs which matched to a protein group containing a contaminant protein, even if the contaminant protein is not the group’s master protein.</p>
+</div>
+</div>
+<p>One of the next filtering steps is to examine to see if we have any <strong>PSMs which lack quantitative data</strong>. In outputs derived from Proteome Discoverer this information is included in the “Quan.Info” column where PSMs are annotated as having “NoQuanLabels”. For users who have considered both lysine and N-terminal TMT labels as static modifications, the data should not contain any PSMs without quantitative information. See <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2024</a>)</span> for how to filter your data if you have TMT modifications set as dynamic.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Quan.Info) <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt; table of extent 0 &gt;</code></pre>
+</div>
+</div>
+<p>We see we have no annotation in this column and no PSMs lacking quantitative information.</p>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 2 - Challenge 2: PSM ranking
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>Since individual spectra can have multiple candidate PSMs, Proteome Discoverer uses a scoring algorithm to determine the probability of a PSM being incorrect. Once each candidate PSM has been given a score, the one with the lowest score (lowest probability of being incorrect) is allocated rank 1. The PSM with the second lowest probability of being incorrect is rank 2, and so on. For the analysis, we only want rank 1 PSMs to be retained. The majority of search engines, including SequestHT (used in this analysis), also provide their own PSM rank. To be conservative and ensure accurate quantitation, we also only retain PSMs that have a search engine rank of 1.</p>
+<ol type="1">
+<li><p>Find the columns <code>Rank</code> and <code>Search.Engine.Rank</code> in the dataset and tabulate how many PSMs we have at each level</p></li>
+<li><p>Use <code>filterFeatures</code> and keep,</p></li>
+</ol>
+<ul>
+<li>PSMs with a <code>Rank</code> of 1</li>
+<li>PSMs with a <code>Search.Engine.Rank</code> of 1</li>
+<li>High confidence PSMs that have been unambiguously assigned</li>
+</ul>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p><strong>Part 1</strong></p>
+<p>First let’s examine the columns in the <code>rowData</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Checked"                           "Tags"                             
+ [3] "Confidence"                        "Identifying.Node.Type"            
+ [5] "Identifying.Node"                  "Search.ID"                        
+ [7] "Identifying.Node.No"               "PSM.Ambiguity"                    
+ [9] "Sequence"                          "Annotated.Sequence"               
+[11] "Modifications"                     "Number.of.Proteins"               
+[13] "Master.Protein.Accessions"         "Master.Protein.Descriptions"      
+[15] "Protein.Accessions"                "Protein.Descriptions"             
+[17] "Number.of.Missed.Cleavages"        "Charge"                           
+[19] "Original.Precursor.Charge"         "Delta.Score"                      
+[21] "Delta.Cn"                          "Rank"                             
+[23] "Search.Engine.Rank"                "Concatenated.Rank"                
+[25] "mz.in.Da"                          "MHplus.in.Da"                     
+[27] "Theo.MHplus.in.Da"                 "Delta.M.in.ppm"                   
+[29] "Delta.mz.in.Da"                    "Ions.Matched"                     
+[31] "Matched.Ions"                      "Total.Ions"                       
+[33] "Intensity"                         "Activation.Type"                  
+[35] "NCE.in.Percent"                    "MS.Order"                         
+[37] "Isolation.Interference.in.Percent" "SPS.Mass.Matches.in.Percent"      
+[39] "Average.Reporter.SN"               "Ion.Inject.Time.in.ms"            
+[41] "RT.in.min"                         "First.Scan"                       
+[43] "Last.Scan"                         "Master.Scans"                     
+[45] "Spectrum.File"                     "File.ID"                          
+[47] "Quan.Info"                         "Peptides.Matched"                 
+[49] "XCorr"                             "Number.of.Protein.Groups"         
+[51] "Contaminant"                       "Percolator.q.Value"               
+[53] "Percolator.PEP"                    "Percolator.SVMScore"              </code></pre>
+</div>
+</div>
+<p>Let’s examine the columns <code>Rank</code> and <code>Search.Engine.Rank</code>,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Rank)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 2
+   Rank     n
+  &lt;int&gt; &lt;int&gt;
+1     1 42185
+2     2   442
+3     3    95
+4     4    20
+5     5     3
+6     6     5
+7     7     1</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Search.Engine.Rank)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 2
+  Search.Engine.Rank     n
+               &lt;int&gt; &lt;int&gt;
+1                  1 41794
+2                  2   798
+3                  3   122
+4                  4    28
+5                  5     3
+6                  6     4
+7                  7     2</code></pre>
+</div>
+</div>
+<p>We can also visualise this by piping the results to <code>ggplot</code></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Rank) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Rank, n)) <span class="sc">+</span> </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span> </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>() </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="03_data_processing_files/figure-html/unnamed-chunk-11-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="03_data_processing_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Search.Engine.Rank) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Search.Engine.Rank, n)) <span class="sc">+</span> </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span> </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>() </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="03_data_processing_files/figure-html/unnamed-chunk-11-2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="03_data_processing_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Part 2</strong></p>
+<p>Now let’s keep only PSMs with a rank of 1,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span> </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Rank <span class="sc">==</span> <span class="dv">1</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Search.Engine.Rank <span class="sc">==</span> <span class="dv">1</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> PSM.Ambiguity <span class="sc">==</span> <span class="st">"Unambiguous"</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Rank' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Search.Engine.Rank' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'PSM.Ambiguity' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="do">## After filtering</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 41794 rows and 10 columns </code></pre>
+</div>
+</div>
+<p>We now have 41794 PSMs.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>In quantitative proteomics when thinking about what PSMs to consider for take forward for quantitation we consider <strong>PSM uniqueness</strong>. By definition uniqueness in this context refers to (i) PSMs corresponding to a single protein only, or it can also refer to (ii) PSMs that map to multiple proteins within a single protein group. This distinction is ultimately up to the user. We do not consider PSMs corresponding to razor and shared peptides as these are linked to multiple proteins across multiple protein groups.</p>
+<p>In this workflow, the final grouping of peptides to proteins will be done based on master protein accession. Therefore, differential expression analysis will be based on protein groups, and we here consider unique as any PSM linked to only one protein group. This means removing PSMs where “Number.of.Protein.Groups” is not equal to 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Number.of.Protein.Groups <span class="sc">==</span> <span class="dv">1</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Number.of.Protein.Groups' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="do">## After filtering</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>cc_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 2 sets:
+
+ [1] psms_raw: SummarizedExperiment with 45803 rows and 10 columns 
+ [2] psms_filtered: SummarizedExperiment with 40044 rows and 10 columns </code></pre>
+</div>
+</div>
+</section>
+<section id="addititional-quality-control-filters-available-for-tmt-data" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="addititional-quality-control-filters-available-for-tmt-data"><span class="header-section-number">3.2.2</span> Addititional quality control filters available for TMT data</h3>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/flow_chart/flow_chart.003.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="figs/flow_chart/flow_chart.003.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As well as the completion of standard data cleaning steps which are common to all quantitative proteomics experiments (see above), different experimental methods are accompanied by additional data processing considerations. Although we cannot provide an extensive discussion of all methods, we will draw attention to three key quality control parameters to consider for our use-case TMT data.</p>
+<ol type="1">
+<li>Average reporter ion signal-to-noise (S/N)</li>
+</ol>
+<p>The quantitation of a TMT experiment is dependent upon the measurement of reporter ion signals from either the MS2 or MS3 spectra. Since reporter ion measurements derived from a small number of ions are more prone to stochastic ion effects and reduced quantitative accuracy, we want to remove PSMs that rely such quantitation to ensure high data quality. When using an Orbitrap analyser, the number of ions is proportional to the S/N ratio of a peak. Hence, removing PSMs that have a low S/N value acts as a proxy for removing low quality quantitation.</p>
+<ol start="2" type="1">
+<li>Isolation interference (%)</li>
+</ol>
+<p>Isolation interference occurs when multiple TMT-labelled precursor peptides are co-isolated within a single data acquisition window. All co-isolated peptides go on to be fragmented together and reporter ions from all peptides contribute to the reporter ion signal. Hence, quantification for the identified peptide becomes inaccurate. To minimise the co-isolation interference problem observed at MS2, MS3-based analysis can be used <span class="citation" data-cites="McAlister2014">McAlister et al. (<a href="#ref-McAlister2014" role="doc-biblioref">2014</a>)</span>. Nevertheless, we remove PSMs with a high percentage isolation interference to prevent the inclusion of inaccurate quantitation values.</p>
+<ol start="3" type="1">
+<li>Synchronous precursor selection mass matches (%) - SPS-MM</li>
+</ol>
+<p>SPS-MM is a parameter unique to the Proteome Discoverer software which lets users quantify the percentage of MS3 fragments that can be explicitly traced back to the precursor peptides. This is important given that quantitation is based on the MS3 spectra.</p>
+<p>Here we will apply the default quality control thresholds as suggested by Thermo Fisher and keep features with:</p>
+<ul>
+<li>Average reporter ion S/N &gt;= 10</li>
+<li>Isolation interference &lt; 75%</li>
+<li>SPS-MM &gt;= 65%</li>
+</ul>
+<p>We also remove features that do not have information regarding these quality control parameters i.e., have an NA value in the corresponding columns of the <code>rowData</code>. To remove these features we include the <code>na.rm = TRUE</code> argument.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span> </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Average.Reporter.SN <span class="sc">&gt;=</span> <span class="dv">10</span>, </span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Isolation.Interference.in.Percent <span class="sc">&lt;=</span> <span class="dv">75</span>, </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> SPS.Mass.Matches.in.Percent <span class="sc">&gt;=</span> <span class="dv">65</span>, </span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">na.rm =</span> <span class="cn">TRUE</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Average.Reporter.SN' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Isolation.Interference.in.Percent' found in 2 out of 2 assay(s).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'SPS.Mass.Matches.in.Percent' found in 2 out of 2 assay(s).</code></pre>
+</div>
+</div>
+<p>In reality, we advise that users take a look at their data to decide whether the default quality control thresholds applied above are appropriate. If there is reason to believe that the raw MS data was of lower quality than desired, it may be sensible to apply stricter thresholds here. Similarly, if users wish to carry out a more stringent or exploratory analyses, these thresholds can be altered accordingly. For code and more information please see <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2024</a>)</span>.</p>
+</section>
+<section id="controlling-false-discovery-rate-fdr" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="controlling-false-discovery-rate-fdr"><span class="header-section-number">3.2.3</span> Controlling false discovery rate (FDR)</h3>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/flow_chart/flow_chart.004.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="figs/flow_chart/flow_chart.004.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The data cleaning steps that we have carried out so far have mainly been concerned with achieving high quality quantitation. However, we also want to be confident in our PSMs and their corresponding peptide and protein identifications.</p>
+<p>To identify the peptides present in each of our samples we used a third party software to carry out a database search. Raw MS spectra are matched to theoretical spectra that are generated via <em>in silico</em> digestion of our desired protein database. The initial result of this search is a list of peptide spectrum matches, PSMs. A database search will identify PSMs for the majority of MS spectra, but only a minority of these will be true positives. In the same way that experiments must be conducted with controls, database search identifications need to be statistically validated to avoid false positives. The most widely used method for reducing the number of false positive identifications is to control the false discovery rate (FDR).</p>
+<section id="target-decoy-approach-to-fdr-control" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="target-decoy-approach-to-fdr-control">Target-decoy approach to FDR control</h4>
+<p>The most common approach to FDR control is the target-decoy approach. This involves searching the raw MS spectra against both a target and decoy database. The target database contains all protein sequences which could be in our sample (the human proteome and potential contaminants). The decoy database contains fake proteins that should not be present in the sample. For example, a decoy database may contain reversed or re-shuffled sequences. The main principle is that by carrying out these two searches we are able to estimate the the proportion of total PSMs that are false (matched to the decoy sequences) and apply score-based thresholding to shift this false discovery rate to a desired maximum. Typically expression proteomics utilises a maximum FDR of 0.01 or 0.05, that is to say 1% or 5% of PSMs are accepted false positives.</p>
+</section>
+<section id="psm-level-local-fdr" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="psm-level-local-fdr">PSM level local FDR</h4>
+<p>The first FDR to be calculated is that for the PSMs themselves, often referred to as <strong>local FDR</strong>. As mentioned previously, each PSM is given a score indicating how likely it is to be correct or incorrect, depending on the search engine used. Based on these scores, each candidate PSM is ranked such that rank 1 PSMs have the highest probability of being correct or lowest probability of being incorrect. To calculate the local FDR for a PSM, the score for that PSM is taken as a threshold, and all PSMs with a score equal to or better than that PSM are extracted. The proportion of false positives within this population of PSMs is taken as its local FDR. In this way, the FDR can be thought of as the proportion of false positives above the critical score threshold.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/local_fdr.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="An illustration of the local FDR calculation used to assign each PSM an FDR."><img src="figs/local_fdr.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%" alt="An illustration of the local FDR calculation used to assign each PSM an FDR."></a></p>
+</figure>
+</div>
+<figcaption>An illustration of the local FDR calculation used to assign each PSM an FDR.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In the parameters for our identification search using Proteome Discoverer we specified a PSM level FDR threshold. We did this by allocating PSM confidence levels as ‘high’, ‘medium’ or ‘low’ depending on whether their FDR was &lt; 0.01, &lt; 0.05 or &gt; 0.05. We then told Proteome Discoverer to only retain high confidence PSMs, those with a local FDR &lt; 0.01. The local FDR indirectly tells us the probability of a PSM being a false positive, given the score it has.</p>
+<p>Let’s double check that we only have high confidence PSMs.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Confidence) <span class="sc">%&gt;%</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+ High 
+45803 </code></pre>
+</div>
+</div>
+<p>As expected, all of the PSMs in our data are of high confidence.</p>
+</section>
+<section id="protein-level-fdr-thresholding-is-still-required" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="protein-level-fdr-thresholding-is-still-required">Protein level FDR thresholding is still required</h4>
+<p>Although we have already applied a PSM level FDR threshold to the data (during the identification search), it is highly recommended to set a protein level FDR threshold. This is because each peptide can have multiple PSMs and each protein can be supported by multiple peptides, thus resulting in the potential for amplification of the FDR during data aggregation. At a given PSM level score threshold, the peptide level FDR is greater than the PSM level FDR. Similarly, the protein level FDR is greater than the peptide level FDR.</p>
+<p>To be absolutely confident in our final protein data we need to apply a protein level FDR. Unfortunately, third party software typically generates output tables in a sequential manner and there is currently no way to include information about the protein level FDR in the PSM level output. Therefore, we have to import the protein level output to get this information. The file is called <code>cell_cycle_total_proteome_analysis_Proteins.txt</code>.</p>
+<p>We begin by using the <code>read.delim</code> function to read in the data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Applying protein level FDR - import protein output from database search</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>protein_data_PD <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="at">file =</span> <span class="st">"data/cell_cycle_total_proteome_analysis_Proteins.txt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Let’s check the dimensions of the protein level output,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(protein_data_PD)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4904   72</code></pre>
+</div>
+</div>
+<p>The output contains 4904 proteins. Let’s compare this to the number of master protein accessions in our raw and filtered PSM data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of master proteins in our raw data</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_raw"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Master.Protein.Accessions) <span class="sc">%&gt;%</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5267</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of master proteins in our filtered data</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Master.Protein.Accessions) <span class="sc">%&gt;%</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">length</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3912</code></pre>
+</div>
+</div>
+<p>It looks like the protein level output has fewer proteins than the raw PSM file but more proteins than our filtered PSM data. This tells us that Proteome Discoverer has done some filtering throughout the process of aggregating from PSM to peptide to protein, but not as much filtering as we have done manually in R. This makes sense because we did not set any quality control thresholds on co-isolation interference, reporter ion S/N ratio or SPS-MM during the search.</p>
+<p>Now let’s look to see where information about the protein level FDR is stored.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(protein_data_PD) <span class="sc">%&gt;%</span> </span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Checked"                         "Tags"                           
+ [3] "Protein.FDR.Confidence.Combined" "Master"                         
+ [5] "Proteins.Unique.Sequence.ID"     "Protein.Group.IDs"              
+ [7] "Accession"                       "Description"                    
+ [9] "Sequence"                        "FASTA.Title.Lines"              </code></pre>
+</div>
+</div>
+<p>We have a column called <code>"Protein.FDR.Confidence.Combined"</code>. Let’s add this information to our <code>rowData</code> of the <code>psms_filtered</code> set of our <code>QFeatures</code> object.</p>
+<p>First let’s extract the <code>rowData</code> and convert it to a <code>data.frame</code> so we can make use of <code>dplyr</code>,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Extract the rowData and convert to a data.frame</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>psm_data_QF <span class="ot">&lt;-</span> </span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now let’s subset the <code>protein_data_PD</code> data to keep only accession and FDR information,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Select only the Accession and FDR info</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>protein_data_PD <span class="ot">&lt;-</span> </span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  protein_data_PD <span class="sc">%&gt;%</span> </span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Accession, Protein.FDR.Confidence.Combined)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now let’s use <code>dplyr</code> and the <code>left_join</code> function to do the matching between the protein PD data and our PSM data for us. We need to specify how we join them so we need to specify the argument <code>by = c("Master.Protein.Accessions" = "Accession")</code> to tell R we wish to join the two datasets by their protein Accessions. Note, in the <code>rowData</code> of the <code>QFeatures</code> object we have <code>"Master.Protein.Accessions"</code> and in the PD protein data the column is just called <code>"Accessions"</code>. Check with your own data the explicit naming of your data files as this will differ between third party softwares.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Use left.join from dplyr to add the FDR data to PSM rowData data.frame </span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>fdr_confidence <span class="ot">&lt;-</span> <span class="fu">left_join</span>(<span class="at">x =</span> psm_data_QF,  </span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">y =</span> protein_data_PD,</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Master.Protein.Accessions"</span> <span class="ot">=</span> <span class="st">"Accession"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(<span class="st">"Protein.FDR.Confidence.Combined"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Joining data.frames
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Note: when using <code>left_join</code> we specify the argument <code>by = c("Master.Protein.Accessions" = "Accession")</code> (note the = equals sign between the names). This tells <code>left_join</code> we want to match join the two <code>data.frames</code> by matching accession numbers between the the <code>Master.Protein.Accessions</code> column in <code>psm_data_QF</code> and the column called <code>Accession</code> in the <code>protein_data_PD</code> data.</p>
+</div>
+</div>
+<p>Now let’s add the FDR information back to the <code>QFeatures</code> object,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Now add this data to the QF object</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rowData</span>(cc_qf[[<span class="st">"psms_filtered"</span>]])<span class="sc">$</span>Protein.FDR.Confidence <span class="ot">&lt;-</span> fdr_confidence</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now we can print a table to see how many of the PSMs in our data were found to have a high confidence after protein level FDR calculations.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowData</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Protein.FDR.Confidence) <span class="sc">%&gt;%</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+  High    Low Medium 
+ 25699      5     84 </code></pre>
+</div>
+</div>
+<p>Most of the PSMs in our data were found to originate from proteins with high confidence (FDR &lt; 0.01 at protein level), but there are a few that are medium or low confidence. Even though we set a PSM level FDR threshold of 0.01, some of the resulting proteins still exceed this FDR due to amplification of error during aggregation.</p>
+<p>We can now use the <code>filterFeatures</code> function to remove PSMs that do not have a <code>Protein_Confidence</code> of ‘High’.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterFeatures</span>(<span class="sc">~</span> Protein.FDR.Confidence <span class="sc">==</span> <span class="st">"High"</span>, </span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>'Protein.FDR.Confidence' found in 1 out of 2 assay(s).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>No filter applied to the following assay(s) because one or more
+filtering variables are missing in the rowData: psms_raw. You can
+control whether to remove or keep the features using the 'keep'
+argument (see '?filterFeature').</code></pre>
+</div>
+</div>
+<p>Notice, we see a message output to the terminal after running the function that telling us that <code>Protein.FDR.Confidence</code> was only found in 1 of our experiment assays and as such no filter was applied to the raw data. This is correct and expected.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>cc_qf[[<span class="st">"psms_filtered"</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>  rowData <span class="sc">%&gt;%</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  as_tibble <span class="sc">%&gt;%</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Protein.FDR.Confidence) <span class="sc">%&gt;%</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+ High 
+25699 </code></pre>
+</div>
+</div>
+<p>For more information about how FDR values are calculated and used see <span class="citation" data-cites="Prieto2019">Prieto and Vázquez (<a href="#ref-Prieto2019" role="doc-biblioref">2019</a>)</span>.</p>
+</section>
+</section>
+</section>
+<section id="management-of-missing-data" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="management-of-missing-data"><span class="header-section-number">3.3</span> Management of missing data</h2>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="figs/flow_chart/flow_chart.005.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="figs/flow_chart/flow_chart.005.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Having cleaned our data, the next step is to deal with missing values. It is important to be aware that missing values can arise for different reasons in MS data, and these reasons determine the best way to deal with the missing data.</p>
+<ul>
+<li>Biological reasons - a peptide may be genuinely absent from a sample or have such low abundance that it is below the limit of MS detection</li>
+<li>Technical reasons - technical variation and the stochastic nature of MS (particularly using DDA) may lead to some peptides not being quantified. Some peptides have a lower ionization efficiency which makes them less compatible with MS analysis</li>
+</ul>
+<p>Missing values that arise for different reasons can generally be deciphered by their pattern. For example, peptides that have missing quantitation values for biological reasons tend to be low intensity or completely absent peptides. Hence, these missing values are <strong>missing not at random (MNAR)</strong> and appear in an intensity-dependent pattern. By contrast, peptides that do not have quantitation due to technical reasons are <strong>missing completely at random (MCAR)</strong> and appear in an intensity-independent manner.</p>
+<section id="influence-of-experimental-design" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="influence-of-experimental-design"><span class="header-section-number">3.3.1</span> Influence of experimental design</h3>
+<p>All quantitative proteomics datasets will have some number of missing values, although the extent of data missingness differs between label-free and label-based DDA experiments as well as between DDA and DIA label-free experiments.</p>
+<p>When carrying out a label-free DDA experiment, all samples are analysed via independent MS runs. Since the selection of precursor ions for fragmentation is somewhat stochastic in DDA (e.g., top <em>N</em> most abundant precursors are selected) experiments, different peptides may be identified and quantified across the different samples. In other words, not all peptides that are analysed in one sample will be analysed in the next, thus introducing a high proportion of missing values.</p>
+<p>One of the advantages of using TMT labelling is the ability to multiplex samples into a single MS run. In the use-case, 10 samples were TMT labelled and pooled together prior to DDA MS analysis. As a result, the same peptides were quantified for all samples and we expect a lower proportion of missing values than if we were to use label-free DDA.</p>
+<p>More recently, DIA MS analysis of label-free samples has increased in popularity. Here, instead of selecting a limited number of precursor peptides (typically the most abundance) for subsequent fragmentation and analysis, all precursors within a selected <em>m/z</em> window are selected. The analysis of all precursor ions within a defined range in every run results in more consistent coverage and accuracy than DDA experiments, hence lower missing values.</p>
+</section>
+<section id="exploration-of-missing-data" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="exploration-of-missing-data"><span class="header-section-number">3.3.2</span> Exploration of missing data</h3>
+<p>The management of missing data can be considered in three main steps:</p>
+<ol type="1">
+<li>Exploration of missing data - determine the number and pattern of missing values</li>
+<li>Removal of data with high levels of missingness - this could be features with missing values across too many samples or samples with an abnormally high proportion of missingness compared to the average</li>
+<li>Imputation (optional)</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Encoding of missing data
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Before we begin managing the missing data, we first need to know what missing data looks like. In our data, missing values are notated as <code>NA</code> values. Alternative software may display missing values as being zero, or even infinite if normalisation has been applied during the database search. All functions used for the management of missing data within the <code>QFeatures</code> infrastructure use the <code>NA</code> notation. If we were dealing with a dataset that had an alternative encoding, we could apply the <code>zeroIsNA()</code> or <code>infIsNA()</code> functions to convert missing values into <code>NA</code> values.</p>
+</div>
+</div>
+<p>The main function that facilitates the exploration of missing data in <code>QFeatures</code> is <code>nNA</code>. Let’s try to use this function. Again, we use the <code>i =</code> argument to specify which <code>SummarizedExperiment</code> within the <code>QFeatures</code> object that we wish to look at.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nNA</span>(cc_qf, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$nNA
+DataFrame with 1 row and 3 columns
+          assay       nNA         pNA
+    &lt;character&gt; &lt;integer&gt;   &lt;numeric&gt;
+1 psms_filte...        14 5.44768e-05
+
+$nNArows
+DataFrame with 25699 rows and 4 columns
+              assay        name       nNA       pNA
+        &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;numeric&gt;
+1     psms_filte...           7         0         0
+2     psms_filte...           8         0         0
+3     psms_filte...           9         0         0
+4     psms_filte...          16         0         0
+5     psms_filte...          18         0         0
+...             ...         ...       ...       ...
+25695 psms_filte...       45748         0         0
+25696 psms_filte...       45752         0         0
+25697 psms_filte...       45753         0         0
+25698 psms_filte...       45777         0         0
+25699 psms_filte...       45784         0         0
+
+$nNAcols
+DataFrame with 10 rows and 4 columns
+           assay        name       nNA         pNA
+     &lt;character&gt; &lt;character&gt; &lt;integer&gt;   &lt;numeric&gt;
+1  psms_filte...     Control         4 0.000155648
+2  psms_filte...         M_1         0 0.000000000
+3  psms_filte...         M_2         9 0.000350208
+4  psms_filte...         M_3         1 0.000038912
+5  psms_filte...        G1_1         0 0.000000000
+6  psms_filte...        G1_2         0 0.000000000
+7  psms_filte...        G1_3         0 0.000000000
+8  psms_filte...        DS_1         0 0.000000000
+9  psms_filte...        DS_2         0 0.000000000
+10 psms_filte...        DS_3         0 0.000000000</code></pre>
+</div>
+</div>
+<p>The output from this function is a <code>list</code> of three <code>DFrame</code>s. The first of these (called <code>nNA</code>) gives us information about missing data at the global level (i.e., for the entire <code>SummarizedExperiment</code>). We get information about the absolute number of missing values (<code>nNA</code>) and the proportion of the total data set that is missing values (<code>pNA</code>). The next two data frames also give us <code>nNA</code> and <code>pNA</code> but this time on a per row/feature (<code>nNArows</code>) and per column/sample (<code>nNAcols</code>) basis.</p>
+<p>Let’s direct the output of <code>nNA</code> on each <code>SummarizedExperiment</code> to an object,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>mv_raw <span class="ot">&lt;-</span> <span class="fu">nNA</span>(cc_qf, <span class="at">i =</span> <span class="st">"psms_raw"</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>mv_filtered <span class="ot">&lt;-</span> <span class="fu">nNA</span>(cc_qf, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To access one <code>DataFrame</code> within a list we use the standard <code>$</code> operator, followed by another <code>$</code> operator if we wish to access specific columns.</p>
+<p><strong>Missing values down columns (sample)</strong> Print information regarding the number of missing values per column in the <code>"mv_raw"</code> data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>mv_raw<span class="sc">$</span>nNAcols</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 10 rows and 4 columns
+         assay        name       nNA        pNA
+   &lt;character&gt; &lt;character&gt; &lt;integer&gt;  &lt;numeric&gt;
+1     psms_raw     Control       280 0.00611314
+2     psms_raw         M_1       161 0.00351505
+3     psms_raw         M_2       388 0.00847106
+4     psms_raw         M_3       177 0.00386438
+5     psms_raw        G1_1       118 0.00257625
+6     psms_raw        G1_2       123 0.00268541
+7     psms_raw        G1_3        88 0.00192127
+8     psms_raw        DS_1       116 0.00253259
+9     psms_raw        DS_2       143 0.00312207
+10    psms_raw        DS_3       110 0.00240159</code></pre>
+</div>
+</div>
+<p>and after filtering,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>mv_filtered<span class="sc">$</span>nNAcols</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 10 rows and 4 columns
+           assay        name       nNA         pNA
+     &lt;character&gt; &lt;character&gt; &lt;integer&gt;   &lt;numeric&gt;
+1  psms_filte...     Control         4 0.000155648
+2  psms_filte...         M_1         0 0.000000000
+3  psms_filte...         M_2         9 0.000350208
+4  psms_filte...         M_3         1 0.000038912
+5  psms_filte...        G1_1         0 0.000000000
+6  psms_filte...        G1_2         0 0.000000000
+7  psms_filte...        G1_3         0 0.000000000
+8  psms_filte...        DS_1         0 0.000000000
+9  psms_filte...        DS_2         0 0.000000000
+10 psms_filte...        DS_3         0 0.000000000</code></pre>
+</div>
+</div>
+<p>Now, we can extract the proportion of NAs in each sample,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>mv_raw<span class="sc">$</span>nNAcols<span class="sc">$</span>pNA</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 0.006113137 0.003515054 0.008471061 0.003864376 0.002576250 0.002685414
+ [7] 0.001921272 0.002532585 0.003122066 0.002401589</code></pre>
+</div>
+</div>
+<p>We can also pass the output data from <code>nNA</code> to <code>ggplot</code> to visualise the missing data. This is particularly useful so that we can see whether any of our samples have an abnormally high proportion of missing values compared to the average. This could be the case if something had gone wrong during sample preparation. It is also useful to see whether there is any specific conditions that have a greater number of missing values.</p>
+<p>In the following code chunk we visualise the proportion of missing values per sample and check for sample and condition bias.</p>
+<p>In the raw data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>mv_raw<span class="sc">$</span>nNAcols <span class="sc">%&gt;%</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">condition =</span> <span class="fu">colData</span>(cc_qf)<span class="sc">$</span>condition) <span class="sc">%&gt;%</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> pNA, <span class="at">group =</span> condition, <span class="at">fill =</span> condition)) <span class="sc">+</span></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Sample"</span>, <span class="at">y =</span> <span class="st">"Proportion missing values"</span>) <span class="sc">+</span> </span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="03_data_processing_files/figure-html/unnamed-chunk-35-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="03_data_processing_files/figure-html/unnamed-chunk-35-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In the filtered data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>mv_filtered<span class="sc">$</span>nNAcols <span class="sc">%&gt;%</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">condition =</span> <span class="fu">colData</span>(cc_qf)<span class="sc">$</span>condition) <span class="sc">%&gt;%</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> name, <span class="at">y =</span> pNA, <span class="at">group =</span> condition, <span class="at">fill =</span> condition)) <span class="sc">+</span></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Sample"</span>, <span class="at">y =</span> <span class="st">"Proportion missing values"</span>) <span class="sc">+</span></span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="03_data_processing_files/figure-html/unnamed-chunk-36-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9"><img src="03_data_processing_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Missing values - expectations
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In this experiment we expect all samples to have a low proportion of missing values due to the TMT labelling strategy. We also expect that all samples should have a similar proportion of missing values because we do not expect cell cycle stage to have a large impact on the majority of the proteome. Hence, the samples here should be very similar. This is the case in most expression proteomics experiments which aim to identify differential protein abundance upon a cellular perturbation. However, in some other MS-based proteomics experiments this would not be the case. For example, proximity labelling and co-immunoprecipitation (Co-IP) experiments have control samples that are not expected to have any proteins in, although there is always a small amount of unwanted noise. In such cases it would be expected to have control samples with a large proportion of missing values and experimental samples with a much lower proportion. It is important to check that the data corresponds to the experimental setup.</p>
+</div>
+</div>
+<p><strong>Missing values across rows (PSMs)</strong> Print information regarding the number of missing values per row (PSM):</p>
+<p>In the <code>"psms_raw"</code> data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>mv_raw<span class="sc">$</span>nNArows</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 45803 rows and 4 columns
+            assay        name       nNA       pNA
+      &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;numeric&gt;
+1        psms_raw           1         0       0.0
+2        psms_raw           2         0       0.0
+3        psms_raw           3         0       0.0
+4        psms_raw           4         6       0.6
+5        psms_raw           5         1       0.1
+...           ...         ...       ...       ...
+45799    psms_raw       45799         3       0.3
+45800    psms_raw       45800         0       0.0
+45801    psms_raw       45801         3       0.3
+45802    psms_raw       45802         2       0.2
+45803    psms_raw       45803         1       0.1</code></pre>
+</div>
+</div>
+<p>The <code>"psms_filtered"</code> data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>mv_filtered<span class="sc">$</span>nNArows</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 25699 rows and 4 columns
+              assay        name       nNA       pNA
+        &lt;character&gt; &lt;character&gt; &lt;integer&gt; &lt;numeric&gt;
+1     psms_filte...           7         0         0
+2     psms_filte...           8         0         0
+3     psms_filte...           9         0         0
+4     psms_filte...          16         0         0
+5     psms_filte...          18         0         0
+...             ...         ...       ...       ...
+25695 psms_filte...       45748         0         0
+25696 psms_filte...       45752         0         0
+25697 psms_filte...       45753         0         0
+25698 psms_filte...       45777         0         0
+25699 psms_filte...       45784         0         0</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 3 - Challenge 3: Analysing missing values
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>How many PSMs do we have with (i) 0 missing values, (ii) 1 missing value, (iii) 2 or more missing values, across samples, before and after filtering?</p>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<p>The <code>nNA</code> column gives information on the number missing values (or we can use <code>pNA</code> which gives information on the proportion of missing values). Calling <code>table</code> on the output number of missing values we have across samples,</p>
+<p>On the raw data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>mv_raw<span class="sc">$</span>nNArows<span class="sc">$</span>nNA <span class="sc">%&gt;%</span> <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+    0     1     2     3     4     5     6     7     8     9    10 
+45263   224    96    58    42    19    17    18    13    11    42 </code></pre>
+</div>
+</div>
+<p>On the filtered data,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>mv_filtered<span class="sc">$</span>nNArows<span class="sc">$</span>nNA <span class="sc">%&gt;%</span> <span class="fu">table</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+    0     1     3 
+25687    11     1 </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- **TODO - add second challenge or too tricky?** -->
+<!-- Ideas ... -->
+<!-- Something to do with missing data across rows - prior to filtering based on a  -->
+<!-- feature having >20% missing values. Ask them to work out how many this will be? -->
+<!-- Ask them to work out the max and min number of missing values per feature? -->
+<!-- Ask them to create a plot looking at the number of missing values across the -->
+<!-- intensity distribution (are they intensity dependent or independent?) -->
+</section>
+<section id="removing-data-with-high-levels-of-missingness" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="removing-data-with-high-levels-of-missingness"><span class="header-section-number">3.3.3</span> Removing data with high levels of missingness</h3>
+<p>Since the use-case data only has a small number of missing values, it makes sense to simply remove any PSM with a missing value. This is done using the <code>filterNA</code> function where the <code>pNA</code> argument specifies the maximum proportion of missing values to allow per feature.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>cc_qf <span class="ot">&lt;-</span> cc_qf <span class="sc">%&gt;%</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filterNA</span>(<span class="at">pNA =</span> <span class="dv">0</span>, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Check that we now have no missing values,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nNA</span>(cc_qf, <span class="at">i =</span> <span class="st">"psms_filtered"</span>)<span class="sc">$</span>nNA</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DataFrame with 1 row and 3 columns
+          assay       nNA       pNA
+    &lt;character&gt; &lt;integer&gt; &lt;numeric&gt;
+1 psms_filte...         0         0</code></pre>
+</div>
+</div>
+<p>We already established that none of our samples have an abnormally high proportion of missing values (relative to the average). Therefore, we do not need to remove any entire samples/columns.</p>
+</section>
+<section id="imputation-of-missing-values" class="level3" data-number="3.3.4">
+<h3 data-number="3.3.4" class="anchored" data-anchor-id="imputation-of-missing-values"><span class="header-section-number">3.3.4</span> Imputation of missing values</h3>
+<p>The final step when managing missing data is to consider whether to impute. Imputation involves the replacement of missing values with probable values. Unfortunately, estimating probable values is difficult and requires complex assumptions about why a value is missing. Given that imputation is difficult to get right and can have substantial effects on the results of downstream analysis, it is generally recommended to avoid it where we can. This means that if there is not a large proportion of missing values in our data, we should not impute. This is one of the reasons that it was easier in the use-case to simply remove the few missing values remaining so that we do not need to impute.</p>
+<p>Unfortunately, not all datasets benefit from having so few missing values. Label-free proteomics experiments in particular have many more missing values than their label-based equivalents. For a more in-depth discussion of imputation and how to complete this within the <code>QFeatures</code> infrastructure, please see the <a href="./10_lfq_vs_tmt.html">Adapting this workflow to label-free proteomics data</a> section.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>The <code>filterFeatures</code> function can be used to remove data from a <code>QFeatures</code> object (or an <code>SummarizedExperiment</code> within a <code>QFeatures</code> object) based on filtering parameters within the <code>rowData</code>.</li>
+<li>Data processing includes (i) standard proteomics data cleaning steps e.g., removal of contaminants, and (ii) data-specific quality control filtering e.g., co-isolation interference thresholding for TMT data.</li>
+<li>The management of missing quantitative data in expression proteomics data is complex. The <code>nNA</code> function can be used to explore missing data and the <code>filterNA</code> function can be used to remove features with undesirably high levels of missing data. Where imputation is absolutely necessary, the <code>impute</code> function exists within the <code>QFeatures</code> infrastructure.</li>
+<li>Protein level thresholding on false discovery rate is required to ensure confident identifications.</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-Frankenfield2022" class="csl-entry" role="listitem">
+Frankenfield, Ashley M., Jiawei Ni, Mustafa Ahmed, and Ling Hao. 2022. <span>“Protein Contaminants Matter: Building Universal Protein Contaminant Libraries for <span>DDA</span> and <span>DIA</span> Proteomics.”</span> <em>Journal of Proteome Research</em> 21 (9): 2104–13. <a href="https://doi.org/10.1021/acs.jproteome.2c00145">https://doi.org/10.1021/acs.jproteome.2c00145</a>.
+</div>
+<div id="ref-Hutchings2023" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Charlotte S. Dawson, Thomas Krueger, Kathryn S. Lilley, and Lisa M. Breckels. 2024. <span>“A Bioconductor Workflow for Processing, Evaluating, and Interpreting Expression Proteomics Data.”</span> <em>F1000Research</em> 12 (September): 1402. <a href="https://doi.org/10.12688/f1000research.139116.2">https://doi.org/10.12688/f1000research.139116.2</a>.
+</div>
+<div id="ref-McAlister2014" class="csl-entry" role="listitem">
+McAlister, Graeme C., David P. Nusinow, Mark P. Jedrychowski, Martin Wühr, Edward L. Huttlin, Brian K. Erickson, Ramin Rad, Wilhelm Haas, and Steven P. Gygi. 2014. <span>“<span>MultiNotch</span> <span>MS</span>3 Enables Accurate, Sensitive, and Multiplexed Detection of Differential Expression Across Cancer Cell Line Proteomes.”</span> <em>Analytical Chemistry</em> 86 (14): 7150–58. <a href="https://doi.org/10.1021/ac502040v">https://doi.org/10.1021/ac502040v</a>.
+</div>
+<div id="ref-Prieto2019" class="csl-entry" role="listitem">
+Prieto, Gorka, and Jesús Vázquez. 2019. <span>“Calculation of False Discovery Rate for Peptide and Protein Identification.”</span> In <em>Methods in Molecular Biology</em>, 145–59. Springer New York. <a href="https://doi.org/10.1007/978-1-4939-9744-2_6">https://doi.org/10.1007/978-1-4939-9744-2_6</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../materials/02_import_and_infrastructure.html" class="pagination-link" aria-label="Import and infrastructure">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../materials/04_normalisation_aggregation.html" class="pagination-link" aria-label="Data normalisation and data aggregation">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data normalisation and data aggregation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Bioinformatics Training Facility</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
