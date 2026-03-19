@@ -22,3 +22,10 @@ book:
     - part: "DIA proteomics"
       chapters:
         - materials/dia/01_intro.Rmd
+        - materials/dia/02_import_and_infrastructure.Rmd
+        - materials/dia/03_data_processing.Rmd
+        - materials/dia/04_normalisation_aggregation.Rmd
+        - materials/dia/05_protein_exploration.Rmd
+        - materials/dia/06_statistical_analysis.Rmd
+        - materials/dia/07_visualisations.Rmd
+        - materials/dia/08_functional_enrichment.Rmd

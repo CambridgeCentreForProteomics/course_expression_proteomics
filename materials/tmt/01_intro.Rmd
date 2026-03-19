@@ -1,6 +1,6 @@
 ---
 title: The use-case data
-bibliography: course_refs.bib
+bibliography: ../course_refs.bib
 ---
 
 ::: {.callout-tip}

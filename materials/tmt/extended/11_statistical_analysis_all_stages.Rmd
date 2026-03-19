@@ -1,6 +1,6 @@
 ---
 title: Statistical analysis of all cell cycle stages
-bibliography: ../course_refs.bib
+bibliography: ../../course_refs.bib
 editor_options: 
   chunk_output_type: console
 editor: 

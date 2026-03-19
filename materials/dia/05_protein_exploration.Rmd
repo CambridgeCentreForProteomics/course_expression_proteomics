@@ -1,0 +1,173 @@
+---
+title: Exploration and visualisation of protein data
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Be able to visualise protein abundance for specific proteins of interest across experimental groups
+* Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation
+* Complete PCA using the `prcomp` function from the `stats` package
+* Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
+
+:::
+
+
+```{r, eval=TRUE, include=FALSE}
+library("here")
+library("QFeatures")
+library("limma")
+library("factoextra")
+library("tidyr")
+library("dplyr")
+library("tibble")
+library("ggplot2")
+library("ggrepel")
+library("ggbeeswarm")
+library("patchwork")
+
+load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+```
+
+TS: MOVE THE PROTEINS OF INTEREST PLOT AND PCA TO DATA EXPLORATION SECTION
+
+TS: ADD SECTION USING subsetByFeature FUNCTION HERE, AS PER THE TMT MATERIAL
+
+## Plotting quantification values for proteins of interest
+
+Often we are interested in the quantities of specific proteins, for example,
+proteins we expect to change in abundance based on prior biological knowledge.
+We can plot the quantification values for these proteins to inspect them
+directly before any formal statistical testing.
+
+We first convert the protein-level data to long format using `longForm`,
+extracting both sample-level metadata (group, shortname) and feature-level
+metadata (gene names, protein names).
+
+```{r}
+long_form_protein <- longForm(dia_qf[,,"norm_proteins"],
+                              colvars = c('shortname', 'group'),
+                              rowvars = c('Genes', 'Protein.Names')) %>%
+  data.frame() %>%
+  dplyr::rename(UniprotID = rowname)
+```
+
+We can then filter to a set of proteins of interest and plot abundance
+values per sample, grouped by condition.
+
+```{r, fig.height=6, fig.width=8}
+proteins_of_interest <- c('P02766', # TTR
+                          'P18428',  # LBP
+                          'P13796') # LCP1
+
+long_form_protein %>%
+  # filter to the proteins of interest
+  filter(UniprotID %in% proteins_of_interest) %>%
+  # define aesthetics
+  ggplot(aes(x = group, y = value, fill = group)) +
+  # Using quasirandom from ggbeeswarm to avoid overlapping points
+  geom_quasirandom(dodge.width = 0.5, colour = 'grey', pch = 21, size = 2) +
+  # Summarise with mean +/- 95% confidence interval
+  stat_summary(fun.data = mean_cl_normal, position = position_dodge(width = 0.5), show.legend = FALSE) +
+  theme_classic() +
+  labs(x = '', y = 'Protein abundance (log2)') +
+  facet_wrap(~Genes, scales = 'free')
+```
+
+## Principal Component Analysis (PCA)
+
+{{< include ../_shared/_pca.md >}}
+
+### Completing PCA with `prcomp`
+
+TS: INTERACTION POINT: DISCUSS MISSING VALUES HERE
+
+Since PCA requires a complete data matrix, we first remove proteins with
+any missing values using `filterNA`. We then extract the normalised
+protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
+
+```{r}
+protein_pca <- dia_qf[["norm_proteins"]] %>%
+  filterNA() %>%
+  assay() %>%
+  t() %>%
+  prcomp(scale = TRUE, center = TRUE)
+
+summary(protein_pca)
+```
+
+We plot a scree plot to inspect how much variance each PC explains.
+
+```{r}
+fviz_screeplot(protein_pca)
+```
+
+TS: INTERACTION POINT: HOW WOULD YOU INTERPRET THESE PCAS?
+
+We then plot the samples in PCA space, colouring by group and using shape
+to indicate age group.
+
+```{r}
+p <- protein_pca$x %>%
+  merge(colData(dia_qf), by = 'row.names') %>%
+  data.frame() %>%
+  ggplot(aes(x = PC1, y = PC2, colour = group, shape = age.group)) +
+  geom_point(size = 3) +
+  theme_bw()
+
+print(p)
+print(p + aes(x = PC3, y = PC4))
+```
+
+## The `subsetByFeature` function
+
+TS: ADD SECTION USING subsetByFeature FUNCTION HERE, AS PER THE TMT MATERIAL
+
+As well as visualising all proteins, it can be useful to extract all data
+levels corresponding to a specific protein of interest. The `QFeatures`
+infrastructure provides the `subsetByFeature` function to do this. It takes
+a `QFeatures` object and one or more feature names, and returns a new
+`QFeatures` object containing only data corresponding to those features.
+
+Let's look at TTR (Transthyretin; UniProt ID P02766), one of the proteins
+of interest plotted above.
+
+```{r}
+TTR <- subsetByFeature(dia_qf, "P02766")
+
+experiments(TTR)
+```
+
+We can use this subset to visualise how the precursor data was aggregated
+to protein level for this particular feature.
+
+```{r, warning=FALSE, message=FALSE}
+TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+  longForm() %>%
+  as_tibble() %>%
+  mutate(assay_order = factor(assay,
+                              levels = c("precursors_filtered_missing",
+                                         "proteins"))) %>%
+  ggplot(aes(x = colname, y = value, colour = assay)) +
+  geom_point() +
+  geom_line(aes(group = rowname)) +
+  theme(axis.text.x = element_text(angle = 45, size = 7)) +
+  facet_wrap(~ assay_order)
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Plotting protein abundances for specific proteins of interest is a useful way to inspect the data before formal statistical testing
+- PCA must be run on a complete data matrix; proteins with missing values in any sample should be removed with `filterNA` before applying `prcomp`
+- In DIA data, `filterNA` prior to PCA may remove a substantial proportion of proteins due to the higher rate of missing values compared to TMT
+- Colouring PCA plots by all potential sources of variation (e.g., group, age group) helps identify which factors drive the observed structure in the data
+- The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object
+
+:::
+
+## References {-}

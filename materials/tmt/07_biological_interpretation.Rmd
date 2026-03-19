@@ -1,6 +1,6 @@
 ---
 title: Biological interpretation
-bibliography: course_refs.bib
+bibliography: ../course_refs.bib
 editor_options: 
   chunk_output_type: console
 ---

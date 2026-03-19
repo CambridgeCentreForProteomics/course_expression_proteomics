@@ -1,0 +1,405 @@
+---
+title: Statistical analysis
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Know how to filter proteins for statistical testing based on quantification across replicates
+* Using the `limma` package (@Smyth2004), design a statistical model with contrasts to test for differentially abundant proteins across multiple conditions
+* Understand the F-test for overall significance across groups
+* Interpret the results of individual pairwise contrasts and apply global multiple testing correction
+* Produce volcano plots to visualise the results of differential abundance analysis
+
+:::
+
+
+```{r, eval=TRUE, include=FALSE}
+library("here")
+library("QFeatures")
+library("limma")
+library("tidyr")
+library("dplyr")
+library("tibble")
+library("ggplot2")
+library("ggrepel")
+library("patchwork")
+
+load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+```
+
+
+## Differential abundance analysis
+
+Having cleaned our data, aggregated from precursor to protein level, log2
+transformed and normalised, we are now ready to carry out statistical analysis.
+
+The aim of this section is to answer the question: *"Which proteins show a
+significant change in abundance between MPXV-infected patients, COVID-19
+patients, and healthy controls?"*.
+
+Our null hypothesis is: **(H0)** The mean protein abundance is the same
+across all three groups.
+
+Our alternative hypothesis is: **(H1)** The mean protein abundance differs
+between at least one pair of groups.
+
+{{< include ../_shared/_empirical_bayes.md >}}
+
+## Handling missing values prior to testing
+
+DIA data contains a higher proportion of missing values than TMT data. Before
+statistical testing, we need to decide how to handle proteins that are not
+quantified in enough samples within each group to support a reliable estimate
+of group-level abundance.
+
+We only want to test proteins which are quantified in at least 3 replicates
+of each condition. We first split the data by group, then count the number
+of finite (non-missing) values per protein within each group.
+
+```{r}
+# TS: Below are two approaches to this, the first is more generalisable to other
+# datasets with different groupings, but the second is perhaps easier to
+# understand and verify, so preferable for training material? Both give the same
+# result. Note that the ideal approach would be to filter the results for each
+# contrast separately, e.g only require a protein to be quantified in 3
+# replicates of the control and MPXV groups to be included in the MPXV vs
+# control contrast, but this is a bit more complex to implement and explain, so
+# I've just applied the same filter across all contrasts for simplicity.
+
+
+### Generalised approach ###
+
+# Split the data by group
+dia_qf_split <- unique(dia_qf$group) %>%
+  lapply(function(g){
+    dia_qf[, colData(dia_qf)[["group"]] == g]
+  })
+
+g_replicated <- dia_qf_split %>%
+  lapply(function(qf){
+    rowSums(is.finite(assay(qf, 'norm_proteins'))) >= 3
+  })
+
+all_replicated_gen <- Reduce("&", g_replicated)
+print(table(all_replicated_gen))
+
+### More 'manual' approach ###
+
+control_qf <- dia_qf[, colData(dia_qf)[["group"]] == "control"]
+mpxv_qf    <- dia_qf[, colData(dia_qf)[["group"]] == "MPXV"]
+cov_qf     <- dia_qf[, colData(dia_qf)[["group"]] == "Covid19"]
+
+# Not using nNA here just because we care about non NA and it gets a bit messy
+# specifying different values for the threshold with respect to the number of NAs
+# since the number of samples in each group is different.
+control_replicated <- rowSums(is.finite(assay(control_qf, 'norm_proteins'))) >= 3
+mpxv_replicated    <- rowSums(is.finite(assay(mpxv_qf, 'norm_proteins'))) >= 3
+cov_replicated     <- rowSums(is.finite(assay(cov_qf, 'norm_proteins'))) >= 3
+
+all_replicated_man <- control_replicated & mpxv_replicated & cov_replicated
+print(table(all_replicated_man))
+
+# Check approaches are equivalent
+all(all_replicated_man == all_replicated_gen)
+```
+
+We now add a new assay containing only the proteins that pass the replication
+filter, and link it to the parent assay.
+
+```{r}
+dia_qf <- addAssay(dia_qf, dia_qf[['norm_proteins']][all_replicated_man, ],
+                   name = "norm_proteins_replicated")
+
+dia_qf <- addAssayLink(dia_qf, from = "norm_proteins",
+                       to = "norm_proteins_replicated")
+```
+
+## Defining the statistical model
+
+We use `model.matrix` to define the design matrix for our linear model.
+Since we have three groups and are interested in all pairwise comparisons,
+we use a model without an intercept (`~0 + group`). This means the model
+estimates the mean abundance for each group directly.
+
+```{r}
+group <- factor(dia_qf$group, levels = c("control", "MPXV", "Covid19"))
+
+limma_design <- model.matrix(formula(~0 + group))
+
+# Rename design matrix columns to make them easier to refer to
+colnames(limma_design) <- levels(group)
+
+## Verify
+limma_design
+```
+
+We then define the **contrasts** — the specific pairwise comparisons we wish
+to make. The `makeContrasts` function creates a contrast matrix specifying
+how differences between group means should be calculated.
+
+```{r}
+## Specify contrasts of interest
+contrasts_matrix <- makeContrasts(MPXV_control  = MPXV - control,
+                                  Covid19_control = Covid19 - control,
+                                  MPXV_Covid19  = MPXV - Covid19,
+                                  levels = limma_design)
+
+## Verify
+contrasts_matrix
+```
+
+{{< include ../_shared/_callout_f_value.md >}}
+
+{{< include ../_shared/_callout_t_p_value.md >}}
+
+## Running the empirical Bayes-moderated test using `limma`
+
+We fit the linear model to the replicated protein data, apply the contrasts,
+and then update the model using the `eBayes` function with `trend = TRUE`
+and `robust = TRUE` to account for the intensity-dependent variance trend
+typical in quantitative proteomics data.
+
+```{r}
+limma_fit <- lmFit(assay(dia_qf[['norm_proteins_replicated']]), limma_design)
+
+limma_fit_contrasts <- contrasts.fit(fit = limma_fit, contrasts = contrasts_matrix)
+
+limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
+```
+
+### Diagnostic plots to verify suitability of our statistical model
+
+{{< include ../_shared/_diagnostic_plots.md >}}
+
+```{r}
+plotSA(fit = limma_fit_contrasts,
+       cex = 0.5,
+       xlab = "Average log2 abundance")
+```
+
+## F-test for overall significance across groups
+
+TS: INTERACTOME POINT: This is a good point to introduce the idea of testing for any significant difference between groups, rather than just pairwise contrasts. This is done using an F-test, which tests the null hypothesis that all group means are equal. In limma, this is done by setting coef=NULL in topTable, which will return the results of the F-test for each protein. Can also ask at this point what they think about the p-value distribution
+
+We can first test for an overall significant difference across all groups
+using an F-test. Setting `coef = NULL` in `topTable` returns the F-statistic
+for each protein, which tests the null hypothesis that the mean abundance is
+equal across all groups.
+
+```{r}
+## Format results
+limma_results_F <- topTable(
+  fit = limma_fit_contrasts,
+  coef = NULL,
+  adjust.method = "BH",  # Method for multiple hypothesis testing
+  number = Inf) %>%       # Print results for all proteins
+  rownames_to_column("UniprotID")
+
+head(limma_results_F)
+
+# Check distribution of p-values
+limma_results_F %>%
+  ggplot(aes(x = P.Value)) +
+  geom_histogram() +
+  theme_classic() +
+  ggtitle("Distribution of p-values for F-test")
+```
+
+## Pairwise contrasts
+
+TS: Start with an example and then later show how to loop through all contrasts. This is a good point to introduce the idea of volcano plots, and also the idea of merging the results with the original data to get gene names for plotting, etc.
+
+We start by extracting results for a single contrast of particular biological
+interest: MPXV versus control. We use `topTable` with `coef = "MPXV_control"`
+to get the results for this specific comparison. We also merge in gene name
+annotations from the `rowData`.
+
+```{r}
+limma_results_mpxv_control <- topTable(limma_fit_contrasts,
+                                       coef = "MPXV_control",
+                                       number = Inf,
+                                       sort.by = "p") %>%
+  data.frame() %>%
+  rownames_to_column('UniprotID')
+
+uniprot_annotations <- rowData(dia_qf[['norm_proteins_replicated']]) %>%
+  data.frame() %>%
+  select(Genes, Protein.Names)
+
+limma_results_mpxv_control <- limma_results_mpxv_control %>%
+  merge(uniprot_annotations, by.x = 'UniprotID', by.y = 'row.names') %>%
+  arrange(P.Value)
+
+limma_results_mpxv_control %>%
+  ggplot(aes(P.Value)) +
+  geom_histogram() +
+  theme_classic() +
+  ggtitle("P-value distribution for MPXV vs Control contrast")
+```
+
+How many significant changes in abundance are there?
+
+```{r}
+table(sig = limma_results_mpxv_control$adj.P.Val < 0.05,
+      ifelse(limma_results_mpxv_control$logFC > 0, 'Increased', 'Decreased'))
+```
+
+{{< include ../_shared/_multiple_hypothesis_testing.md >}}
+
+## Visualising results: the volcano plot
+
+{{< include ../_shared/_volcano_plot_intro.md >}}
+
+TS: INTERACTION POINT: From experience, I've found some people almost treat volcano plots as the end goal of the statistical testing. Worth clarifying that they are just one way of representing the statistical testing results. Focus on what's being shown and what can be learned from them. For example, there are proteins with large fold changes that are not significant, which due to high variability in those proteins. Also a good point to discuss arbitrary cut offs for 'significance' as we can see there are lots of proteins around the cut off of adj.P.Val < 0.05, and the importance of looking at the data in a more continuous way, rather than just dichotomising into significant vs non-significant.
+
+We produce a volcano plot for the MPXV vs Control contrast, labelling the
+top 30 most significant proteins by gene name.
+
+```{r}
+data_for_highlighting <- limma_results_mpxv_control %>%
+  filter(adj.P.Val < 0.05) %>%
+  arrange(P.Value) %>%
+  head(30)
+
+ggplot(limma_results_mpxv_control,
+       aes(logFC, -log10(P.Value),
+           colour = adj.P.Val < 0.05,
+           alpha = adj.P.Val < 0.05)) +
+  geom_point(pch = 20, size = 3) +
+  ggrepel::geom_text_repel(
+    data = data_for_highlighting,
+    aes(label = Genes), vjust = 1.5, size = 2, colour = 'grey20') +
+  theme_classic() +
+  xlab("Log2 Fold Change (MPXV vs Control)") +
+  ylab("-Log10 P-value") +
+  scale_colour_manual(values = c('grey', 'orangered3')) +
+  scale_alpha_manual(values = c(0.2, 1)) +
+  theme(legend.position = "none")
+```
+
+## Extracting results for all contrasts
+
+TS: Personally, I'd use `lapply` here as it keeps the code cleaner to my eye. However, using for loop below instead to avoid introducing too many concepts.
+
+Rather than extracting results for each contrast separately, we can loop
+through all contrasts and bind the results into a single long-format data
+frame. This format is well-suited for downstream visualisation with `ggplot2`.
+
+```{r}
+contrasts <- colnames(contrasts_matrix)
+
+limma_results_all_contrasts_list <- vector('list', length(contrasts))
+names(limma_results_all_contrasts_list) <- contrasts
+
+for(contrast in contrasts){
+  limma_results_all_contrasts_list[[contrast]] <- topTable(limma_fit_contrasts,
+                                                           coef = contrast,
+                                                           number = Inf,
+                                                           sort.by = "p") %>%
+    data.frame() %>%
+    rownames_to_column('UniprotID') %>%
+    merge(uniprot_annotations, by.x = 'UniprotID', by.y = 'row.names') %>%
+    mutate(contrast = contrast) %>%
+    arrange(P.Value)
+}
+```
+
+TS: Worth stopping at this point and show them what `limma_results_all_contrasts` contains and explain why we want to bind the list of data.frames into a single data.frame
+
+```{r}
+# bind into one data.frame
+limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
+```
+
+### Inspecting p-value distributions across contrasts
+
+TS: INTERACTION POINT: What can we tell just by looking at the p-value distributions?
+
+```{r}
+limma_results_all_contrasts %>%
+  ggplot(aes(P.Value)) +
+  geom_histogram() +
+  theme_classic() +
+  labs(x = "P-value", y = "Frequency") +
+  facet_wrap(~contrast)
+```
+
+### Global multiple testing correction across contrasts
+
+TS: CLARIFICATION POINT: Need to make sure we are very clear here about the concept of multiple testing and why we need to adjust for it. We could show them significance results before/after global adjustment. Despite being more conservative, it actually increases the number of significant proteins for the MPXV_Covid19 contrast. Exploring why might help cement the principles of the adjustment for some participants, but would likely confuse more. On balance, probably best to leave in as an extended exercise for the end of this section.
+
+When testing thousands of proteins across multiple contrasts, p-values must
+be adjusted for multiple testing. The standard Benjamini-Hochberg method was
+designed for independent tests, but our contrasts share data and are
+positively correlated. Fortunately, BH remains valid under this kind of
+positive dependence (formally called Positive Regression Dependency on a
+Subset, PRDS), so applying BH globally across all contrasts is statistically
+justified and more rigorous than correcting each contrast separately.
+
+```{r}
+limma_results_all_contrasts <- limma_results_all_contrasts %>%
+  mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
+```
+
+How many significant changes in abundance are there in each contrast?
+
+TS: INTERACTION POINT: What does this tell us about the differences between the conditions
+
+```{r}
+table(sig = limma_results_all_contrasts$adj.P.Val < 0.05,
+      ifelse(limma_results_all_contrasts$logFC > 0, 'Increased', 'Decreased'),
+      limma_results_all_contrasts$contrast)
+```
+
+### Volcano plots for all contrasts
+
+TS: INTERACTION POINT: Exact same code as before, with two additional lines to highlight. Hopefully this will clarify the benefit of 'long' form data when plotting with ggplot.
+
+```{r}
+data_for_highlighting_all_contrasts <- limma_results_all_contrasts %>%
+  filter(adj.P.Val < 0.05) %>%
+  arrange(P.Value) %>%
+  group_by(contrast) %>% # group by contrast to get top 30 for each contrast
+  slice_min(P.Value, n = 30)
+
+ggplot(limma_results_all_contrasts,
+       aes(logFC, -log10(P.Value),
+           colour = adj.P.Val < 0.05,
+           alpha = adj.P.Val < 0.05)) +
+  geom_point(pch = 20, size = 3) +
+  ggrepel::geom_text_repel(
+    data = data_for_highlighting_all_contrasts,
+    aes(label = Genes), vjust = 1.5, size = 2, colour = 'grey20') +
+  theme_classic() +
+  xlab("Log2 Fold Change") +
+  ylab("-Log10 P-value") +
+  scale_colour_manual(values = c('grey', 'orangered3')) +
+  scale_alpha_manual(values = c(0.2, 1)) +
+  theme(legend.position = "none") +
+  facet_wrap(~contrast) # facet by contrast to get separate volcano plots for each contrast
+```
+
+## Save data
+
+```{r}
+save(dia_qf, limma_results_F, limma_results_all_contrasts,
+     file = here("course_files/dia/preprocessed/lesson06.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Before statistical testing, proteins should be filtered to those quantified in a minimum number of replicates per group to ensure reliable group-level abundance estimates
+- When comparing more than two groups, a no-intercept design matrix (`~0 + group`) combined with contrasts provides a flexible way to specify all pairwise comparisons of interest
+- The F-test (`coef = NULL` in `topTable`) tests for any significant difference across all groups simultaneously, before examining specific pairwise contrasts
+- When testing multiple contrasts simultaneously, p-values should be adjusted globally across all proteins and contrasts to avoid inflated false positive rates; Benjamini-Hochberg correction is valid under the positive correlation structure typical of multi-contrast proteomics experiments
+- Volcano plots are a useful summary of differential abundance results, but it is important to interpret them as one representation of a continuous statistical landscape rather than a binary significant/not-significant classification
+
+:::
+
+## References {.unnumbered}

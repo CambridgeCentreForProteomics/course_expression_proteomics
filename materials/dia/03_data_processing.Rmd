@@ -1,0 +1,144 @@
+---
+title: Data processing
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined assay
+* Be able to explore and visualise missing values in DIA proteomics data
+* Understand how to filter sparse precursors based on a missing value threshold
+
+:::
+
+
+```{r, eval=TRUE, include=FALSE}
+library("here")
+library("arrow")
+library("readxl")
+library("stringr")
+library("QFeatures")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+
+load(here("course_files/dia/preprocessed/lesson02.rda"), verbose = TRUE)
+```
+
+
+## Joining per-sample assays into a single precursor matrix
+
+After filtering, our `QFeatures` object contains one `SummarizedExperiment`
+per sample run. To work with the data as a combined matrix across all samples,
+we use the `joinAssays` function. This merges all per-sample assays into a
+single combined assay called `"precursors"`, aligning features (precursors)
+by their `Precursor.Id`.
+
+```{r}
+# make combined precursor SE
+dia_qf <- joinAssays(x = dia_qf,
+                     i = names(dia_qf),
+                     name = "precursors",
+                     fcol = "Precursor.Id")
+```
+
+## Removing individual sample-level assays
+
+Now that the per-sample data has been joined into the `"precursors"` assay,
+we no longer need to keep the individual per-sample `SummarizedExperiment`
+objects. We identify and remove them to keep our `QFeatures` object tidy.
+
+```{r}
+## Identify which sets to remove
+sets_to_rm <- which(names(dia_qf) != "precursors")
+## Now create a new object and remove them
+dia_qf <- removeAssay(dia_qf, i = sets_to_rm)
+```
+
+## Exploring missing values
+
+DIA proteomics data can exhibit missing values because proteins must be
+detected independently in each sample. Before filtering, it is important to
+understand the extent and distribution of missing values in the data.
+
+We use the `nNA` function to calculate the proportion of missing values
+per precursor (row) and per sample (column).
+
+```{r}
+precursors_missing <- nNA(dia_qf, i = "precursors")
+
+print(precursors_missing)
+```
+
+TS: POSSIBLE EXCERCISE POINT - PLOT MISSING VALUES. ASK Q: IS THIS OK? DO WE NEED TO FILTER OUT SOME PRECURSORS? DO WE NEED TO FILTER OUT ANY SAMPLES?
+
+The histogram below shows the distribution of the proportion of missing values
+per precursor. The barplot shows the proportion of missing values per sample,
+coloured by experimental group.
+
+```{r}
+hist(precursors_missing$nNArows$pNA)
+
+precursors_missing$nNAcols %>%
+  as_tibble() %>%
+  merge(data.frame(colData(dia_qf)), by.x = "name", by.y = "runCol") %>%
+  ggplot(aes(x = name, y = pNA, group = group, fill = group)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Sample", y = "Proportion missing values") +
+  coord_flip() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_classic()
+```
+
+## Filtering sparse precursors
+
+Precursors that are missing across the majority of samples provide little
+useful quantitative information and may introduce noise into downstream
+analyses. We filter out precursors with excessive missing values using the
+`filterNA` function with a threshold of `pNA = 0.75`, meaning precursors
+missing in more than 75% of samples are removed.
+
+We first create a copy of the precursors assay to retain the unfiltered data,
+and add an assay link to maintain the relationship between the two assays.
+
+```{r, fig.height=3, fig.width=3}
+dia_qf <- addAssay(dia_qf, dia_qf[['precursors']],
+                   name = "precursors_filtered_missing")
+
+plot(dia_qf) # no automatic link between assays
+
+dia_qf <- addAssayLink(dia_qf, from = "precursors",
+                       to = "precursors_filtered_missing")
+
+plot(dia_qf)
+```
+
+Filtering by missing values using filterNA
+
+```{r}
+dia_qf <- dia_qf %>%
+  filterNA(pNA = 0.75, i = "precursors_filtered_missing")
+```
+
+## Save data
+
+```{r}
+save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- `joinAssays` combines per-sample `SummarizedExperiment` objects into a single combined assay, enabling analysis across all samples simultaneously
+- `nNA` provides a convenient summary of missing values per feature (row) and per sample (column)
+- DIA data typically has a higher proportion of missing values than TMT-labelled data, as proteins must be detected independently in each sample
+- `filterNA` can be used to remove precursors that are missing above a specified proportion of samples, with the threshold chosen based on the experimental context
+
+:::
+
+## References {-}

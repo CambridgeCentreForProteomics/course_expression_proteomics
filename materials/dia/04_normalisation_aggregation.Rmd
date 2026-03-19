@@ -1,0 +1,165 @@
+---
+title: Normalisation and aggregation
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Know how to log2 transform DIA precursor data within a `QFeatures` object
+* Understand how to use `robustSummary` to summarise precursor-level data to protein-level abundance, including in the presence of missing values
+* Be able to normalise protein-level data using the `diff.median` method
+* Understand the importance of visualising missing values at the protein level
+
+:::
+
+
+```{r, eval=TRUE, include=FALSE}
+library("here")
+library("arrow")
+library("readxl")
+library("stringr")
+library("QFeatures")
+library("naniar")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+
+load(here("course_files/dia/preprocessed/lesson03.rda"), verbose = TRUE)
+```
+
+
+## Logarithmic transformation
+
+{{< include ../_shared/_log_transformation.md >}}
+
+We apply a log2 transformation to the filtered precursor data using the
+`logTransform` function, which creates a new assay in our `QFeatures` object.
+
+```{r}
+dia_qf <- logTransform(
+  dia_qf,
+  base = 2,
+  i = "precursors_filtered_missing",
+  name = "precursors_filtered_missing_log")
+```
+
+## Summarising to protein-level abundance
+
+We now aggregate from precursor level to protein level using the
+`aggregateFeatures` function. For DIA data with missing values, we use
+the `robustSummary` method (@Sticker2020), which models the log-transformed
+peptide/precursor-level quantification as being dependent upon the
+protein-level abundance plus a precursor-level effect. This modelling-based
+approach can handle missing values without imputation, as it only considers
+finite data. The only requirement is that a precursor must be quantified in
+at least two samples.
+
+```{r qfeatures-aggregate-precursors-to-proteins, message=FALSE}
+dia_qf <- aggregateFeatures(dia_qf,
+                            i = "precursors_filtered_missing_log",
+                            fcol = "Protein.Ids",
+                            name = "proteins",
+                            fun = MsCoreUtils::robustSummary,
+                            maxit = 10000)
+
+dia_qf
+```
+
+TS: POSSIBLE EXCERCISE POINT - HOW MANY SAMPLES ARE QUANTIFIED FOR EACH PROTIEN. ASK Q: WHY ARE SOME SAMPLES NOT QUANTIFIED IF ROBUSTSUMMARY CAN HANDLE MISSING DATA? WHAT SHOULD WE DO ABOUT THIS - IMPUTE/FILTER/IGNORE?
+
+Although `robustSummary` can handle missing values at the precursor level,
+proteins where all precursors are missing in a given sample will still result
+in a missing protein-level abundance for that sample. We can visualise how
+many samples are quantified for each protein, broken down by experimental group.
+
+```{r}
+longForm(dia_qf[,,'proteins'], colvars = 'group') %>%
+  data.frame() %>%
+  group_by(rowname, group) %>%
+  summarise(n_quant = sum(is.finite(value))) %>%
+  ggplot(aes(n_quant)) +
+  geom_histogram() +
+  facet_wrap(~group) +
+  theme_classic() +
+  labs(x = 'Quantified samples', y = 'Proteins')
+```
+
+
+TS: POSSIBLE ((DIFFICULT) EXCERCISE POINT - WHAT ARE THE PATTERNS OF MISSINGNESS? WHAT DOES THIS TELL YOU ABOUT WHY SOME PROTEINS ARE MISSING. HOW DOES THIS AFFECT WHAT YOU DO NEXT?
+
+TS: I'D START WITH AN UPSET PLOT TO SHOW THE PATTERNS OF MISSINGNESS ACROSS SAMPLES. THIS CAN BE DONE USING `naniar::::gg_miss_upset`. ALTERNATIVE WOULD BE TO PLOT A HEATMAP OF MISSINGNESS. THE UPSET PLOT IS PROBABLY THE MOST INFORMATIVE AND EASIEST TO INTERPRET, BUT IT DOES REQUIRE SOME EXPLANATION OF HOW TO READ IT.
+
+```{r, fig.height=10, fig.width=10, warning=FALSE}
+missing_data <- dia_qf[['proteins']] %>% assay() %>% data.frame()
+
+# The sets argument is required to make the keep_order work as intended,
+# otherwise the order of the sets is determined by the total number of missing
+# values in each set, which is not what we want here. By providing the sets
+# argument with the column names of the missing data, we can ensure that the order
+# of the sets in the upset plot matches the order of the columns in our data frame.
+naniar::gg_miss_upset(missing_data,
+                      sets = paste0(colnames(missing_data), "_NA"),
+                      keep.order = TRUE,
+                      nintersects = 50)
+```
+
+## Normalisation
+
+{{< include ../_shared/_normalisation_intro.md >}}
+
+We normalise the protein-level data using the `diff.median` method, which
+shifts the intensity distribution of each sample so that the median intensity
+is the same across all samples. This corrects for sample-level systematic
+differences in loading or ionisation efficiency.
+
+```{r qfeatures-normalize}
+dia_qf <- normalize(dia_qf,
+                    i = "proteins",
+                    name = "norm_proteins",
+                    method = "diff.median")
+```
+
+We can visualise the effect of normalisation by plotting density curves of
+protein abundance per sample before and after normalisation.
+
+```{r}
+pre_norm <- longForm(dia_qf[,,'proteins'], colvars = 'group') %>%
+  ggplot(aes(x = value, colour = group, group = colname)) +
+  geom_density() +
+  theme_classic() +
+  xlab("log2 (Abundance)") +
+  ggtitle('Pre-normalisation')
+
+post_norm <- longForm(dia_qf[,,'norm_proteins'], colvars = 'group') %>%
+  ggplot(aes(x = value, colour = group, group = colname)) +
+  geom_density() +
+  theme_classic() +
+  xlab("log2 (Abundance)") +
+  ggtitle('Post-normalisation')
+
+pre_norm + post_norm
+```
+
+## Save data
+
+```{r}
+save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Log2 transformation is applied to precursor-level data before aggregation to protein level, giving data a more Gaussian distribution suitable for downstream statistical analysis
+- `robustSummary` is the recommended summarisation method for DIA data, as it can handle missing values at the precursor level without requiring imputation
+- Proteins where all precursors are missing in a given sample will still have missing protein-level abundances, even with `robustSummary` — these should be explored and handled appropriately
+- Upset plots are a useful way to visualise patterns of missingness across samples, helping to identify whether missing values are random or associated with particular groups
+- `diff.median` normalisation corrects for sample-level systematic differences by shifting each sample's intensity distribution to have the same median
+
+:::
+
+## References {-}

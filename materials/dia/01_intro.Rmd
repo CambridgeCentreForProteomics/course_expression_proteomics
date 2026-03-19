@@ -1,9 +1,69 @@
 ---
-title: Introduction
-editor_options:
-  chunk_output_type: console
+title: The use-case data
+bibliography: ../course_refs.bib
 ---
 
-::: {.callout-note}
-DIA proteomics materials coming soon.
+::: {.callout-tip}
+#### Learning Objectives
+
+* Understand the aim and design of the use-case DIA expression proteomics experiment
+* Know how label-free relative quantitation is achieved in Data-Independent Acquisition (DIA) proteomics
+* Understand what DIA-NN does and what data it outputs for downstream analysis
+
 :::
+
+## Exploring changes in protein abundance in monkeypox infection
+
+As a use case, we will analyse a label-free DIA plasma proteomics dataset comparing
+patients infected with Monkeypox virus (MPXV), patients with COVID-19, and healthy
+controls. The aim of the experiment was to identify proteins that are differentially
+abundant between these groups, providing insight into the host response to MPXV infection
+and how it compares to another viral infection.
+
+Plasma samples were collected from three groups:
+
+- **MPXV**: patients with confirmed Monkeypox virus infection
+- **COVID-19**: patients with confirmed COVID-19 infection
+- **Control**: healthy control individuals
+
+Protein was extracted and digested to peptides for bottom-up mass spectrometry analysis.
+Samples were run individually (label-free) on the mass spectrometer using a
+Data-Independent Acquisition (DIA) method.
+
+## Data-Independent Acquisition (DIA)
+
+Unlike Data-Dependent Acquisition (DDA), where the mass spectrometer selects individual
+precursor ions for fragmentation based on their intensity, DIA acquires fragment ion
+data for all precursors within defined m/z windows systematically and without
+selection bias. This results in more complete and reproducible quantification across
+samples, particularly for lower-abundance proteins.
+
+DIA data can exhibit more missing values between runs than TMT-labelled DDA data,
+since proteins must be detected independently in each sample rather than being
+quantified as part of a multiplexed pool.
+
+## DIA-NN: the identification and quantification software
+
+The raw DIA mass spectrometry data was processed using
+[DIA-NN](https://github.com/vdemichev/DiaNN), a neural-network-based software
+tool for DIA data analysis. DIA-NN performs spectral library searching and
+quantification, outputting a report file (in `.parquet` format) containing precursor-
+and protein-level identifications and quantities for each sample.
+
+Key quality values output by DIA-NN include:
+
+- **Q.Value** — run-level precursor confidence (false discovery rate)
+- **PG.Q.Value** — run-level protein group confidence
+- **Lib.Q.Value** — library-level precursor confidence (relevant when using match-between-runs)
+- **Lib.PG.Q.Value** — library-level protein group confidence
+
+We will use these values to filter our data to high-confidence identifications.
+
+## Summary
+
+The use-case data we will process and analyse is a **DIA label-free bottom-up**
+plasma proteomics dataset. The aim is to quantify **relative protein abundances**
+between patient groups and apply statistical tests to determine whether any proteins
+differ significantly in abundance.
+
+## References {-}

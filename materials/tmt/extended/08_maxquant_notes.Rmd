@@ -1,6 +1,6 @@
 ---
 title: Adapting this workflow to MaxQuant processed data 
-bibliography: ../course_refs.bib
+bibliography: ../../course_refs.bib
 editor_options: 
   chunk_output_type: console
 editor: 
