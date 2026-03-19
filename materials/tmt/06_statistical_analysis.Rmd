@@ -1,0 +1,521 @@
+---
+title: Statistical analysis
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+::: callout-tip
+#### Learning Objectives
+
+-   Acknowledge the availability of different R/Bioconductor packages
+    for carrying out differential expression (abundance) analyses
+-   Using the `limma` package, design a statistical model to test for
+    differentially abundant proteins between two conditions
+-   Interpret the output of a statistical model and annotate
+    the results with user-defined significance thresholds
+-   Produce volcano plots and heatmaps to explore the results of differential
+    expression analyses
+:::
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
+```
+
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("limma")
+library("factoextra")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+library("patchwork")
+library("tidyverse")
+library("pheatmap")
+library("ggupset")
+library("here")
+
+load(here("course_files/tmt/preprocessed/lesson04.rda"), verbose = TRUE)
+```
+
+## Differential expression analysis
+
+Having cleaned our data, aggregated from PSM to protein level, completed
+a log2 transformation and normalised the data, we are now ready to carry
+out statistical analysis. 
+
+To simply the statistical analysis, we will focus on just two conditions here:
+M and G1 cell cycle stages. For a more complete statistical analysis of all cell
+cycles stages, please see the [Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html) section.
+
+The aim of this section is to answer the
+question: *"Which proteins show a significant change in abundance
+between M and G1?"*.
+
+Our null hypothesis is: **(H0)** The change in abundance for a protein
+between cell cycle stages is 0.
+
+Our alternative hypothesis is: **(H1)** The change in abundance for a
+protein between cell cycle stages is not 0.
+
+We want to perform a statistical test to determine if there is sufficient evidence to reject the null hypothesis. This is carried out on each protein separately, though as we will see, all proteins are tested simultaneously and there is some sharing of information between the proteins.
+
+## Selecting a statistical test
+
+There are a few aspects of our data that we need to consider prior to
+deciding which statistical test to apply.
+
+-   The protein abundances in this data are not normally distributed
+    (i.e., they do not follow a Gaussian distribution). However, they
+    are approximately normal following a log-transformation.
+-   The cell cycle is not expected to have a large impact on biological
+    variability. We can assume that the variance is approximately equal across the groups.
+-   The samples are independent not paired. For example, M_1 is not
+    derived from the same cells as G1_1 and DS_1.
+
+The first point relates to a key assumption that is made when
+carrying out **Gaussian Linear modeling**, which assumes that the
+residuals (difference between the observed values and the values predicted by the
+model) are Gaussian distributed. If this assumption is not met,
+then it is not appropriate to use a Gaussian Linear model. For
+quantitative proteomics data, it's reasonable to assume
+the residuals will be approximately Gaussian distributed if we first
+log-transform the abundances.
+
+Many different R packages can be used to carry out differential
+expression (abundance) analysis on proteomics data. Here we will use
+`limma`, a package that is widely used for omics analysis and can be used in single comparisons or multifactorial experiments using an
+**empirical Bayes-moderated linear model**. A simple example of the empirical
+Bayes-moderated linear model is provided in @Hutchings2023. 
+
+Here, we will perform a comparison between two groups (M and G1 phases) for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html).
+
+
+{{< include ../_shared/_empirical_bayes.md >}}
+
+
+## Extracting the required data
+
+We subset to our log2 transformed protein-level data and retain just the M and G1 phase samples
+
+```{r}
+# extract the log-normalised experiment from our QFeatures object
+all_proteins <- cc_qf[["log_norm_proteins"]]
+
+# subset to retain only M and G1 samples
+all_proteins <- all_proteins[, all_proteins$condition %in% c("M", "G1")]
+                             
+## Ensure that conditions are stored as levels of a factor with
+## explicitly defined levels
+all_proteins$condition <- factor(all_proteins$condition, 
+                                 levels = c("M", "G1"))
+
+
+```
+
+## Defining the statistical model
+
+Before we apply our empirical Bayes moderated linear model, we first need
+to set up a model. To define the model design we use `model.matrix`. A
+**model matrix**, also called a design matrix, is a matrix in which rows
+represent individual samples and columns correspond to explanatory
+variables, in our case the cell cycle stages. Simply put, the model
+design is determined by how samples are distributed across conditions.
+
+Below, we define the model matrix with `condition` as the explanatory variable. 
+
+```{r}
+## Design a matrix containing all factors that we wish to model
+condition <- all_proteins$condition
+
+m_design <- model.matrix(~condition) # Model with intercept
+
+```
+
+Inspecting the design matrix, we can see that we have a coefficient called `(Intercept)` and a coefficient called `conditionG1`. The first level of the variable (here, M) is considered the 'baseline' and modeled by the intercept. The second level of the variable (here, G1) is then modeled by an additional term in the model, which captures the difference between M and G1. This is the most appropriate way to model the data since the term `conditionG1` captures the difference we are interested in.
+
+```{r}
+## Inspect the design matrix
+m_design
+```
+
+::: callout-note
+
+### What happens if we don't include an intercept?
+
+When investigating the effect of a single explanatory variable, the design
+matrix should be created using `model.matrix(~variable)`, such that an intercept term is included and the other model term captures the difference we are interested in.
+
+If we specified a model without an intercept (`model.matrix(~0 + variable)`), the resultant coefficients in the model will capture the difference between each group (M or G1) and zero. Given our null hypothesis relates to the difference *between the groups*, not *between each group and zero*, this is not want we want! We could still use contrasts to explore the differences between the groups an intercept term in our model, but it's simpler to work with a model which inherently estimates this difference.
+
+:::
+
+
+## Running an empirical Bayes-moderated test using `limma`
+
+After we have specified the design matrix, the next step is to apply the
+statistical model
+
+```{r}
+## Fit linear model using the design matrix and desired contrasts
+fit_model <- lmFit(object = assay(all_proteins), design = m_design)
+```
+
+The initial model has now been applied to each of the proteins in our
+data. We now update the model using the `eBayes` function. When we do
+this we include two other arguments: `trend = TRUE` and `robust = TRUE`. 
+
+-   `trend` - takes a logical value of `TRUE` or `FALSE` to indicate
+    whether an intensity-dependent trend should be allowed for the prior
+    variance (i.e., the population level variance prior to empirical
+    Bayes moderation). This means that when the empirical Bayes
+    moderation is applied the protein variances are not squeezed towards
+    a global mean but rather towards an intensity-dependent trend.
+-   `robust` - takes a logical value of `TRUE` or `FALSE` to indicate
+    whether the parameter estimation of the priors should be robust
+    against outlier sample variances.
+    
+See (@Phipson2016 and @Smyth2004) for further details.
+
+```{r}
+## Update the model using the limma eBayes algorithm
+
+final_model <- eBayes(fit = fit_model, 
+                      trend = TRUE,
+                      robust = TRUE)
+```
+
+### Accessing the model results
+
+The `topTable` function extracts a table of the top-ranked proteins from
+our fitted linear model. By default, `topTable` outputs a table of the
+top 10 ranked proteins, that is the 10 proteins with the highest
+log-odds of being differentially abundant. To get the results for all of
+our proteins we use the `number = Inf` argument.
+
+```{r}
+## Format results
+limma_results <- topTable(fit = final_model,
+                          coef = 'conditionG1',
+                          adjust.method = "BH",    # Method for multiple hypothesis testing
+                          number = Inf) %>%        # Print results for all proteins
+  rownames_to_column("Protein") 
+
+## Verify
+head(limma_results)
+```
+
+Depending on whether the linear model is used to perform single comparisons or multifactorial comparisons, the test statistic for each protein will either be a t-value or an F-value, respectively. Here, we are performing a single comparison (M vs G1), so we obtain a *t-value*. We also obtain the *p-value* from the comparison of the t-value with a t-distribution.
+
+{{< include ../_shared/_callout_t_p_value.md >}}
+
+We also see an *adjusted p-value* (`adj.P.Val`) column. This provides p-values adjusted to account
+for the multiple hypothesis tests performed.
+
+{{< include ../_shared/_multiple_hypothesis_testing.md >}}
+
+### Diagnostic plots to verify suitability of our statistical model
+
+{{< include ../_shared/_diagnostic_plots.md >}}
+
+```{r}
+plotSA(fit = final_model,
+       cex = 0.5,
+       xlab = "Average log2 abundance")
+```
+
+```{r, message=FALSE, warning=FALSE}
+limma_results %>%
+  as_tibble() %>%
+  ggplot(aes(x = P.Value)) +
+  geom_histogram()
+```
+
+```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
+knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
+```
+
+
+### Interpreting the output of our statistical model
+
+Having checked that the model we fitted was appropriate for the data, we
+can now take a look at the results of our test
+
+```{r}
+head(limma_results)
+```
+
+Interpreting the output of `topTable`:
+
+-   `logFC` = The observed log2FC for G1 vs M cell cycle stages 
+-   `AveExpr` = the average log abundance of the protein across samples
+-   `t` = eBayes moderated t-value. Interpreted in the same way as a
+    normal t-value (see above).
+-   `P.Value` = Unadjusted p-value
+-   `adj.P.Val` = FDR-adjusted p-value (note that this adjustment is only for multiple proteins, not multiple contrasts i.e., separate rather than global correction)
+
+We have used the statistical test to ask *"Does this protein show a
+significant change in abundance between M and G1 cell cycle stages?"* for each
+protein.
+
+Our null hypothesis is: **(H0)** The change in abundance for a protein
+between cell cycle stages is 0.
+
+Our alternative hypothesis is: **(H1)** The change in abundance for a
+protein between cell cycle stages is greater than 0.
+
+From our output we can see that some of our proteins have high t-values
+and low adjusted p-values (below any likely threshold of significance).
+These adjusted p-values tell us that these protein have a significantly
+different abundance across M and G1 cell cycle stages. 
+
+#### Adding user-defined significance thresholds
+
+The output of our statistical test will provide us with key information
+for each protein, including its p-value, BH-adjusted p-value and logFC.
+However, it is up to us to decide what we consider to be significant.
+The first parameter to consider is the `adj.P.Val` threshold that we wish
+to apply. The second parameter which is sometimes used to define significance
+is the `logFC`. This is mainly because larger fold changes are deemed more likely 
+to be 'biologically relevant'.
+
+Here we are going to define significance based on an `adj.P.Val` \<
+0.01. We can add a column to our results to indicate significance as
+well as the direction of change.
+
+```{r}
+## Add direction and significance information
+limma_results <- limma_results %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down"),
+         significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
+
+
+## Verify
+head(limma_results)
+```
+
+## Visualising the results of our statistical model
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.011.png", error = FALSE)
+```
+
+{{< include ../_shared/_volcano_plot_intro.md >}}
+
+```{r}
+limma_results %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+```
+
+
+::: callout-exercise
+#### Challenge: Volcano plots
+
+{{< level 2 >}} 
+
+Re-generate your volcano plot defining significance
+based on an adjusted P-value \< 0.01 and a log2 fold-change of \> 1.
+
+::: {.callout-answer collapse="true"}
+
+```{r}
+my_results <- 
+  limma_results %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down"), 
+         significance = ifelse(adj.P.Val < 0.01 & abs(logFC) > 1, "sig", "not.sig"))
+
+my_results %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+```
+:::
+
+:::
+
+## A more statistically valid way to include a fold-change threshold
+
+Although it is commonplace to see a threshold being applied to the point estimate for the log fold-change (logFC) to determine the 'biologically significant' changes, there is a drawback. The point estimate does not take into account the confidence interval for the logFC. As such, proteins with poorly estimated fold-changes are more likely to pass the logFC threshold by chance, while proteins with very well estimated fold-changes which fall just below the threshold would not be deemed biologically significant. 
+
+Thankfully, `limma` has in-built functions which allows us to specify a different null hypothesis and more appropriately test whether a protein has a fold-change greater than a given value. This test whether the fold-change is greater than a specific value is more stringent than a post-hoc threshold on the point estimate and it thus makes sense to use a slightly lower threshold. Here we will use a threshold of absolute logFC > 0.5 (>1.4 fold-change).
+
+```{r}
+
+final_model_treat <- treat(final_model,
+                           lfc = 0.5, # null hypothesis is 'absolute logFC < 0.5'
+                           trend = TRUE, 
+                           robust = TRUE)
+
+# We now need to use TopTreat in place of TopTable
+limma_results_treat <- topTreat(final_model_treat,
+                                coef = "conditionG1",
+                                n = Inf) %>%
+  rownames_to_column("Protein")
+```
+
+Again, we add columns specifying the direction of change and significance (using the adjusted p-value alone).
+
+```{r}
+## Add direction and significance information
+limma_results_treat <- limma_results_treat %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down"),
+         significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig"))
+
+
+```
+
+Finally, we visualise the volcano plot.
+```{r}
+limma_results_treat %>%
+  ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
+  geom_point(shape = 21, stroke = 0.25, size = 3) +
+  theme_bw()
+```
+
+
+::: callout-exercise
+#### Challenge: Compare logFC thresholding post-hoc with LogFC null hypothesis 
+
+{{< level 3 >}} 
+
+- Compare the overall results for each logFC thresholding approach by creating a 2 x 2 table with the number of proteins with increased/decreased abundance and significant/not significant change, for each approach. 
+- Identify the proteins which are significant when using the TREAT functions to define a logFC threshold for the null hypothesis but not when thresholding on the logFC post-hoc. You can use the existing `my_results` and `limma_results_treat` objects for this. 
+- Re-make the volcano plots for the two logFC thresholding approaches, but this time with the proteins identified above highlighted by the point shape.
+\> 1.
+
+::: {.callout-answer collapse="true"}
+
+```{r}
+# Tabulate direction of change and significance
+# for both logFC threshold approaches
+table(my_results$direction,
+      my_results$significance)
+
+table(limma_results_treat$direction,
+      limma_results_treat$significance)
+
+```
+
+```{r}
+# Identify the proteins which are significant using 
+# TREAT, but not with the post hoc threshold on fold-change
+post_hoc_not_sig <- my_results %>%
+  filter(significance == 'not.sig') %>%
+  pull(Protein)
+
+treat_sig <- limma_results_treat %>% 
+  filter(significance == 'sig') %>%
+  pull(Protein)
+
+sig_treat_only <- intersect(post_hoc_not_sig, treat_sig)
+```
+
+```{r}
+
+# Make a volcano plot highlighting these proteins
+my_results %>%
+  # Add a new column to annotate the proteins to highlight
+  mutate(highlight = Protein %in% sig_treat_only) %>% 
+  # Use the highlight column to control the shape aesthetic
+  ggplot(aes(x = logFC, y = -log10(P.Value),
+             fill = significance,
+             shape = highlight)) + 
+  geom_point(stroke = 0.25, size = 3) +
+  # Define the shapes
+  scale_shape_manual(values = c(21, 8),
+                     name = 'Post-hoc logFC\nthresh. sig. only') + 
+  guides(fill = guide_legend(override.aes = list(shape=21))) +
+  theme_bw()
+
+
+limma_results_treat %>%
+  mutate(highlight = Protein %in% sig_treat_only) %>% 
+  ggplot(aes(x = logFC, y = -log10(P.Value),
+             fill = significance,
+             shape = highlight)) + 
+  geom_point(stroke = 0.25, size = 3) +
+  scale_shape_manual(values = c(21, 8),
+                     name = 'Post-hoc logFC\nthresh. sig. only') + 
+  guides(fill = guide_legend(override.aes = list(shape=21))) +
+  theme_bw()
+
+
+```
+:::
+
+:::
+
+## Visualising the protein abundances in a heatmap
+
+Another widely used visualisation tool is a heatmap. A heatmap is a two-dimensional
+representation of our quantitative data where the magnitude of values are depicted
+by colour. These visualisations are commonly combined with clustering tools to
+facilitate the identification of groups of features, here proteins, that display
+similar quantitative behaviour. Here, we will use the `pheatmap` function from the 
+`pheatmap` package to plot a heatmap of proteins that display a significant 
+difference in abundance between M-phase and G1-phase cells. Note that we will plot all samples though, not just M and G1 phase samples.
+
+We first extract the accessions of proteins with significant differences. We 
+use these accessions to subset the original quantification data which is currently
+stored in the `assay` of our `cp_qf` object.
+
+```{r}
+## Extract accessions of significant proteins
+sig_proteins <- limma_results %>%
+  filter(significance == "sig") %>%
+  pull(Protein)
+
+## Subset quantitative data corresponding to significant proteins
+quant_data <- cc_qf[["log_norm_proteins"]]
+
+quant_data <- quant_data[sig_proteins, ] %>% assay() 
+```
+
+Now we use the quantitative data to plot a heatmap using `pheatmap`. We will normalise each row of protein abundances to Z-scores (standard deviations away from the mean).
+
+```{r}
+pheatmap(mat = quant_data,
+         scale = 'row', # Z-score normalise across the rows (proteins)
+         show_rownames = FALSE)  # Too many proteins to show all their names!
+
+```
+
+A more in-depth overview of `pheatmap` and how to customise these plots further
+can be found in the documentation (`?pheatmap`) and [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
+
+```{r, include=FALSE}
+## Save results
+save(limma_results, all_proteins, file = here("course_files/tmt/preprocessed/lesson06.rda"))
+```
+
+::: {.callout-tip}
+#### Key Points
+
+-   The `limma` package provides a statistical pipeline for the analysis
+    of differential expression (abundance) experiments
+-   Empirical Bayes moderation involves borrowing information across
+    proteins to squeeze the per-protein variance estimates towards an
+    expected value based on the behavior of other proteins with similar
+    abundances. This method increases the statistical power and reduces
+    the number of false positives.
+-   Since proteomics data typically shows an intensity-dependent trend,
+    it is recommended to apply empirical Bayes moderation with
+    `trend = TRUE` and `robust = TRUE`. The validity of this approach can be
+    assessed by plotting an SA plot.
+-   Significance thresholds are somewhat arbitrary and must be selected
+    by the user. However, correction must be carried out for multiple
+    hypothesis testing so significance thresholds should be based on
+    adjusted p-values rather than raw p-values. 
+-   The statistically appropriate way to threshold based on a log fold-change is
+    to use the TREAT functions in `limma` and define a null hypothesis that the
+    change is below a given value.
+-   The results of differential expression and abundance analyses are
+    often summarised with volcano plots and heatmaps.
+:::
+
+## References {.unnumbered}

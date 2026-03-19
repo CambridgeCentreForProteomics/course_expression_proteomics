@@ -1,0 +1,364 @@
+---
+title: Data normalisation and data aggregation
+bibliography: course_refs.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Be able to aggregate PSM-level information to protein-level using the `aggregateFeatures` function in the `QFeatures` infrastructure
+* Recognise the importance of log transformation (`logTransform`) 
+* Know how to normalise your data (using `normalize`) and explore the most appropriate methods for expression proteomics data 
+
+:::
+
+
+
+```{r, eval=TRUE, include=FALSE}
+library("QFeatures")
+library("limma")
+library("factoextra")
+library("org.Hs.eg.db")
+library("clusterProfiler")
+library("enrichplot")
+library("patchwork")
+library("tidyverse")
+library("pheatmap")
+library("ggupset")
+library("here")
+load(here("course_files/tmt/preprocessed/lesson03.rda"), verbose = TRUE)
+```
+
+Let's start by recapping which stage we have reached in the processing of our 
+quantitative proteomics data. In the previous two lessons we have so far learnt,
+
+* how to import our data into R and store it in a `QFeatures` object
+* work with the structure of `QFeatures` objects
+* clean data using a series of non-specific and data-dependent filters
+
+In this next lesson we will continue processing the PSM level data, aggregate
+our data to protein-level intensities, explore log transformation, and finally
+normalise the protein-level data ready for downstream statistical testing.
+
+<!-- ```{r, echo = FALSE, fig.align = "center", out.width = "90%"} -->
+<!-- knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE) -->
+<!-- ``` -->
+
+
+## Feature aggregation 
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
+```
+
+Let's recap our data,
+
+```{r}
+cc_qf
+```
+
+Now that we are satisfied with our PSM quality, we need to aggregate our PSM level data
+upward to the protein level. In a bottom-up MS experiment we initially identify
+and quantify peptides. Further, each peptide can be identified and quantified on 
+the basis of multiple matched spectra (the peptide spectrum matches, PSMs). We 
+now want to group information from all PSMs that correspond to the same master
+protein accession. 
+
+To aggregate upwards from PSM to proteins we can either do this (i) directly
+(from PSM straight to protein, if we are not interested in peptide level
+information) or (ii) include an intermediate step of aggregating from PSM to
+peptides, and then from the peptide level to proteins. Which you do will depend
+on your biological question. For the purpose of demonstration, let's perform
+the explicit step of PSM to peptide aggregation.
+
+### Step 1: Sum aggregation of PSMs to peptides
+
+In your console run the `aggregateFeatures` function on your `QFeatures` object.
+We wish to aggregate from PSM to peptide level so pass the argument `i =
+"psms_filtered"` to specify we wish to aggregate the PSM data, and then pass
+`fcol = "Sequence"` to specify we wish to group by the peptide amino acid
+sequence.
+
+```{r, warning = FALSE, message=FALSE}
+cc_qf <- aggregateFeatures(cc_qf, 
+                           i = "psms_filtered", 
+                           fcol = "Sequence",
+                           name = "peptides",
+                           fun = base::colSums,
+                           na.rm = TRUE)
+
+cc_qf
+```
+
+We see we have created a new assay called `peptides` and summarised 
+`r nrow(cc_qf[["psms_filtered"]])` PSMs into `r nrow(cc_qf[["peptides"]])`
+peptides.
+
+There are many ways in which we can combine the quantitative values from each of
+the contributing PSMs into a single consensus peptide or protein quantitation.
+Simple methods for doing this include calculating the peptide or master protein
+quantitation based on the mean, median or sum PSM quantitation. Although the use
+of these simple mathematical functions can be effective, using `colMeans` or
+`colMedians` can become difficult for data sets that still contain missing
+values. Similarly, using `colSums` can result in protein quantitation values
+being biased by the presence of missing values.
+
+That said in this case 
+when missing values are not a problem, 
+`colSums` can provide a beneficial bias towards the more abundant PSMs or 
+peptides, which are also more likely to be accurate. If missing values are
+present, an alternative would be to use
+`MsCoreUtils::robustSummary`, a state-of-the art aggregation method that is able 
+to aggregate effectively even in the presence of missing values [@Sticker2020].
+See the [extended materials](./10_lfq_vs_tmt.html) for an example of robust summarisation.
+
+### Step 2: Sum aggregation of peptides to proteins
+
+Let's complete our aggregation by now aggregating our peptide level data to 
+protein level data. Let's again use the `aggregateFeatures` function and pass
+`fcol = "Master.Protein.Accessions"` to specify we wish to
+group by `"Master.Protein.Accessions"`. 
+
+```{r, warning = FALSE, message=FALSE}
+cc_qf <- aggregateFeatures(cc_qf, 
+                           i = "peptides", 
+                           fcol = "Master.Protein.Accessions",
+                           name = "proteins",
+                           fun = base::colSums,
+                           na.rm = TRUE)
+
+cc_qf
+```
+
+We see we have now created a new assay with `r nrow(cc_qf[["proteins"]])` 
+protein groups. 
+
+
+::: {.callout-note}
+#### Protein groups
+Since we are aggregating all PSMs that are assigned to the same master protein
+accession, the downstream statistical analysis will be carried out at the 
+level of protein groups. This is important to consider since most people will 
+report "proteins" as displaying significantly different abundances across 
+conditions, when in reality they are referring to protein groups.
+
+:::
+
+
+
+## Logarithmic transformation
+
+We have now reached the point where we are ready to log2 transform the
+quantitative data. If we take a look at our current (raw) quantitative data we will 
+see that our abundance values are dramatically skewed towards zero.
+
+
+```{r, warning = FALSE, message=FALSE}
+## Look at distribution of abundance values in untransformed data
+cc_qf[["proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() + 
+  theme_bw() +
+  xlab("Abundance (raw)")
+```
+
+
+{{< include ../_shared/_log_transformation.md >}}
+
+
+::: {.callout-note}
+#### At which stage of the processing should I perform log transformation?
+Logarithmic transformation can be applied at any stage of the data processing.
+This decision will depend upon the other data processing steps being completed 
+and the methods used to do so. For example, many imputation methods work on 
+log transformed data. We have chosen to log transform the data in this example
+**after** protein aggregation as we will use the `colSums` method for summarisation 
+and this method requires the data to **not** be log transformed.
+
+:::
+
+
+```{r, warning = FALSE, message=FALSE}
+## Look at distribution of abundance values in untransformed data
+cc_qf[["proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  ggplot(aes(x = log2(value))) +
+  geom_histogram() + 
+  theme_bw() +
+  xlab("(Log2) Abundance")
+```
+
+To apply this log2 transformation to our data we use the `logTransform` function
+and specify `base = 2`.
+
+```{r}
+cc_qf <- logTransform(object = cc_qf, 
+                      base = 2, 
+                      i = "proteins", 
+                      name = "log_proteins")
+```
+
+Let's take a look again at our `QFeatures` object,
+
+```{r}
+cc_qf
+```
+
+
+## Normalisation of quantitative data 
+
+```{r, echo = FALSE, fig.align = "center", out.width = "90%"}
+knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
+```
+
+{{< include ../_shared/_normalisation_intro.md >}}
+
+In `QFeatures` we can use the `normalize` function. To see which other 
+normalisation methods are supported within this function, type `?normalize` to 
+access the function's help page. 
+
+Of the supported methods, median-based methods work well for most quantitative
+proteomics data. Unlike using the mean, median-based methods are less sensitive
+to the outliers which we often have in proteomics datasets. Let's apply a
+center median normalisation approach,
+
+```{r}
+cc_qf <- normalize(cc_qf, 
+                   i = "log_proteins", 
+                   name = "log_norm_proteins",
+                   method = "center.median")
+```
+
+Let's verify the normalisation  by viewing the `QFeatures` object. We can call
+`experiments` to view all the assays we have created,
+
+```{r}
+experiments(cc_qf)
+```
+
+
+:::{.callout-exercise}
+#### Challenge 2: Visualising the data prior and post-normalisation
+{{< level 3 >}}
+
+Create two boxplots pre- and post-normalisation to visualise the effect it has
+had on the data and add colour to distinguish between conditions.
+
+::: {.callout-answer collapse=true}
+
+Using `ggplot2`,
+
+```{r}
+pre_norm <- cc_qf[["log_proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") 
+
+post_norm <- cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  ggplot(aes(x = colname, y = value)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
+
+pre_norm  + post_norm 
+```
+
+Colour coding by condition,
+
+```{r}
+pre_norm <- cc_qf[["log_proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  mutate(Condition = strsplit(as.character(colname), split = "_") %>% 
+           sapply("[[", 1)) %>%
+  ggplot(aes(x = colname, y = value, fill = Condition))  +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Pre-normalization") +
+  theme(legend.position = "none")
+
+post_norm <- cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  longForm() %>%
+  mutate(Condition = strsplit(as.character(colname), split = "_") %>% 
+           sapply("[[", 1)) %>% 
+  ggplot(aes(x = colname, y = value, fill = Condition))  +
+  geom_boxplot() +
+  labs(x = "Sample", y = "log2(abundance)", title = "Post-normalization") 
+
+pre_norm + post_norm 
+```
+
+:::
+:::
+
+To visualise the effect that log transformation followed by normalisation has 
+had on our data, we can also generate density plots. Density plots allow us to
+visualise the distribution of quantitative values in our data and to see where
+the majority of intensities lie. 
+
+:::{.callout-exercise}
+#### Challenge 3: Visualising the impact of data transformation and normalisation
+{{< level 2 >}}
+
+Create three density plots to visualise the distribution of intensities in (1) 
+the raw protein data, (2) the log transformed protein data and (3) the log 
+normalised protein data.
+
+::: {.callout-answer collapse=true}
+
+Using `plotDensities` from the `Limma` package,
+
+```{r}
+par(mfrow = c(1, 3))  ## Set up panel to hold three figures
+
+cc_qf[["proteins"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Raw proteins") 
+
+cc_qf[["log_proteins"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Log2 proteins") 
+
+cc_qf[["log_norm_proteins"]] %>%
+  assay() %>%
+  plotDensities(legend = FALSE, 
+                main = "Log2 norm proteins") 
+
+```
+
+:::
+:::
+
+From our plots we can see that the center median normalisation has shifted the
+curves according to their median such that all of the final peaks are overlapping.
+This is what we would expect given that all of our samples come from the same 
+cells and our treatment/conditions don't case massive changes in the proteome.
+
+To explore the use of alternative normalisation strategies, the [`NormalyzerDE`](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html) @Willforss2018 package can be used to compare normalisation approaches.
+Please refer to the [Using NormalyzerDE to explore normalisation methods](./09_normalyzer.html) section.
+
+
+```{r, include=FALSE}
+save(cc_qf, file = here("course_files/tmt/preprocessed/lesson04.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- Aggregation from lower level data (e.g., PSM) to high level identification and quantification (e.g., protein) is achieved using the `aggregateFeatures` function, which also creates explicit links between the original and newly created `assays`.
+- Expression proteomics data should be log2 transformed to generate a Gaussian distribution which is suitable for parametric statistical testing. This is done using the `logTransform` function.
+- To remove non-biological variation, data normalisation should be completed using the `normalize` function. To help users decide which normalisation method is appropriate for their data we recommend using the `normalyzer` function to create a report containing a comparison of methods.
+:::
+
+## References {-}

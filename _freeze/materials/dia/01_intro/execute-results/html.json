@@ -1,0 +1,15 @@
+{
+  "hash": "e5a025ad1fecba841f4d3a6548b3f26e",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: Introduction\neditor_options:\n  chunk_output_type: console\n---\n\n::: {.callout-note}\nDIA proteomics materials coming soon.\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
