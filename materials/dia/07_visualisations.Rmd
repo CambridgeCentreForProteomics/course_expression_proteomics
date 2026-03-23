@@ -33,7 +33,13 @@ load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
 
 ## Heatmaps
 
-TS: INTERACTION POINTS: What are we trying to learn from a heatmap? Which proteins to plot?
+::: {.callout-discussion}
+#### Discussion
+
+- What are we trying to learn from a heatmap of protein abundances? What patterns would you look for?
+- Which proteins would you choose to plot — all quantified proteins, significant proteins, or the most variable? What are the trade-offs of each approach?
+
+:::
 
 A heatmap provides a two-dimensional view of protein abundances across all
 samples simultaneously, and is commonly used alongside hierarchical clustering
@@ -133,16 +139,29 @@ plot_heatmap_for_uids <- function(uids, ...){
 plot_heatmap_for_uids(most_variable)
 ```
 
-TS: POSSIBLE EXERCISE POINT. PLOT THE HEATMAPS FOR THE SIGNIFICANT PROTEINS ACCORDING TO F-TEST AND PER CONTRAST T-TESTS. HOW DO THE PROTEINS AND SAMPLES CLUSTER?
+:::{.callout-exercise}
+#### Challenge: Heatmaps of significant proteins
+
+{{< level 2 >}}
+
+We have already defined the `plot_heatmap_for_uids` helper function and have F-test and pairwise contrast results available. Use these to produce heatmaps for:
+
+1. Proteins with a significant overall difference across groups according to the F-test (`adj.P.Val < 0.05`)
+2. Proteins significant (`adj.P.Val < 0.05`) in at least one pairwise contrast
+
+For each heatmap, consider:
+
+- How do the proteins and samples cluster?
+- Do the sample groups separate cleanly?
+- How does restricting to significant proteins change the heatmap compared to the most variable proteins plotted above?
+
+<details><summary>Hint</summary>Filter `limma_results_F` and `limma_results_all_contrasts` to get the UniProt IDs of significant proteins, then pass these to `plot_heatmap_for_uids`.</details>
+
+::: {.callout-answer collapse="true"}
 
 ### Heatmap of proteins significant by F-test
 
-We can use our helper function to plot a heatmap restricted to proteins
-with a significant overall difference across groups according to the F-test
-(adjusted p-value < 0.05).
-
 ```{r, fig.height=10, fig.width=10}
-# Get the significant proteins from the F-test results
 sig_prot_F <- limma_results_F %>%
   filter(adj.P.Val < 0.05) %>%
   pull(UniprotID)
@@ -151,9 +170,6 @@ plot_heatmap_for_uids(sig_prot_F)
 ```
 
 ### Heatmap of proteins significant in any pairwise contrast
-
-Similarly, we can plot the proteins that are significant (adjusted p-value
-< 0.05) in at least one pairwise contrast.
 
 ```{r, fig.height=10, fig.width=10}
 sig_prot_contrasts <- limma_results_all_contrasts %>%
@@ -164,13 +180,24 @@ sig_prot_contrasts <- limma_results_all_contrasts %>%
 plot_heatmap_for_uids(sig_prot_contrasts)
 ```
 
+:::
+
+:::
+
 ## Comparing log fold changes across contrasts
 
 A scatter plot of log fold changes from two contrasts — here MPXV vs Control
 and COVID-19 vs Control — allows us to identify proteins with shared responses
 to both infections versus those with a response specific to one condition.
 
-TS: INTERACTION POINT: Is a linear model appropriate here? I don't think so because it predicts y from x, thus assumes x is measured without error. What is a better alternative (total least squares regression). What are we trying to learn from this plot? Which proteins to label?
+::: {.callout-discussion}
+#### Discussion
+
+- What are we trying to learn from this scatter plot — what does a protein's position in the plot tell us?
+- The plot includes a linear regression line. Is a standard linear model (OLS) appropriate here, given that both axes represent quantities measured with error? What would be a better alternative?
+- Which proteins would you choose to label, and why?
+
+:::
 
 We first reshape the results into wide format so that each protein has a
 single row with separate columns for each contrast's log fold change and

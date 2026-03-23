@@ -371,19 +371,6 @@ O43583[, , c("psms_filtered", "peptides", "proteins")] %>%
   facet_wrap(~ assay_order)
 ```
 
-Other useful functions that we do not have time to cover today include
-`subsetByAssay`, `subsetByColData`, `subsetByColumn`, `subsetByFilter`, 
-`subsetByRow`, `subsetByOverlap`, and many more. To find out more about these 
-functions you can execute a single question mark (`?`) followed by the function name. 
-If you have the `QFeatures` package installed you should be able to access a help
-and information page for the function of interest.
-
-For example: 
-
-```{r, eval = FALSE}
-?subsetByAssay
-```
-
 
 ## Principal Component Analysis (PCA)
 

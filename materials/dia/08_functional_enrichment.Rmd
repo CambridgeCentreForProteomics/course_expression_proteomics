@@ -50,6 +50,8 @@ proteins are associated with. Two complementary approaches are used here:
    identify pathways that are coordinately up- or down-regulated, without
    requiring a hard significance threshold.
 
+TS: I think we should focus on one and go into more depth on that, rather than trying to cover both ORA and GSEA. ORA is more commonly used and easier to understand, so I suggest we focus on that. We can briefly mention GSEA as an alternative approach, but I don't think we have time to go through it in detail. I haven't added exercises or discussion points for the GSEA section, but we could if we want to cover it.
+
 We focus our analysis on the MPXV vs Control contrast, as this is the
 comparison of primary biological interest.
 
@@ -85,7 +87,13 @@ go_down <- enrichGO(gene = sig_down,                                # list of do
 
 ### Visualising significant GO terms
 
-TS: INTERACTION POINT: WHY DO WE HAVE MANY SIMILAR TERMS IN ORA?
+::: {.callout-discussion}
+#### Discussion
+
+- Looking at the GO enrichment results, why do we see so many similar or overlapping terms?
+- What property of the Gene Ontology leads to this redundancy, and how might we address it?
+
+:::
 
 We produce a dotplot of the significant GO terms, faceted by ontology
 (Biological Process, Molecular Function, Cellular Component). The size of
@@ -127,6 +135,8 @@ sig_go_down_simplified <- simplify(sig_go_down_similarity,
                                    select_fun = min)
 ```
 
+We can now re-visualise the simplified results, which should be more interpretable with less redundancy.
+
 ```{r}
 dotplot(sig_go_down_simplified,
         x = "Count",
@@ -145,9 +155,12 @@ significant GO terms based on their pairwise semantic similarity and
 displays them as a tree, making the relationships between terms easier
 to interpret.
 
-TS: treeplot has some fairly horrible arguments to control the plot parameters and stop labels overlapping. Honestly, I just played with the values until it worked!
 
 ```{r, fig.height=6, fig.width=10}
+# TS: treeplot has some fairly horrible arguments to control the plot parameters
+# and stop labels overlapping. Honestly, I just played with the values until it
+# worked!
+  
 treeplot(sig_go_down_similarity,
          showCategory = Inf,
          fontsize_tiplab = 2,
@@ -168,20 +181,20 @@ coordinately shifted in abundance, making it complementary to ORA.
 
 Since Reactome pathway annotations are available for UniProt IDs directly,
 we use these rather than requiring a mapping to Entrez gene IDs. The code
-to obtain and process the Reactome annotations is provided in the extended
-materials. Here we load the pre-computed objects.
+to obtain and process the Reactome annotations is provided in the
+[extended materials](extended/09_reactome_annotations.html).
+Here we load the pre-computed objects.
 
 ```{r}
 reactome_annot_list <- readRDS(here("course_files/dia/preprocessed/reactome_annot_list.rds"))
 reactome_map        <- readRDS(here("course_files/dia/preprocessed/reactome_map.rds"))
-```
 
-TS: Will need to be clear here about what these objects are and that the code to generate them is available, but will not be taught.
-
-```{r}
+# Examine the objects
 head(reactome_annot_list)
 head(reactome_map)
+
 ```
+
 
 ### Running GSEA with `fgsea`
 
@@ -222,8 +235,6 @@ We plot the Normalised Enrichment Score (NES) against -log10(adjusted
 p-value) to show both the strength of enrichment and its significance,
 colouring points by NES to distinguish positively and negatively enriched
 pathways. The most significant pathways are labelled.
-
-TS: Again, it would be good to reduce the redundancy here
 
 ```{r, fig.width=8, fig.height=6}
 gsea_reactome_highlight <- gsea_reactome %>%

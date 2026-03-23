@@ -29,3 +29,6 @@ book:
         - materials/dia/06_statistical_analysis.Rmd
         - materials/dia/07_visualisations.Rmd
         - materials/dia/08_functional_enrichment.Rmd
+    - part: "DIA extended materials"
+      chapters:
+        - materials/dia/extended/09_reactome_annotations.Rmd

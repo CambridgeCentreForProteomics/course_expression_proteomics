@@ -64,12 +64,15 @@ of finite (non-missing) values per protein within each group.
 # TS: Below are two approaches to this, the first is more generalisable to other
 # datasets with different groupings, but the second is perhaps easier to
 # understand and verify, so preferable for training material? Both give the same
-# result. Note that the ideal approach would be to filter the results for each
-# contrast separately, e.g only require a protein to be quantified in 3
-# replicates of the control and MPXV groups to be included in the MPXV vs
-# control contrast, but this is a bit more complex to implement and explain, so
-# I've just applied the same filter across all contrasts for simplicity.
+# result. I also tried writing a for loop as an intermediate option, but it
+# seemed like the worst of both worlds in terms of readability and
+# generalisability
 
+# Note that the ideal approach would be to filter the results for each contrast
+# separately, e.g only require a protein to be quantified in 3 replicates of the
+# control and MPXV groups to be included in the MPXV vs control contrast, but
+# this is a bit more complex to implement and explain, so I've just applied the
+# same filter across all contrasts for simplicity.
 
 ### Generalised approach ###
 
@@ -103,7 +106,7 @@ cov_replicated     <- rowSums(is.finite(assay(cov_qf, 'norm_proteins'))) >= 3
 all_replicated_man <- control_replicated & mpxv_replicated & cov_replicated
 print(table(all_replicated_man))
 
-# Check approaches are equivalent
+### Check approaches are equivalent ###
 all(all_replicated_man == all_replicated_gen)
 ```
 
@@ -183,7 +186,14 @@ plotSA(fit = limma_fit_contrasts,
 
 ## F-test for overall significance across groups
 
-TS: INTERACTOME POINT: This is a good point to introduce the idea of testing for any significant difference between groups, rather than just pairwise contrasts. This is done using an F-test, which tests the null hypothesis that all group means are equal. In limma, this is done by setting coef=NULL in topTable, which will return the results of the F-test for each protein. Can also ask at this point what they think about the p-value distribution
+::: {.callout-discussion}
+#### Discussion
+
+- Before running individual pairwise contrasts, why might it be useful to first test for any significant difference across all groups simultaneously?
+- What null hypothesis does the F-test test, and how does it differ from a pairwise t-test?
+- After running the code below, look at the p-value distribution — what shape would you expect if many proteins are truly differentially abundant, and does this plot match your expectation?
+
+:::
 
 We can first test for an overall significant difference across all groups
 using an F-test. Setting `coef = NULL` in `topTable` returns the F-statistic
@@ -210,8 +220,6 @@ limma_results_F %>%
 ```
 
 ## Pairwise contrasts
-
-TS: Start with an example and then later show how to loop through all contrasts. This is a good point to introduce the idea of volcano plots, and also the idea of merging the results with the original data to get gene names for plotting, etc.
 
 We start by extracting results for a single contrast of particular biological
 interest: MPXV versus control. We use `topTable` with `coef = "MPXV_control"`
@@ -254,7 +262,14 @@ table(sig = limma_results_mpxv_control$adj.P.Val < 0.05,
 
 {{< include ../_shared/_volcano_plot_intro.md >}}
 
-TS: INTERACTION POINT: From experience, I've found some people almost treat volcano plots as the end goal of the statistical testing. Worth clarifying that they are just one way of representing the statistical testing results. Focus on what's being shown and what can be learned from them. For example, there are proteins with large fold changes that are not significant, which due to high variability in those proteins. Also a good point to discuss arbitrary cut offs for 'significance' as we can see there are lots of proteins around the cut off of adj.P.Val < 0.05, and the importance of looking at the data in a more continuous way, rather than just dichotomising into significant vs non-significant.
+::: {.callout-discussion}
+#### Discussion
+
+- What information does a volcano plot convey, and what are its limitations?
+- Why might some proteins have a large fold change but not be statistically significant?
+- Look at the proteins near the significance threshold — what does this tell you about treating `adj.P.Val < 0.05` as a hard cut-off?
+
+:::
 
 We produce a volcano plot for the MPXV vs Control contrast, labelling the
 top 30 most significant proteins by gene name.
@@ -283,8 +298,6 @@ ggplot(limma_results_mpxv_control,
 
 ## Extracting results for all contrasts
 
-TS: Personally, I'd use `lapply` here as it keeps the code cleaner to my eye. However, using for loop below instead to avoid introducing too many concepts.
-
 Rather than extracting results for each contrast separately, we can loop
 through all contrasts and bind the results into a single long-format data
 frame. This format is well-suited for downstream visualisation with `ggplot2`.
@@ -308,8 +321,6 @@ for(contrast in contrasts){
 }
 ```
 
-TS: Worth stopping at this point and show them what `limma_results_all_contrasts` contains and explain why we want to bind the list of data.frames into a single data.frame
-
 ```{r}
 # bind into one data.frame
 limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
@@ -317,7 +328,13 @@ limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 
 ### Inspecting p-value distributions across contrasts
 
-TS: INTERACTION POINT: What can we tell just by looking at the p-value distributions?
+::: {.callout-discussion}
+#### Discussion
+
+- Before interpreting the results in detail, what can you infer just from the shape of the p-value distributions across the three contrasts?
+- Which contrast shows the strongest signal, and what does that suggest about the biology?
+
+:::
 
 ```{r}
 limma_results_all_contrasts %>%
@@ -330,7 +347,14 @@ limma_results_all_contrasts %>%
 
 ### Global multiple testing correction across contrasts
 
-TS: CLARIFICATION POINT: Need to make sure we are very clear here about the concept of multiple testing and why we need to adjust for it. We could show them significance results before/after global adjustment. Despite being more conservative, it actually increases the number of significant proteins for the MPXV_Covid19 contrast. Exploring why might help cement the principles of the adjustment for some participants, but would likely confuse more. On balance, probably best to leave in as an extended exercise for the end of this section.
+::: {.callout-discussion}
+#### Discussion
+
+- Why do we need to adjust p-values when testing thousands of proteins across multiple contrasts?
+- What is the difference between adjusting each contrast separately versus adjusting globally across all contrasts and proteins?
+- Which approach is more conservative, and in what circumstances might that matter?
+
+:::
 
 When testing thousands of proteins across multiple contrasts, p-values must
 be adjusted for multiple testing. The standard Benjamini-Hochberg method was
@@ -347,7 +371,13 @@ limma_results_all_contrasts <- limma_results_all_contrasts %>%
 
 How many significant changes in abundance are there in each contrast?
 
-TS: INTERACTION POINT: What does this tell us about the differences between the conditions
+::: {.callout-discussion}
+#### Discussion
+
+- Looking at the counts of significantly increased and decreased proteins across the three contrasts, what does this tell you about the differences between the conditions?
+- Are you surprised by any of these numbers? What biological explanations might account for what you see?
+
+:::
 
 ```{r}
 table(sig = limma_results_all_contrasts$adj.P.Val < 0.05,
@@ -356,8 +386,6 @@ table(sig = limma_results_all_contrasts$adj.P.Val < 0.05,
 ```
 
 ### Volcano plots for all contrasts
-
-TS: INTERACTION POINT: Exact same code as before, with two additional lines to highlight. Hopefully this will clarify the benefit of 'long' form data when plotting with ggplot.
 
 ```{r}
 data_for_highlighting_all_contrasts <- limma_results_all_contrasts %>%

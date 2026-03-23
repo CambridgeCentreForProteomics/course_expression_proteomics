@@ -8,6 +8,7 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
+* Know how to use `filterFeatures` to filter DIA-NN precursor data by Q-value thresholds
 * Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined assay
 * Be able to explore and visualise missing values in DIA proteomics data
 * Understand how to filter sparse precursors based on a missing value threshold
@@ -17,9 +18,6 @@ editor_options:
 
 ```{r, eval=TRUE, include=FALSE}
 library("here")
-library("arrow")
-library("readxl")
-library("stringr")
 library("QFeatures")
 library("tidyr")
 library("dplyr")
@@ -30,20 +28,105 @@ load(here("course_files/dia/preprocessed/lesson02.rda"), verbose = TRUE)
 ```
 
 
+## Filtering by Q-value
+
+::: {.callout-discussion}
+#### Discussion
+
+Before reading on, consider the following:
+
+- Why do we need to filter the DIA-NN output at all? What would happen if we
+  kept all identifications?
+- What do the Q-value columns represent, and what is the difference between
+  run-level and library-level Q-values?
+- What threshold would you choose?
+- What impact could this filtering have on the downstream analysis and results?
+
+:::
+
+DIA-NN assigns a Q-value to each precursor and protein group identification,
+representing the local false discovery rate (FDR) at that score threshold —
+i.e., the expected proportion of identifications at that level that are
+incorrect. Filtering by Q-value ensures we retain only high-confidence
+identifications before proceeding to downstream analysis.
+
+DIA-NN outputs several Q-value columns:
+
+- **Q.Value** — run-level precursor Q-value (FDR within a single run)
+- **PG.Q.Value** — run-level protein group Q-value
+- **Lib.Q.Value** — library-level precursor Q-value (based on the spectral
+  library used in matching)
+- **Lib.PG.Q.Value** — library-level protein group Q-value
+
+Since our data was processed with match-between-runs (MBR) enabled, we
+additionally filter on the library-level Q-values (`Lib.Q.Value` and
+`Lib.PG.Q.Value`). When MBR is used, DIA-NN rescores identifications across
+runs using an empirical library built in a first pass; the library-level
+Q-values reflect the confidence of those cross-run matches and are therefore
+the most stringent and appropriate filter for MBR data. We apply a standard
+1% FDR threshold (Q-value ≤ 0.01) to all four columns.
+
+{{< include ../_shared/_filterFeatures.md >}}
+
+Since we want to apply the Q-value filter across all per-sample
+`SummarizedExperiment`s simultaneously, we do not pass an `i` argument —
+this causes `filterFeatures` to apply the filter to every set in the
+`QFeatures` object.
+
+```{r}
+dia_qf
+
+dia_qf <- dia_qf %>%
+  filterFeatures(~ Q.Value <= 0.01) %>%       # Run-level precursor Q-value
+  filterFeatures(~ PG.Q.Value <= 0.01) %>%    # Run-level protein group Q-value
+  filterFeatures(~ Lib.Q.Value <= 0.01) %>%   # Library-level precursor Q-value
+  filterFeatures(~ Lib.PG.Q.Value <= 0.01)    # Library-level protein group Q-value
+
+dia_qf
+```
+
+We can see how many precursors remain per sample after filtering by inspecting
+the number of rows in each per-sample assay.
+
+```{r, fig.height=4, fig.width=4}
+hist(nrows(dia_qf),
+     xlab = "Precursors",
+     main = "Precursor counts per sample after Q-value filtering")
+```
+
+
 ## Joining per-sample assays into a single precursor matrix
 
 After filtering, our `QFeatures` object contains one `SummarizedExperiment`
 per sample run. To work with the data as a combined matrix across all samples,
 we use the `joinAssays` function. This merges all per-sample assays into a
 single combined assay called `"precursors"`, aligning features (precursors)
-by their `Precursor.Id`.
+by their `Precursor.Id`. Where a precursor was not detected in a particular
+sample, the corresponding entry in the combined matrix will be `NA`.
 
 ```{r}
-# make combined precursor SE
 dia_qf <- joinAssays(x = dia_qf,
                      i = names(dia_qf),
                      name = "precursors",
                      fcol = "Precursor.Id")
+```
+
+Note that `joinAssays` only retains `rowData` columns that are shared across
+all assays and have consistent values — run-specific metrics such as `Q.Value`,
+`PEP`, and `Run` are therefore dropped from the combined assay. This is
+expected: these per-run quality metrics were used for filtering in the previous
+step and are no longer needed. We can confirm which columns are dropped by
+comparing the `rowData` names before and after joining.
+
+```{r}
+# rowData columns in the per-sample assays
+sample_level_rdata_names <- rowDataNames(dia_qf)[[1]]
+
+# rowData columns in the combined assay
+joined_rdata_names <- rowDataNames(dia_qf)[["precursors"]]
+
+# Columns present in sample-level assays but dropped from the combined assay
+setdiff(sample_level_rdata_names, joined_rdata_names)
 ```
 
 ## Removing individual sample-level assays
@@ -53,17 +136,18 @@ we no longer need to keep the individual per-sample `SummarizedExperiment`
 objects. We identify and remove them to keep our `QFeatures` object tidy.
 
 ```{r}
-## Identify which sets to remove
 sets_to_rm <- which(names(dia_qf) != "precursors")
-## Now create a new object and remove them
 dia_qf <- removeAssay(dia_qf, i = sets_to_rm)
 ```
 
+
+
+
 ## Exploring missing values
 
-DIA proteomics data can exhibit missing values because proteins must be
-detected independently in each sample. Before filtering, it is important to
-understand the extent and distribution of missing values in the data.
+DIA proteomics data can exhibit substantial missing values because proteins must
+be detected independently in each sample run. Before filtering, it is important
+to understand the extent and distribution of missing values in the data.
 
 We use the `nNA` function to calculate the proportion of missing values
 per precursor (row) and per sample (column).
@@ -74,15 +158,41 @@ precursors_missing <- nNA(dia_qf, i = "precursors")
 print(precursors_missing)
 ```
 
-TS: POSSIBLE EXCERCISE POINT - PLOT MISSING VALUES. ASK Q: IS THIS OK? DO WE NEED TO FILTER OUT SOME PRECURSORS? DO WE NEED TO FILTER OUT ANY SAMPLES?
+:::{.callout-exercise}
+#### Challenge: Visualising missing values
 
-The histogram below shows the distribution of the proportion of missing values
-per precursor. The barplot shows the proportion of missing values per sample,
-coloured by experimental group.
+{{< level 2 >}}
+
+Using the `precursors_missing` object, create plots to explore the
+distribution of missing values in the data.
+
+1. Plot the distribution of the proportion of missing values across precursors.
+2. Plot the proportion of missing values per sample, coloured by group.
+
+Based on your plots:
+
+- Does the proportion of missing values differ between groups?
+- Are there any precursors or samples with an unusually high proportion of
+  missing values?
+
+<details><summary>Hint</summary>The `precursors_missing` object contains
+two data frames: `nNArows` (one row per precursor) and `nNAcols` (one row
+per sample), each with a `pNA` column giving the proportion of missing
+values.</details>
+
+::: {.callout-answer collapse="true"}
+
+**Task 1**
 
 ```{r}
-hist(precursors_missing$nNArows$pNA)
+hist(precursors_missing$nNArows$pNA,
+     xlab = "Proportion missing values",
+     main = "Missing values per precursor")
+```
 
+**Task 2**
+
+```{r}
 precursors_missing$nNAcols %>%
   as_tibble() %>%
   merge(data.frame(colData(dia_qf)), by.x = "name", by.y = "runCol") %>%
@@ -93,6 +203,10 @@ precursors_missing$nNAcols %>%
   scale_fill_brewer(palette = "Dark2") +
   theme_classic()
 ```
+
+:::
+
+:::
 
 ## Filtering sparse precursors
 
@@ -117,8 +231,6 @@ dia_qf <- addAssayLink(dia_qf, from = "precursors",
 plot(dia_qf)
 ```
 
-Filtering by missing values using filterNA
-
 ```{r}
 dia_qf <- dia_qf %>%
   filterNA(pNA = 0.75, i = "precursors_filtered_missing")
@@ -134,10 +246,23 @@ save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
 ::: {.callout-tip}
 #### Key Points
 
-- `joinAssays` combines per-sample `SummarizedExperiment` objects into a single combined assay, enabling analysis across all samples simultaneously
-- `nNA` provides a convenient summary of missing values per feature (row) and per sample (column)
-- DIA data typically has a higher proportion of missing values than TMT-labelled data, as proteins must be detected independently in each sample
-- `filterNA` can be used to remove precursors that are missing above a specified proportion of samples, with the threshold chosen based on the experimental context
+- DIA-NN Q-value columns (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`,
+  `Lib.PG.Q.Value`) represent the local FDR for each identification; filtering
+  at ≤ 0.01 retains only identifications at 1% FDR
+- When match-between-runs is enabled, library-level Q-values (`Lib.Q.Value`,
+  `Lib.PG.Q.Value`) are the most appropriate filter as they reflect the
+  confidence of cross-run matches
+- `filterFeatures` applies row-level filters based on `rowData` variables,
+  and can be applied to the whole `QFeatures` object or to specific sets
+- `joinAssays` combines per-sample `SummarizedExperiment` objects into a single
+  combined assay, with missing values (`NA`) where a precursor was not detected
+  in a given sample
+- `nNA` provides a convenient summary of missing values per feature (row) and
+  per sample (column)
+- DIA data typically has a higher proportion of missing values than TMT-labelled
+  data, as proteins must be detected independently in each sample
+- `filterNA` removes precursors that are missing above a specified proportion
+  of samples, with the threshold chosen based on the experimental context
 
 :::
 

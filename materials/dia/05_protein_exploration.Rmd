@@ -32,10 +32,6 @@ library("patchwork")
 load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
-TS: MOVE THE PROTEINS OF INTEREST PLOT AND PCA TO DATA EXPLORATION SECTION
-
-TS: ADD SECTION USING subsetByFeature FUNCTION HERE, AS PER THE TMT MATERIAL
-
 ## Plotting quantification values for proteins of interest
 
 Often we are interested in the quantities of specific proteins, for example,
@@ -83,7 +79,14 @@ long_form_protein %>%
 
 ### Completing PCA with `prcomp`
 
-TS: INTERACTION POINT: DISCUSS MISSING VALUES HERE
+::: {.callout-discussion}
+#### Discussion
+
+- Why do we need to remove proteins with missing values before running PCA?
+- How many proteins do you expect to lose by applying `filterNA` here, given what we observed about missingness in the earlier lesson?
+- What impact might this have on the PCA result and its biological interpretation?
+
+:::
 
 Since PCA requires a complete data matrix, we first remove proteins with
 any missing values using `filterNA`. We then extract the normalised
@@ -105,7 +108,14 @@ We plot a scree plot to inspect how much variance each PC explains.
 fviz_screeplot(protein_pca)
 ```
 
-TS: INTERACTION POINT: HOW WOULD YOU INTERPRET THESE PCAS?
+::: {.callout-discussion}
+#### Discussion
+
+- Looking at the PCA plot, which factor appears to drive the most variation between samples — group, age group, or something else?
+- What would you expect to see in a well-behaved proteomics experiment, and does this data meet those expectations?
+- Are there any samples that look like outliers? What might explain this?
+
+:::
 
 We then plot the samples in PCA space, colouring by group and using shape
 to indicate age group.
@@ -124,8 +134,6 @@ print(p + aes(x = PC3, y = PC4))
 
 ## The `subsetByFeature` function
 
-TS: ADD SECTION USING subsetByFeature FUNCTION HERE, AS PER THE TMT MATERIAL
-
 As well as visualising all proteins, it can be useful to extract all data
 levels corresponding to a specific protein of interest. The `QFeatures`
 infrastructure provides the `subsetByFeature` function to do this. It takes
@@ -140,6 +148,10 @@ TTR <- subsetByFeature(dia_qf, "P02766")
 
 experiments(TTR)
 ```
+
+From this we can see the dimensions of the TTR data at each assay level,
+showing how many precursors support the protein-level quantification for
+this protein.
 
 We can use this subset to visualise how the precursor data was aggregated
 to protein level for this particular feature.

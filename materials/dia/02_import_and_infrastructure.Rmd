@@ -8,10 +8,11 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
+* Understand the structure of `SummarizedExperiment` and `QFeatures` objects and how the two are related
 * Understand how DIA-NN output data is structured and how it can be imported into R
 * Know how to use `readQFeaturesFromDIANN` to create a `QFeatures` object from DIA-NN output
 * Be able to access sample metadata via `colData` in a `QFeatures` object
-* Understand how to filter DIA-NN precursor data using Q-value thresholds
+* Be able to explore the data within a `QFeatures` object using `assay`, `rowData`, and `colData`
 
 :::
 
@@ -58,6 +59,8 @@ diann_df <- diann_df %>%
 print(head(unique(diann_df$Run), 2))
 ```
 
+{{< include ../_shared/_pipe.md >}}
+
 ## Importing sample metadata
 
 We import the sample metadata from an Excel file. This provides information
@@ -69,6 +72,11 @@ compatible with the `readQFeaturesFromDIANN` function.
 colData <- read_excel(here("course_files/dia/metadata/monkeypox_metadata.xlsx")) %>%
   dplyr::rename(runCol = sample_id)
 ```
+
+{{< include ../_shared/_qfeatures_structure.md >}}
+
+The best way to get our head around the `QFeatures` infrastructure is to import
+our data into a `QFeatures` object and start exploring.
 
 ## Reading into a `QFeatures` object
 
@@ -83,17 +91,102 @@ dia_qf <- QFeatures::readQFeaturesFromDIANN(
   diann_df, quantCols = "Precursor.Quantity", fnames = "Precursor.Id",
   runCol = 'Run', colData = colData)
 
-colData(dia_qf)
+
 ```
+
+
 
 ## Exploring the data
 
-### Full-width at half maximum (FWHM)
+When we inspect our `QFeatures` object, we see that it contains 31 assays, each corresponding to a different sample run. Each assay contains the
+precursor-level quantification data for that run, with feature names given by the `Precursor.Id` column from the original DIA-NN output.
 
-The `rowData` of each per-sample `SummarizedExperiment` contains quality
-metrics from DIA-NN, including the Full-Width at Half Maximum (FWHM) of the
-chromatographic peaks. We can extract this information across all runs and
-visualise the distribution of FWHM values per sample, coloured by group.
+```{r}
+dia_qf
+
+head(assay(dia_qf[[1]]))
+```
+
+::: {.callout-discussion}
+#### Discussion
+
+Why does `readQFeaturesFromDIANN` create one `SummarizedExperiment` per run,
+rather than a single combined assay across all runs from the outset?
+
+:::
+
+::: {.callout-answer collapse="true"}
+
+The DIA-NN output contains per-run quality metrics
+stored in the `rowData` of each precursor. These are run-specific values and
+would be ambiguous or impossible to retain if all runs were immediately merged
+into a single matrix. By keeping one `SummarizedExperiment` per run, we can
+inspect and filter on these per-run metrics before joining the data. We will
+join the per-sample assays into a single combined precursor matrix in the next
+lesson, once filtering is complete.
+
+:::
+
+### How many precursors per sample?
+
+Each sample will have a different number of precursors identified and quantified. We can explore
+this by inspecting the number of rows in each per-sample assay, which corresponds to the number of precursors quantified in that sample.
+
+:::{.callout-exercise}
+#### Challenge: Precursors per sample
+
+{{< level 2 >}}
+
+1. Find a function to determine how many precursors are quantified in each
+sample. Use it to plot a histogram of precursor counts across samples.
+
+2. Create a bar plot showing the number of precursors identified in each
+sample, coloured by group. Based on your plot:
+
+- Which group tends to have the most precursors identified?
+- Is there any sample that looks like an outlier?
+
+<details><summary>Hint</summary>Browse the `QFeatures` documentation with
+`?QFeatures` to find a suitable function for obtaining per-sample feature
+counts.</details>
+
+::: {.callout-answer collapse="true"}
+
+**Task 1**
+
+```{r, fig.height=4, fig.width=4}
+hist(nrows(dia_qf),
+     xlab="Precursors",
+     main="Precursor counts per sample")
+
+```
+
+**Task 2**
+
+```{r}
+data.frame(
+  n_precursors = nrows(dia_qf),
+  sample = names(nrows(dia_qf))) %>%
+  merge(data.frame(colData(dia_qf)), by.x = "sample", by.y = "runCol") %>%
+  ggplot(aes(x = shortname, y = n_precursors, fill = group)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Sample", y = "Number of precursors") +
+  coord_flip() +
+  theme_classic()
+```
+
+:::
+
+:::
+
+
+### Exploring the row data
+
+The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
+from DIA-NN, including the Full-Width at Half Maximum (FWHM) of the
+chromatographic peaks. We can extract this information across all runs using the
+`rbindRowData` function. If we merge with the column data, we can then visualise
+the distribution of FWHM values per sample, coloured by group.
 
 ```{r, fig.width=5, fig.height=5}
 cdata <- data.frame(colData(dia_qf))
@@ -108,50 +201,26 @@ rdata %>%
   theme_classic()
 ```
 
-### How many precursors per sample?
+:::{.callout-exercise}
+#### Challenge: Exploring rowData quality metrics
 
-TS: POSSIBLE EXERCISE POINT - HOW MANY PRECURSORS FOR EACH SAMPLE
+{{< level 2 >}}
 
-```{r, fig.height=4, fig.width=4}
-# Look for suitable methods with ?QFeatures
-hist(nrows(dia_qf))
-```
+The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
-## Filtering by Q-value
+1. Use `str(rdata)` to identify other numerical quality metric columns.
+2. Choose one metric and create a plot to visualise its distribution across
+   samples, coloured by group.
+3. Do any metrics appear to differ systematically between groups, or between
+   individual samples?
 
-TS: INTERACTION POINT. WHY DO WE NEED TO FILTER? WHAT SHOULD WE FILTER ON? WHAT DO THESE COLUMNS MEAN?
+:::
 
-DIA-NN outputs several Q-value columns that can be used to filter our data to
-high-confidence identifications. The key Q-value columns are:
 
-- **Q.Value** — run-level precursor confidence (false discovery rate)
-- **PG.Q.Value** — run-level protein group confidence
-- **Lib.Q.Value** — library-level precursor confidence (relevant when using match-between-runs)
-- **Lib.PG.Q.Value** — library-level protein group confidence
-
-Since our data was processed with match-between-runs (MBR) enabled, we
-filter on the library-level Q-values (`Lib.Q.Value` and `Lib.PG.Q.Value`),
-as these are most relevant for MBR-processed data. We apply a standard 1%
-FDR threshold (Q-value ≤ 0.01) on all four columns.
-
-```{r, fig.height=4, fig.width=4}
-
-# From docs:
-# Lib refers to the respective value saved in the spectral library, e.g. Lib.Q.Value means q-value for the respective library precursor; when using MBR, Lib q-values will correspond to q-values in the empirical DIA-based lib created in the first pass of MBR
-# We should be filtering on Lib values here because these are the most relevant for our data, which was processed with MBR on.
-
-dia_qf <- dia_qf %>%
-  filterFeatures(~ Q.Value <= 0.01) %>%        # Run-level precursor Q.value
-  filterFeatures(~ PG.Q.Value <= 0.01) %>%     # Run-level Protein group Q.value
-  filterFeatures(~ Lib.Q.Value <= 0.01) %>%    # Library-level precursor Q.value
-  filterFeatures(~ Lib.PG.Q.Value <= 0.01)     # Library-level Protein group Q-value
-
-hist(nrows(dia_qf))
-```
 
 ## Save data
 
-```{r}
+```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
 
@@ -162,7 +231,7 @@ save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 - DIA-NN outputs a `.parquet` format report file containing precursor- and protein-level quantification data for each sample
 - The `readQFeaturesFromDIANN` function imports DIA-NN output into a `QFeatures` object, creating one `SummarizedExperiment` per sample run
 - Sample metadata is stored in the `colData` of the `QFeatures` object and can be used to annotate samples with experimental group information
-- DIA-NN Q-value columns (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`, `Lib.PG.Q.Value`) can be used to filter to high-confidence precursor and protein identifications at a desired FDR threshold
+- The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics from DIA-NN (e.g. FWHM, Q-values) that can be used to explore data quality and guide downstream filtering decisions
 
 :::
 

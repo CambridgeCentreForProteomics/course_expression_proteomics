@@ -139,17 +139,11 @@ MaxQuant equivalent column names to those used in this course [here](./08_maxqua
 
 ### Non-specific filtering
 
-To remove features based on variables within our `rowData` we make use of the
-**`filterFeatures`** function. This function takes a `QFeatures` object as its input
-and then filters this object against a condition based on the `rowData` (indicated
-by the `~` operator). If the condition is met and returns TRUE for a feature,
-this feature will be kept.
+{{< include ../_shared/_filterFeatures.md >}}
 
-The `filterFeatures` function provides the option to apply our filter (i) to the
-whole `QFeatures` object and all of its `SummarizedExperiment`s, or (ii) to specific
-`SummarizedExperiment`s within the `QFeatures` object. We wish to only filter on the data in our
-`QFeatures` object called `psms_filtered` (and not every dataset) so in the
-following code chunks we always pass the argument `i = "psms_filtered"`.
+We wish to filter only the `psms_filtered` dataset within our `QFeatures` object
+(and not every set), so in the following code chunks we always pass the argument
+`i = "psms_filtered"`.
 
 Let's begin by filtering out any PSMs that **do not have a master protein**.
 These instances are characterised by an empty `character` i.e. `""`.
@@ -936,7 +930,7 @@ if there is not a large proportion of missing values in our data, we should not
 impute. This is one of the reasons that it was easier in the use-case to simply 
 remove the few missing values remaining so that we do not need to impute.
 
-Unfortunately, not all datasets benefit from having so few missing values. Label-free 
+However, not all datasets benefit from having so few missing values. Label-free 
 proteomics experiments in particular have many more missing values than their
 label-based equivalents. For a more in-depth discussion of imputation and how to
 complete this within the `QFeatures` infrastructure, please see the
