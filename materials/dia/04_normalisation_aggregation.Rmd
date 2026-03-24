@@ -221,7 +221,7 @@ samples.
 #### Alternative normalisation methods
 More sophisticated normalisation approaches may be appropriate depending on the
 data. For example, the authors of the original study from which this dataset is
-derived [@Deutsch2022] used cyclic loess normalisation, available via
+derived [@Wang2022] used cyclic loess normalisation, available via
 `limma::normalizeCyclicLoess()`, which corrects for intensity-dependent biases
 rather than applying a simple global shift. However, applying it within the
 QFeatures pipeline requires extracting and replacing the assay matrix manually,
