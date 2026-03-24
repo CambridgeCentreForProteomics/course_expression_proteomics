@@ -47,6 +47,21 @@ across all three groups.
 Our alternative hypothesis is: **(H1)** The mean protein abundance differs
 between at least one pair of groups.
 
+## Selecting a statistical test
+
+There are a few aspects of our data that we need to consider prior to
+deciding which statistical test to apply.
+
+-   The protein abundances in this data are not normally distributed
+    (i.e., they do not follow a Gaussian distribution). However, they
+    are approximately normal following a log-transformation.
+-   We assume that the variance is approximately equal across the three
+    groups.
+-   The samples are independent and not paired — each patient contributes
+    a single sample to one group only.
+
+{{< include ../_shared/_selecting_statistical_test.md >}}
+
 {{< include ../_shared/_empirical_bayes.md >}}
 
 ## Handling missing values prior to testing

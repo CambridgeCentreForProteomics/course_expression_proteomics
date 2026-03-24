@@ -72,26 +72,16 @@ deciding which statistical test to apply.
     (i.e., they do not follow a Gaussian distribution). However, they
     are approximately normal following a log-transformation.
 -   The cell cycle is not expected to have a large impact on biological
-    variability. We can assume that the variance is approximately equal across the groups.
--   The samples are independent not paired. For example, M_1 is not
+    variability. We can assume that the variance is approximately equal
+    across the groups.
+-   The samples are independent and not paired. For example, M_1 is not
     derived from the same cells as G1_1 and DS_1.
 
-The first point relates to a key assumption that is made when
-carrying out **Gaussian Linear modeling**, which assumes that the
-residuals (difference between the observed values and the values predicted by the
-model) are Gaussian distributed. If this assumption is not met,
-then it is not appropriate to use a Gaussian Linear model. For
-quantitative proteomics data, it's reasonable to assume
-the residuals will be approximately Gaussian distributed if we first
-log-transform the abundances.
+{{< include ../_shared/_selecting_statistical_test.md >}}
 
-Many different R packages can be used to carry out differential
-expression (abundance) analysis on proteomics data. Here we will use
-`limma`, a package that is widely used for omics analysis and can be used in single comparisons or multifactorial experiments using an
-**empirical Bayes-moderated linear model**. A simple example of the empirical
-Bayes-moderated linear model is provided in @Hutchings2023. 
-
-Here, we will perform a comparison between two groups (M and G1 phases) for each protein. For a multifactorial comparison of all cell cycle stages, see [Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html).
+Here, we will perform a comparison between two groups (M and G1 phases) for
+each protein. For a multifactorial comparison of all cell cycle stages, see
+[Statistical analysis of all 3 cell cycle stages](./11_statistical_analysis_all_stages.html).
 
 
 {{< include ../_shared/_empirical_bayes.md >}}

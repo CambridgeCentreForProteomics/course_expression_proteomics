@@ -41,40 +41,22 @@ the next step is to carry out some data cleaning. However, as with all data
 analyses, it is sensible to keep a copy of our raw data in case we need to refer
 back to it later. 
 
-## Creating a copy of the raw data 
+## Creating a copy of the raw data
 
-To create a copy of the `psms_raw` data we can first extract the `SummarizedExperiment`
-and then add it back to our `QFeatures` object using the `addAssay` function.
-When we do this, we give the second `SummarizedExperiment` (our copy) a new name. Here we will
-call it `psms_filtered` as by the end of our data cleaning and filtering, this
-copy will have had the unwanted data removed.
+{{< include ../_shared/_copy_assay_rationale.md >}}
+
+We call the copy `psms_filtered` — by the end of our data cleaning, this assay
+will have had all unwanted features removed.
 
 ```{r}
-## Extract a copy of the raw PSM-level data
-raw_data_copy <- cc_qf[["psms_raw"]] 
+raw_data_copy <- cc_qf[["psms_raw"]]
 
-## Re-add the assay to our QFeatures object with a new name
-cc_qf <- addAssay(x = cc_qf, 
-                  y = raw_data_copy, 
+cc_qf <- addAssay(x = cc_qf,
+                  y = raw_data_copy,
                   name = "psms_filtered")
 
-## Verify
 cc_qf
 ```
-
-We now see that a second `SummarizedExperiment` has been added to the `QFeatures`
-object. When we use `addAssay` to add to a `QFeatures` object, the newly created
-`SummarizedExperiment` does not automatically have links to the pre-existing 
-`SummarizedExperiment`s. 
-
-::: {.callout-note}
-#### Assay links
-`QFeatures` maintains the hierarchical links between quantitative levels whilst
-allowing easy access to all data levels for individual features (PSMs, peptides 
-and proteins) of interest. This is fundamental to the `QFeatures` 
-infrastructure and will be exemplified throughout this course.
-
-:::
 
 
 ## Data cleaning

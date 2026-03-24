@@ -131,16 +131,17 @@ setdiff(sample_level_rdata_names, joined_rdata_names)
 
 ## Removing individual sample-level assays
 
-Now that the per-sample data has been joined into the `"precursors"` assay,
-we no longer need to keep the individual per-sample `SummarizedExperiment`
-objects. We identify and remove them to keep our `QFeatures` object tidy.
+Now that the per-sample data has been joined into the `"precursors"` assay, we
+no longer need to keep the individual per-sample `SummarizedExperiment` objects.
+To reduce the size of our QFeatures object, we identify the sets for individual
+samples and remove them. This isn't strickly necessary for this datasets, but it
+may be if you have a very large experiment. It also helps to keep the object
+tidy and focused on the combined assay for downstream analysis.
 
 ```{r}
 sets_to_rm <- which(names(dia_qf) != "precursors")
 dia_qf <- removeAssay(dia_qf, i = sets_to_rm)
 ```
-
-
 
 
 ## Exploring missing values
@@ -208,33 +209,50 @@ precursors_missing$nNAcols %>%
 
 :::
 
-## Filtering sparse precursors
-
 Precursors that are missing across the majority of samples provide little
 useful quantitative information and may introduce noise into downstream
 analyses. We filter out precursors with excessive missing values using the
-`filterNA` function with a threshold of `pNA = 0.75`, meaning precursors
-missing in more than 75% of samples are removed.
+`filterNA` function, where the `pNA` argument specifies the maximum proportion
+of missing values allowed per precursor.
 
-We first create a copy of the precursors assay to retain the unfiltered data,
-and add an assay link to maintain the relationship between the two assays.
+The choice of threshold involves a trade-off: stricter thresholds (lower `pNA`)
+remove more precursors and produce a cleaner but smaller dataset; more
+permissive thresholds retain more precursors but include those with very sparse
+quantification. Here we use `pNA = 0.75`, meaning a precursor must be observed
+in at least 25% of samples — with 31 samples, this corresponds to a minimum of
+approximately 8 observations. This is a deliberately permissive threshold, as
+more stringent filtering will be applied at the protein level in the statistical
+analysis, where we will require proteins to be quantified in at least 3
+replicates per group before testing.
+
+## Filtering sparse precursors
+
+{{< include ../_shared/_copy_assay_rationale.md >}}
+
+We call the copy `"precursors_filtered_missing"` — after filtering, this assay
+will contain only precursors that meet the missing value threshold. We use
+`plot` to visualise the assay structure before and after adding the link.
 
 ```{r, fig.height=3, fig.width=3}
 dia_qf <- addAssay(dia_qf, dia_qf[['precursors']],
                    name = "precursors_filtered_missing")
 
-plot(dia_qf) # no automatic link between assays
+plot(dia_qf) # no link yet
 
 dia_qf <- addAssayLink(dia_qf, from = "precursors",
                        to = "precursors_filtered_missing")
 
-plot(dia_qf)
+plot(dia_qf) # link now shown
 ```
+
+Now we perform the missing value filtering on the new assay, specifying the `i` argument to apply the filter only to the `"precursors_filtered_missing"` assay. This retains the original `"precursors "` assay with all precursors for reference, while the new assay contains only those precursors that pass the missing value threshold.
 
 ```{r}
 dia_qf <- dia_qf %>%
   filterNA(pNA = 0.75, i = "precursors_filtered_missing")
 ```
+
+TS: Update data to contaminants-aware search and include a section on filtering out contaminants and decoys, as well as a discussion of how to handle them in downstream analysis, as per the TMT notebook 3.
 
 ## Save data
 

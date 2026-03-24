@@ -34,7 +34,30 @@ load(here("course_files/dia/preprocessed/lesson03.rda"), verbose = TRUE)
 
 ## Logarithmic transformation
 
+If we look at the distribution of raw precursor intensities, we will see that
+the abundance values are dramatically skewed towards zero.
+
+```{r, warning=FALSE, message=FALSE}
+dia_qf[["precursors_filtered_missing"]] %>%
+  assay() %>%
+  longForm() %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  theme_bw() +
+  xlab("Abundance (raw)")
+```
+
 {{< include ../_shared/_log_transformation.md >}}
+
+::: {.callout-note}
+#### At which stage should log transformation be applied?
+Logarithmic transformation should be applied at the appropriate stage of the
+processing pipeline for the aggregation method being used. Here we apply it
+**before** aggregation to protein level, because we use `robustSummary` for
+summarisation. `robustSummary` fits a linear model to the precursor-level data,
+which assumes approximately Gaussian distributed residuals — a requirement that
+is only met after log transformation.
+:::
 
 We apply a log2 transformation to the filtered precursor data using the
 `logTransform` function, which creates a new assay in our `QFeatures` object.
@@ -188,10 +211,23 @@ random.
 
 {{< include ../_shared/_normalisation_intro.md >}}
 
-We normalise the protein-level data using the `diff.median` method, which
-shifts the intensity distribution of each sample so that the median intensity
-is the same across all samples. This corrects for sample-level systematic
-differences in loading or ionisation efficiency.
+{{< include ../_shared/_median_normalisation.md >}}
+
+We apply the `diff.median` method, which shifts each sample's intensity
+distribution so that all sample medians match the grand median across all
+samples.
+
+::: {.callout-note}
+#### Alternative normalisation methods
+More sophisticated normalisation approaches may be appropriate depending on the
+data. For example, the authors of the original study from which this dataset is
+derived [@Deutsch2022] used cyclic loess normalisation, available via
+`limma::normalizeCyclicLoess()`, which corrects for intensity-dependent biases
+rather than applying a simple global shift. However, applying it within the
+QFeatures pipeline requires extracting and replacing the assay matrix manually,
+and because cyclic loess is sensitive to missing values, additional care is
+needed — complexity beyond the scope of this course.
+:::
 
 ```{r qfeatures-normalize}
 dia_qf <- normalize(dia_qf,

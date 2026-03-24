@@ -218,14 +218,10 @@ knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
 
 {{< include ../_shared/_normalisation_intro.md >}}
 
-In `QFeatures` we can use the `normalize` function. To see which other 
-normalisation methods are supported within this function, type `?normalize` to 
-access the function's help page. 
+{{< include ../_shared/_median_normalisation.md >}}
 
-Of the supported methods, median-based methods work well for most quantitative
-proteomics data. Unlike using the mean, median-based methods are less sensitive
-to the outliers which we often have in proteomics datasets. Let's apply a
-center median normalisation approach,
+We apply a center median normalisation, which shifts each sample's distribution
+so that all sample medians are centered at zero.
 
 ```{r}
 cc_qf <- normalize(cc_qf, 
