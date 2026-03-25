@@ -1,15 +1,20 @@
 This is to be expected since the majority of proteins exist at low abundances
-within the cell and only a few proteins are highly abundant. However, if we
-leave the quantitative data in a non-Gaussian distribution then we will not be
-able to apply parametric statistical tests later on. Consider the case where
-we have a protein with abundance values across three samples A, B and C. If the
-abundance values were 0.1, 1 and 10, we can tell from just looking at the numbers
-that the protein is 10-fold more abundant in sample B compared to sample A, and
-10-fold more abundant in sample C than sample B. However, even though the fold-changes
-are equal, the abundance values in A and B are much closer together on
-a linear scale than those of B and C. A parametric test would not account for
-this bias and would not consider A and B to be as equally different as B and C.
-**By applying a logarithmic transformation we can convert our skewed asymmetrical data distribution into a symmetrical, Gaussian distribution.**
+within the cell and only a few are highly abundant. However, **raw protein
+abundances are not normally distributed**, which means parametric statistical
+tests cannot be applied directly.
+
+**Why does the skewed distribution matter?** Consider a protein with abundance
+values of 0.25, 1, and 4 across three samples A, B, and C:
+
+- Each step represents a 4-fold increase — the fold changes are equal.
+- Yet on a linear scale, samples A and B (difference of 0.75) appear much
+  closer together than B and C (difference of 3).
+- A parametric test would treat these as unequal differences, introducing a
+  systematic bias.
+
+By applying a log2 transformation, the values become −2, 0, and +2 — evenly
+spaced — converting the skewed distribution into a symmetrical, approximately
+Gaussian distribution suitable for downstream statistical analysis.
 
 ::: {.callout-note}
 #### Why use base-2?

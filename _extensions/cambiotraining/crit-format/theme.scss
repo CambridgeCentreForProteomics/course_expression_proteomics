@@ -16,6 +16,7 @@ $callout-color-tip: #28828A;
 $callout-color-caution: #D62828;
 $callout-color-warning: #D62828;
 $callout-color-important: #28828A;
+$callout-color-discussion: #D07820;
 
 /* Custom palette for convenience / reuse */
 $primary: #106470;
@@ -181,6 +182,19 @@ div.callout-hint.callout {
 }
 div.callout-hint.callout-style-default > .callout-header {
   background-color: #f9f9f8;
+}
+
+/* Discussion callout */
+div.callout-discussion.callout {
+  border-left-color: $callout-color-discussion;
+}
+div.callout-discussion.callout-style-default > .callout-header {
+  background-color: #fdf4e3;
+}
+.callout-discussion > .callout-header::before {
+  font-family: "Font Awesome 5 Free";
+  content: "\f086";
+  margin-right: 10px;
 }
 
 

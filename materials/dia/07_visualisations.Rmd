@@ -31,6 +31,13 @@ load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
 ```
 
 
+Having performed differential abundance analysis, we now want to visualise the
+results in ways that complement the volcano plots produced in the previous
+lesson. In this lesson we produce heatmaps to display protein abundance patterns
+across all samples simultaneously, and scatter plots to compare fold changes
+across contrasts to identify proteins with shared or condition-specific
+responses.
+
 ## Heatmaps
 
 ::: {.callout-discussion}

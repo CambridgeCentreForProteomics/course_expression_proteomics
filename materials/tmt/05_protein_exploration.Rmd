@@ -85,7 +85,7 @@ Adding a relation between these two `sets` ensures traceability.
 Given that we started from the PSM level and did extensive data cleaning, 
 filtering and management of missing data, it would be useful to know how much 
 data we have left. We may want to know how many PSMs, peptides and proteins
-the `log_norm_proteins` assay contains, given that this is the data to which
+the `log_norm_proteins` set contains, given that this is the data to which
 statistical analysis will be applied.
 
 We can easily find the number master proteins by printing our `QFeatures` object
@@ -172,7 +172,7 @@ This column was not present in the PSM level datasets.
 For example,
 
 ```{r}
-## Check columns in the log normalised peptide assay
+## Check columns in the log normalised peptide set
 cc_qf[["peptides"]] %>%
   rowData() %>%
   names()
@@ -350,7 +350,7 @@ from 5 PSMs.
 
 We can use our new `QFeatures` object to create a plot which displays how the
 PSM data was aggregated to protein for this particular feature. To do so, we
-extract the assays of interest from our `"O43583"` `QFeatures` object and pass
+extract the sets of interest from our `"O43583"` `QFeatures` object and pass
 to the `longForm` function which will covert the subset `QFeatures` object
 to a long format `DataFrame`. We can then use the standard `ggplot2` functions
 to visualise the processing of this protein.

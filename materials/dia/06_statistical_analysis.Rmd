@@ -125,8 +125,8 @@ print(table(all_replicated_man))
 all(all_replicated_man == all_replicated_gen)
 ```
 
-We now add a new assay containing only the proteins that pass the replication
-filter, and link it to the parent assay.
+We now add a new set containing only the proteins that pass the replication
+filter, and link it to the parent set.
 
 ```{r}
 dia_qf <- addAssay(dia_qf, dia_qf[['norm_proteins']][all_replicated_man, ],
@@ -428,7 +428,7 @@ ggplot(limma_results_all_contrasts,
 
 ## Save data
 
-```{r}
+```{r, include=FALSE}
 save(dia_qf, limma_results_F, limma_results_all_contrasts,
      file = here("course_files/dia/preprocessed/lesson06.rda"))
 ```

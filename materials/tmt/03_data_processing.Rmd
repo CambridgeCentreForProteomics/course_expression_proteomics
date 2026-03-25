@@ -45,7 +45,7 @@ back to it later.
 
 {{< include ../_shared/_copy_assay_rationale.md >}}
 
-We call the copy `psms_filtered` — by the end of our data cleaning, this assay
+We call the copy `psms_filtered` — by the end of our data cleaning, this set
 will have had all unwanted features removed.
 
 ```{r}

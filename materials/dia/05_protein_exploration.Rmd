@@ -32,6 +32,12 @@ library("patchwork")
 load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
+Having cleaned, aggregated, and normalised our data, we are now ready to
+explore the protein-level data before carrying out formal statistical testing.
+This includes visualising the abundance of specific proteins of interest,
+assessing overall sample structure using PCA, and tracing individual proteins
+across data levels to verify the processing pipeline has behaved as expected.
+
 ## Plotting quantification values for proteins of interest
 
 Often we are interested in the quantities of specific proteins, for example,
@@ -149,7 +155,7 @@ TTR <- subsetByFeature(dia_qf, "P02766")
 experiments(TTR)
 ```
 
-From this we can see the dimensions of the TTR data at each assay level,
+From this we can see the dimensions of the TTR data at each data level,
 showing how many precursors support the protein-level quantification for
 this protein.
 

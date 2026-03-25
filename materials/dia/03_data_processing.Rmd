@@ -1,5 +1,5 @@
 ---
-title: Data processing
+title: Data cleaning
 bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
@@ -9,7 +9,7 @@ editor_options:
 #### Learning Objectives
 
 * Know how to use `filterFeatures` to filter DIA-NN precursor data by Q-value thresholds
-* Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined assay
+* Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined set
 * Be able to explore and visualise missing values in DIA proteomics data
 * Understand how to filter sparse precursors based on a missing value threshold
 
@@ -27,6 +27,11 @@ library("patchwork")
 load(here("course_files/dia/preprocessed/lesson02.rda"), verbose = TRUE)
 ```
 
+
+Now that we have our precursor-level data stored in a `QFeatures` object, the
+next step is to carry out data cleaning — filtering to retain only
+high-confidence identifications and removing precursors with excessive missing
+values across samples.
 
 ## Filtering by Q-value
 
@@ -86,23 +91,23 @@ dia_qf
 ```
 
 We can see how many precursors remain per sample after filtering by inspecting
-the number of rows in each per-sample assay.
+the number of rows in each per-sample set.
 
 ```{r, fig.height=4, fig.width=4}
 hist(nrows(dia_qf),
      xlab = "Precursors",
-     main = "Precursor counts per sample after Q-value filtering")
+     main = "Precursor counts per sample\nafter Q-value filtering")
 ```
 
 
-## Joining per-sample assays into a single precursor matrix
+## Joining per-sample sets into a single precursor set
 
 After filtering, our `QFeatures` object contains one `SummarizedExperiment`
-per sample run. To work with the data as a combined matrix across all samples,
-we use the `joinAssays` function. This merges all per-sample assays into a
-single combined assay called `"precursors"`, aligning features (precursors)
+per sample run. To work with the data combined across all samples,
+we use the `joinAssays` function. This merges all per-sample sets into a
+single combined set called `"precursors"`, aligning features (precursors)
 by their `Precursor.Id`. Where a precursor was not detected in a particular
-sample, the corresponding entry in the combined matrix will be `NA`.
+sample, the corresponding entry will be `NA`.
 
 ```{r}
 dia_qf <- joinAssays(x = dia_qf,
@@ -112,31 +117,31 @@ dia_qf <- joinAssays(x = dia_qf,
 ```
 
 Note that `joinAssays` only retains `rowData` columns that are shared across
-all assays and have consistent values — run-specific metrics such as `Q.Value`,
-`PEP`, and `Run` are therefore dropped from the combined assay. This is
+all sets and have consistent values — run-specific metrics such as `Q.Value`,
+`PEP`, and `Run` are therefore dropped from the combined set. This is
 expected: these per-run quality metrics were used for filtering in the previous
 step and are no longer needed. We can confirm which columns are dropped by
 comparing the `rowData` names before and after joining.
 
 ```{r}
-# rowData columns in the per-sample assays
+# rowData columns in the per-sample sets
 sample_level_rdata_names <- rowDataNames(dia_qf)[[1]]
 
-# rowData columns in the combined assay
+# rowData columns in the combined set
 joined_rdata_names <- rowDataNames(dia_qf)[["precursors"]]
 
-# Columns present in sample-level assays but dropped from the combined assay
+# Columns present in sample-level sets but dropped from the combined set
 setdiff(sample_level_rdata_names, joined_rdata_names)
 ```
 
 ## Removing individual sample-level assays
 
-Now that the per-sample data has been joined into the `"precursors"` assay, we
+Now that the per-sample data has been joined into the `"precursors"` set, we
 no longer need to keep the individual per-sample `SummarizedExperiment` objects.
 To reduce the size of our QFeatures object, we identify the sets for individual
-samples and remove them. This isn't strickly necessary for this datasets, but it
+samples and remove them. This isn't strictly necessary for this dataset, but it
 may be if you have a very large experiment. It also helps to keep the object
-tidy and focused on the combined assay for downstream analysis.
+tidy and focused on the combined set for downstream analysis.
 
 ```{r}
 sets_to_rm <- which(names(dia_qf) != "precursors")
@@ -167,14 +172,16 @@ print(precursors_missing)
 Using the `precursors_missing` object, create plots to explore the
 distribution of missing values in the data.
 
-1. Plot the distribution of the proportion of missing values across precursors.
-2. Plot the proportion of missing values per sample, coloured by group.
+1. Plot a histogram for the proportion of missing values across _precursors_.
+2. Plot the proportion of missing values per _sample_, coloured by _group_.
 
 Based on your plots:
 
-- Does the proportion of missing values differ between groups?
+- Do most precursors have missing values?
 - Are there any precursors or samples with an unusually high proportion of
   missing values?
+- Does the proportion of missing values differ between groups?
+
 
 <details><summary>Hint</summary>The `precursors_missing` object contains
 two data frames: `nNArows` (one row per precursor) and `nNAcols` (one row
@@ -218,10 +225,10 @@ of missing values allowed per precursor.
 The choice of threshold involves a trade-off: stricter thresholds (lower `pNA`)
 remove more precursors and produce a cleaner but smaller dataset; more
 permissive thresholds retain more precursors but include those with very sparse
-quantification. Here we use `pNA = 0.75`, meaning a precursor must be observed
-in at least 25% of samples — with 31 samples, this corresponds to a minimum of
-approximately 8 observations. This is a deliberately permissive threshold, as
-more stringent filtering will be applied at the protein level in the statistical
+quantification, which are more likely to be inaccurately quantified. Here we use
+`pNA = 0.75`, meaning a precursor must be observed in at least 25% of samples —
+with 31 samples, this corresponds to a minimum of approximately 8 observations.
+Further filtering will be applied at the protein level in the statistical
 analysis, where we will require proteins to be quantified in at least 3
 replicates per group before testing.
 
@@ -229,7 +236,7 @@ replicates per group before testing.
 
 {{< include ../_shared/_copy_assay_rationale.md >}}
 
-We call the copy `"precursors_filtered_missing"` — after filtering, this assay
+We call the copy `"precursors_filtered_missing"` — after filtering, this set
 will contain only precursors that meet the missing value threshold. We use
 `plot` to visualise the assay structure before and after adding the link.
 
@@ -245,7 +252,7 @@ dia_qf <- addAssayLink(dia_qf, from = "precursors",
 plot(dia_qf) # link now shown
 ```
 
-Now we perform the missing value filtering on the new assay, specifying the `i` argument to apply the filter only to the `"precursors_filtered_missing"` assay. This retains the original `"precursors "` assay with all precursors for reference, while the new assay contains only those precursors that pass the missing value threshold.
+Now we perform the missing value filtering on the new assay, specifying the `i` argument to apply the filter only to the `"precursors_filtered_missing"` assay. This retains the original `"precursors "` assay with all precursors for reference, while the new set contains only those precursors that pass the missing value threshold.
 
 ```{r}
 dia_qf <- dia_qf %>%
@@ -256,7 +263,7 @@ TS: Update data to contaminants-aware search and include a section on filtering 
 
 ## Save data
 
-```{r}
+```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
 ```
 
@@ -273,7 +280,7 @@ save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
 - `filterFeatures` applies row-level filters based on `rowData` variables,
   and can be applied to the whole `QFeatures` object or to specific sets
 - `joinAssays` combines per-sample `SummarizedExperiment` objects into a single
-  combined assay, with missing values (`NA`) where a precursor was not detected
+  combined set, with missing values (`NA`) where a precursor was not detected
   in a given sample
 - `nNA` provides a convenient summary of missing values per feature (row) and
   per sample (column)

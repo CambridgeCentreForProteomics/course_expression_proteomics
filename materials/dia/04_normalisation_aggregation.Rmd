@@ -32,6 +32,12 @@ load(here("course_files/dia/preprocessed/lesson03.rda"), verbose = TRUE)
 ```
 
 
+Having filtered our DIA-NN data to retain only high-confidence identifications
+and removed precursors with excessive missing values, we are now ready to
+continue processing. In this lesson we will log2 transform the precursor-level
+data, aggregate to protein-level abundances, and normalise the protein-level
+data ready for downstream statistical analysis.
+
 ## Logarithmic transformation
 
 If we look at the distribution of raw precursor intensities, we will see that
@@ -60,7 +66,7 @@ is only met after log transformation.
 :::
 
 We apply a log2 transformation to the filtered precursor data using the
-`logTransform` function, which creates a new assay in our `QFeatures` object.
+`logTransform` function, which creates a new set in our `QFeatures` object.
 
 ```{r}
 dia_qf <- logTransform(
@@ -102,13 +108,14 @@ protein will still have a missing abundance in any sample where all of its
 precursors are absent.
 
 To investigate this, we will use the `longForm` function, which converts a
-`QFeatures` assay from wide format (proteins × samples) to long format (one
+`QFeatures` set from wide format (proteins × samples) to long format (one
 row per protein–sample combination). The `colvars` argument specifies which
 columns from the `colData` to carry across.
 
 Run the following code and inspect the output — what does each row represent?
 
 ```{r}
+# dia_qf[,,'proteins'] subsets the QFeatures object to the "proteins" set
 longForm(dia_qf[,,'proteins'], colvars = 'group') %>%
   data.frame() %>%
   head()
@@ -259,7 +266,7 @@ pre_norm + post_norm
 
 ## Save data
 
-```{r}
+```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))
 ```
 
