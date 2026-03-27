@@ -34,3 +34,7 @@ course_files/output
 
 **/*.quarto_ipynb
 _freeze
+
+# Quarto render artifacts
+**/*_files/
+figure/
