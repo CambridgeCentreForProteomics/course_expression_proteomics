@@ -169,11 +169,14 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   mutate(assay_order = factor(assay,
                               levels = c("precursors_filtered_missing",
                                          "proteins"))) %>%
+  mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
   ggplot(aes(x = colname, y = value, colour = assay)) +
   geom_point() +
   geom_line(aes(group = rowname)) +
-  theme(axis.text.x = element_text(angle = 45, size = 7)) +
-  facet_wrap(~ assay_order)
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7)) +
+  facet_wrap(~ assay_order) +
+  labs(x='Sample', y='Abundance (log2)')
 ```
 
 

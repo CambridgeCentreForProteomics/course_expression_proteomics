@@ -117,12 +117,15 @@ most_variable <- sort(var, decreasing = TRUE)[1:50] %>% names()
 ```
 
 Since we will be making multiple heatmaps with different subsets of proteins,
-we define a helper function that takes a vector of UniProt IDs and produces a
-heatmap. The function uses gene name and UniProt ID combined as row labels
-for interpretability.
+it is useful to define a helper function rather than repeating the same code
+each time. The function takes a vector of UniProt IDs, extracts the
+corresponding rows from the quantification matrix, applies the
+correlation-based distance metrics, and calls `pheatmap` with consistent
+formatting. This keeps each subsequent heatmap call concise and ensures all
+plots are produced in the same way.
 
 ```{r, fig.height=10, fig.width=10}
-plot_heatmap_for_uids <- function(uids, ...){
+plot_heatmap_for_uids <- function(uids){
   quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids,])
   colnames(quant_mtx) <- dia_qf$shortname
 
@@ -139,8 +142,7 @@ plot_heatmap_for_uids <- function(uids, ...){
            annotation_col = sample_annotations,
            clustering_distance_rows = dist_rows,
            clustering_distance_cols = dist_cols,
-           fontsize = 8,
-           ...)
+           fontsize = 8)
 }
 
 plot_heatmap_for_uids(most_variable)

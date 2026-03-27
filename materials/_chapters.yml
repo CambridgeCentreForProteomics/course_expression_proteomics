@@ -13,12 +13,12 @@ book:
         - materials/tmt/05_protein_exploration.Rmd
         - materials/tmt/06_statistical_analysis.Rmd
         - materials/tmt/07_biological_interpretation.Rmd
-    - part: "TMT extended materials"
+    - part: "TMT proteomics: extended materials"
       chapters:
-        - materials/tmt/extended/08_maxquant_notes.Rmd
-        - materials/tmt/extended/09_normalyzer.Rmd
-        - materials/tmt/extended/10_lfq_vs_tmt.Rmd
-        - materials/tmt/extended/11_statistical_analysis_all_stages.Rmd
+        - materials/tmt/08_maxquant_notes.Rmd
+        - materials/tmt/09_normalyzer.Rmd
+        - materials/tmt/10_lfq_vs_tmt.Rmd
+        - materials/tmt/11_statistical_analysis_all_stages.Rmd
     - part: "DIA proteomics"
       chapters:
         - materials/dia/01_intro.Rmd
@@ -28,7 +28,4 @@ book:
         - materials/dia/05_protein_exploration.Rmd
         - materials/dia/06_statistical_analysis.Rmd
         - materials/dia/07_visualisations.Rmd
-        - materials/dia/08_functional_enrichment.Rmd
-    - part: "DIA extended materials"
-      chapters:
-        - materials/dia/extended/09_reactome_annotations.Rmd
+        - materials/dia/09_functional_enrichment.Rmd

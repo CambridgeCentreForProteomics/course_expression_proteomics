@@ -43,7 +43,7 @@ We read this file into R using the `read_parquet` function from the `arrow`
 package.
 
 ```{r}
-diann_df <- read_parquet(here("course_files/dia/DIANNout/monkeypox_plasma_proteomes.parquet"))
+diann_df <- read_parquet(here("course_files/dia/DIANNout/monkeypox_plasma_proteomes.parquet")) 
 ```
 
 We can inspect the dimensions and column names to understand what the data
@@ -58,6 +58,8 @@ The key columns we will use in our analysis are:
 
 - **`Precursor.Id`**: a unique identifier for each precursor — typically the
   modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
+- **`Protein.Group`**: the canonical protein group identifier used for
+  aggregation to protein level
 - **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the
   precursor is assigned
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
@@ -135,14 +137,13 @@ diann_df <- diann_df %>%
 We use the `readQFeaturesFromDIANN` function to import the cleaned DIA-NN data
 into a `QFeatures` object. This function creates one `SummarizedExperiment` per
 run, with each set containing the precursor-level quantification data for that
-run. The `runCol` argument specifies which column identifies the run in the
-input data frame; the `colData` must have a column called `runCol` so that
-sample metadata can be matched correctly.
+run. The `runCol` argument specifies which column in the input data frame
+identifies the run.
 
 ```{r}
-# Rename shortname to runCol in colData
+# readQFeaturesFromDIANN requires colData to have a column called 'runCol'
 colData <- colData %>%
-  rename(runCol = shortname)
+  mutate(runCol = shortname)
 
 dia_qf <- QFeatures::readQFeaturesFromDIANN(
   diann_df, quantCols = "Precursor.Quantity", fnames = "Precursor.Id",

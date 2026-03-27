@@ -426,6 +426,54 @@ ggplot(limma_results_all_contrasts,
   facet_wrap(~contrast) # facet by contrast to get separate volcano plots for each contrast
 ```
 
+:::{.callout-exercise}
+#### Challenge: Using `treat` to test against a fold-change threshold
+
+{{< level 2 >}}
+
+The `eBayes` function tests the null hypothesis that a protein's log fold
+change is exactly zero. In practice, we are often only interested in changes
+that exceed a minimum biologically meaningful fold change. The `treat` function
+from `limma` instead tests the null hypothesis that the absolute log fold
+change is *less than* a specified threshold `fc`, providing a statistically
+rigorous alternative to post-hoc fold-change filtering.
+
+1. Replace the `eBayes` call with `treat(fc=1.2, trend = TRUE, robust = TRUE)`
+   and extract results for all contrasts using `topTreat` in place of
+   `topTable`.
+2. Apply global Benjamini-Hochberg correction to the p-values as before.
+3. How many proteins are significant (`adj.P.Val < 0.05`) in each contrast
+   compared to the `eBayes` results? Why is the number lower?
+
+::: {.callout-answer collapse="true"}
+
+```{r}
+limma_fit_treat <- treat(limma_fit_contrasts, fc = 1.2, trend = TRUE, robust = TRUE)
+
+limma_results_treat_list <- lapply(colnames(contrasts_matrix), function(contrast) {
+  topTreat(limma_fit_treat, coef = contrast, n = Inf) %>%
+    rownames_to_column("UniprotID") %>%
+    mutate(contrast = contrast)
+})
+
+limma_results_treat_all <- bind_rows(limma_results_treat_list) %>%
+  mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
+
+table(sig = limma_results_treat_all$adj.P.Val < 0.05,
+      limma_results_treat_all$contrast)
+```
+
+`treat` tests a stricter null hypothesis — that the fold change is smaller than
+`fc = 1.2` (i.e. less than 1.2-fold) — rather than simply that it is zero. A
+protein must therefore show both statistical significance *and* a fold change
+exceeding the threshold to be called significant. This reduces the number of
+hits compared to `eBayes`, retaining only those changes that are both
+statistically and practically meaningful.
+
+:::
+
+:::
+
 ## Save data
 
 ```{r, include=FALSE}
