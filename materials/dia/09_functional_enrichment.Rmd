@@ -21,11 +21,12 @@ library("QFeatures")
 library("ggplot2")
 library("clusterProfiler")
 library("tidyr")
-library("dplyr")
 library("tibble")
 library("org.Hs.eg.db")
 library("enrichplot")
 library("GOSemSim")
+library("pheatmap")
+library("dplyr")
 
 load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
 ```
@@ -166,37 +167,102 @@ underlying biology. This makes it easier to summarise the enrichment results
 in terms of a small number of coherent biological themes rather than a long
 list of individually significant terms.
 
+
+## Linking GO results back to protein abundances
+
+The GO enrichment results tell us which biological processes are over-represented
+among our proteins of interest, but it is often informative to go back and
+examine the sample-level abundance patterns for the proteins driving that
+enrichment.
+
+Because we set `readable = TRUE` in our `enrichGO` call, the `geneID` column of
+the results contains gene symbols rather than Entrez IDs. We can extract
+these directly from the enrichment result and use `AnnotationDbi::select` to map
+them to UniProt accessions, filtering to proteins present in our experiment.
+
+
+```{r}
+
+lipid_go_id <- go_down@result %>%
+  filter(Description == "lipid localization") %>%
+  pull(geneID) %>%
+  strsplit("/") %>%
+  unlist() 
+
+# Gene symbol -> UniProt map
+g2p <- AnnotationDbi::select(org.Hs.eg.db, lipid_go_id,
+                             columns = "UNIPROT", keytype = "SYMBOL") %>%
+  filter(UNIPROT %in% limma_results_mpxv_control$UniprotID)
+
+print(g2p)
+```
+
 :::{.callout-exercise}
-#### Challenge: GO enrichment of proteins increased in MPXV
+#### Challenge: Visualising abundances of lipid localisation proteins
 
-{{< level 2 >}}
+{{< level 3 >}}
 
-We have focused so far on proteins with significantly *decreased* abundance in
-MPXV patients relative to controls. Now apply the same GO over-representation
-analysis to proteins with significantly *increased* abundance.
+Use the UniProt IDs retrieved above to examine whether the protein abundances for the lipid localisation group show the expected decrease in MPXV patients.
 
-1. Filter `limma_results_mpxv_control` to proteins with `adj.P.Val < 0.05` and
-   positive `logFC` to define the gene list.
-2. Run `enrichGO` using the same settings as above.
-3. What do you conclude from the results? Are there any interesting biological themes emerging from the proteins with increased abundance in MPXV patients?
+1. Plot a heatmap of the protein-level abundances for these proteins, with
+   samples annotated by group. Do the samples separate as you would expect from
+   the enrichment result?
+2. Use `subsetByFeature` to subset `dia_qf` to the features belonging to these
+   proteins. Then plot the precursor-level and protein-level abundances side by
+   side across samples, adapting the approach from the protein exploration
+   notebook.
+
+<details><summary>Hint</summary>For (2), pass `rowvars = 'Genes'` to `longForm` to carry gene names through to the plot, then facet by gene name and assay.</details>
 
 ::: {.callout-answer collapse="true"}
 
-```{r}
-sig_up <- limma_results_mpxv_control %>%
-  filter(adj.P.Val < 0.05, logFC > 0) %>%
-  pull(UniprotID)
 
-go_up <- enrichGO(gene = sig_up,
-                  universe = limma_results_mpxv_control$UniprotID,
-                  OrgDb = org.Hs.eg.db,
-                  keyType = "UNIPROT",
-                  pvalueCutoff = 0.05,
-                  ont = "ALL",
-                  readable = TRUE)
+```{r, fig.height=8, fig.width=8}
 
-# There are no over-represented GO terms!
-print(go_up)
+lipid_uids <- g2p$UNIPROT
+
+# 1. Protein-level heatmap
+sample_annotations <- colData(dia_qf) %>%
+  data.frame() %>%
+  tibble::remove_rownames() %>%
+  tibble::column_to_rownames("shortname") %>%
+  select(group)
+
+quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][lipid_uids, ])
+colnames(quant_mtx) <- dia_qf$shortname
+
+rownames(quant_mtx) <- rowData(dia_qf[["norm_proteins_replicated"]][lipid_uids, ])$Genes
+
+dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
+dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
+
+pheatmap(quant_mtx,
+         scale = "row",
+         annotation_col = sample_annotations,
+         clustering_distance_rows = dist_rows,
+         clustering_distance_cols = dist_cols,
+         fontsize = 8)
+```
+
+```{r, fig.height=10, fig.width=20}
+
+dia_qf_lipids <- subsetByFeature(dia_qf, lipid_uids)
+
+dia_qf_lipids[, , c("precursors_filtered_missing", "proteins")] %>%
+  longForm(rowvars=c('Genes')) %>%
+  as_tibble() %>%
+  mutate(assay_order = factor(assay,
+                              levels = c("precursors_filtered_missing",
+                                         "proteins"))) %>%
+  mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
+  ggplot(aes(x = colname, y = value, colour = assay)) +
+  geom_point(size=0.5) +
+  geom_line(aes(group = rowname)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7)) +
+  facet_grid(Genes~assay_order,scales='free') +
+  labs(x='Sample', y='Abundance (log2)') +
+  theme(aspect.ratio=1/2)
 ```
 
 :::
@@ -206,9 +272,11 @@ print(go_up)
 ::: {.callout-tip}
 #### Key Points
 
+
 - GO over-representation analysis tests whether a set of proteins of interest is enriched for particular biological annotations relative to a background set; the background should be all proteins quantified in the experiment
 - GO results often contain many redundant terms due to the hierarchical nature of the GO; semantic similarity-based methods (e.g., `GOSemSim`) can reduce this redundancy to make results more interpretable
-
+- Visualising the relationships between significant GO terms (e.g., with `enrichplot::treeplot`) can help to summarise results in terms of a small number of coherent biological themes rather than a long list of individual terms
+- Linking GO results back to the underlying data can help to validate and interpret the enrichment results, and reveal whether the proteins driving the enrichment show the expected abundance patterns across samples
 :::
 
 ## References {-}
