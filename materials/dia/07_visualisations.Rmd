@@ -24,7 +24,6 @@ library("dplyr")
 library("tibble")
 library("ggplot2")
 library("ggrepel")
-library("ggbeeswarm")
 library("pheatmap")
 
 load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
@@ -59,6 +58,19 @@ the replication filter in the statistical analysis. We rename the sample
 columns using the `shortname` column from the `colData` and add a column
 annotation bar to indicate group membership.
 
+The default Euclidean distance metric used for hierarchical clustering in
+`pheatmap` can be sensitive to the absolute scale of values. An alternative
+is to use 1 minus the Pearson correlation as a distance metric, which focuses
+on the shape of abundance profiles rather than their absolute values.
+
+We could use `clustering_distance_rows = "correlation"` within `pheatmap`,
+but this does not handle missing values. Instead, we calculate the
+correlation-based distance manually using `cor` with
+`use = "pairwise.complete.obs"` to handle missing values appropriately.
+We also use Ward's minimum variance method (`clustering_method = 'ward.D2'`)
+for the hierarchical clustering, which tends to produce more compact,
+evenly-sized clusters than the default complete linkage.
+
 ```{r, fig.height=10, fig.width=8}
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
 
@@ -73,25 +85,6 @@ sample_annotations <- colData(dia_qf) %>%
 
 head(sample_annotations)
 
-pheatmap(quant_mtx,
-         scale = 'row',
-         show_rownames = FALSE,
-         annotation_col = sample_annotations)
-```
-
-### Improving clustering with correlation-based distance
-
-The default Euclidean distance metric used for hierarchical clustering in
-`pheatmap` can be sensitive to the absolute scale of values. An alternative
-is to use 1 minus the Pearson correlation as a distance metric, which focuses
-on the shape of abundance profiles rather than their absolute values.
-
-We could use `clustering_distance_rows = "correlation"` within `pheatmap`,
-but this does not handle missing values. Instead, we calculate the
-correlation-based distance manually using `cor` with
-`use = "pairwise.complete.obs"` to handle missing values appropriately.
-
-```{r, fig.height=10, fig.width=8}
 # Calculate correlation-based distance manually, handling NAs with pairwise complete obs
 dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
 dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
@@ -100,31 +93,23 @@ pheatmap(quant_mtx,
          scale = 'row',
          show_rownames = FALSE,
          annotation_col = sample_annotations,
+         clustering_method = 'ward.D2', # Use Ward's method for hierarchical clustering
          clustering_distance_rows = dist_rows,
          clustering_distance_cols = dist_cols)
 ```
 
-### Heatmap for the most variable proteins
 
-Plotting all proteins can make it difficult to see structure. A common
-approach is to restrict the heatmap to the most variable proteins, which are
-more likely to reveal biologically meaningful patterns.
-
-```{r}
-var <- rowVars(assay(dia_qf[["norm_proteins_replicated"]]), na.rm = TRUE)
-
-most_variable <- sort(var, decreasing = TRUE)[1:50] %>% names()
-```
-
-Since we will be making multiple heatmaps with different subsets of proteins,
+Since we will be making multiple heatmaps below with different subsets of proteins,
 it is useful to define a helper function rather than repeating the same code
-each time. The function takes a vector of UniProt IDs, extracts the
-corresponding rows from the quantification matrix, applies the
-correlation-based distance metrics, and calls `pheatmap` with consistent
-formatting. This keeps each subsequent heatmap call concise and ensures all
+each time. This keeps each subsequent heatmap call concise and ensures all
 plots are produced in the same way.
 
-```{r, fig.height=10, fig.width=10}
+The function below takes a vector of UniProt IDs, extracts the
+corresponding rows from the quantification matrix, applies the
+correlation-based distance metrics, and calls `pheatmap` with consistent
+formatting. 
+
+```{r}
 plot_heatmap_for_uids <- function(uids){
   quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids,])
   colnames(quant_mtx) <- dia_qf$shortname
@@ -133,20 +118,38 @@ plot_heatmap_for_uids <- function(uids){
   rownames(quant_mtx) <- sprintf('%s (%s)',
                                  rowData(dia_qf[["norm_proteins_replicated"]][uids,])$Genes,
                                  rownames(quant_mtx))
-
+  # Calculate correlation-based distance manually, handling NAs with pairwise complete obs
   dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
   dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
 
   pheatmap(quant_mtx,
            scale = 'row',
+           clustering_method = 'ward.D2', 
            annotation_col = sample_annotations,
            clustering_distance_rows = dist_rows,
            clustering_distance_cols = dist_cols,
            fontsize = 8)
 }
 
+
+```
+
+
+### Heatmap for the most variable proteins
+
+Plotting all proteins can make it difficult to see structure. A common
+approach is to restrict the heatmap to the most variable proteins, which are
+more likely to reveal biologically meaningful patterns.
+
+```{r, fig.width=20, fig.height=10}
+var <- rowVars(assay(dia_qf[["norm_proteins_replicated"]]), na.rm = TRUE)
+
+most_variable <- sort(var, decreasing = TRUE)[1:50] %>% names()
+
 plot_heatmap_for_uids(most_variable)
 ```
+
+
 
 :::{.callout-exercise}
 #### Challenge: Heatmaps of significant proteins
@@ -196,33 +199,36 @@ plot_heatmap_for_uids(sig_prot_contrasts)
 ## Comparing log fold changes across contrasts
 
 A scatter plot of log fold changes from two contrasts — here MPXV vs Control
-and COVID-19 vs Control — allows us to identify proteins with shared responses
-to both infections versus those with a response specific to one condition.
+and COVID-19 vs Control — is one way to visualise to what extent the response
+to both infections is shared or infection-specific.
 
-::: {.callout-discussion}
-#### Discussion
-
-- What are we trying to learn from this scatter plot — what does a protein's position in the plot tell us?
-- The plot includes a linear regression line. Is a standard linear model (OLS) appropriate here, given that both axes represent quantities measured with error? What would be a better alternative?
-- Which proteins would you choose to label, and why?
-
-:::
-
-We first reshape the results into wide format so that each protein has a
-single row with separate columns for each contrast's log fold change and
-adjusted p-value. We then categorise proteins by their significance status
-across the two contrasts of interest.
+We first use `pivot_wider` to reshape the results so that each protein
+occupies a single row, with separate columns for the log fold change and
+adjusted p-value from each contrast.
 
 ```{r}
-# Will need to break this up into 3 stages and explain each carefully:
-# 1. Reshape the limma results to have one row per protein and separate columns for each contrast's adjusted p-value and log fold change.
-# 2. Create a new column 'sig' to categorize proteins based on their significance in the two contrasts we are comparing (MPXV vs Control and COVID-19 vs Control)
-# 3. Plot the log fold changes against each other, coloring and labeling points based on their significance category
-
 compare_limma_results <- limma_results_all_contrasts %>%
   select(UniprotID, Genes, adj.P.Val, logFC, contrast) %>%
   pivot_wider(names_from = contrast, values_from = c(adj.P.Val, logFC))
+```
 
+We can now plot the log fold changes against each other.
+
+```{r}
+compare_limma_results %>%
+  ggplot(aes(x=logFC_MPXV_control, y=logFC_Covid19_control)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Log Fold Change (MPXV vs Control)",
+       y = "Log Fold Change (COVID-19 vs Control)") 
+```
+
+We'd like to highlight the significance status of each protein across the two
+contrasts. We can create a `sig` column that categorises each protein by its
+significance status across the two contrasts, distinguishing proteins
+significant in both, in only one, or in neither.
+
+```{r}
 compare_limma_results <- compare_limma_results %>%
   mutate(sig = case_when(
     adj.P.Val_MPXV_control < 0.05 & adj.P.Val_Covid19_control < 0.05 ~ "Both",
@@ -230,12 +236,17 @@ compare_limma_results <- compare_limma_results %>%
     adj.P.Val_MPXV_control >= 0.05 & adj.P.Val_Covid19_control < 0.05 ~ "COVID-19 only",
     TRUE ~ "None"
   ))
+```
 
-compare_limma_results %>%
+Now we can re-plot the log fold changes against each other, colouring
+points by significance category. We will label only those significant in
+both contrasts to keep the plot legible.
+
+```{r}
+p <- compare_limma_results %>%
   arrange(desc(sig)) %>%
-  ggplot(aes(logFC_MPXV_control, logFC_Covid19_control)) +
-  geom_point(aes(colour = sig, alpha = sig), pch = 20, size = 3) +
-  geom_smooth(method = 'lm', se = FALSE, linetype = 2, colour = 'grey') +
+  ggplot(aes(x=logFC_MPXV_control, y=logFC_Covid19_control)) +
+  geom_point(aes(colour = sig), pch = 20, size = 3) +
   geom_text_repel(data = filter(compare_limma_results, sig == "Both"),
                   aes(label = Genes),
                   size = 3,
@@ -246,13 +257,38 @@ compare_limma_results %>%
   scale_colour_manual(values = c("Both" = "purple",
                                  "MPXV only" = "orangered4",
                                  "COVID-19 only" = "steelblue",
-                                 "None" = "grey70")) +
+                                 "None" = "grey70"))
+
+print(p)
+```
+
+Finally, we map transparency (`alpha`) to the significance category to draw the eye
+towards proteins significant in both contrasts, and add a linear regression line
+with `geom_smooth(method = 'lm')` to show the overall relationship between log
+fold changes across the two infections.
+
+```{r}
+p2 <- p + aes(alpha = sig) +
   scale_alpha_manual(values = c("Both" = 0.8,
                                 "MPXV only" = 0.8,
                                 "COVID-19 only" = 0.8,
                                 "None" = 0.25)) +
+  geom_smooth(aes(x=logFC_MPXV_control, y=logFC_Covid19_control),
+              inherit.aes = FALSE, # Don't inherit aesthetics to avoid inheriting alpha aesthetics
+              method = 'lm', se = FALSE, linetype = 2, colour = 'grey') +
   theme(legend.title = element_blank())
+
+print(p2)
 ```
+
+::: {.callout-discussion}
+#### Discussion
+
+- What are we trying to learn from this scatter plot — what does a protein's position in the plot tell us?
+- Which proteins are most interesting?
+- The plot includes a linear regression line. Is a standard linear model (Ordinary Least Squares; OLS) appropriate here, given that both axes represent quantities measured with error? What would be a better alternative?
+
+:::
 
 
 ::: {.callout-tip}
@@ -260,6 +296,7 @@ compare_limma_results %>%
 
 - Heatmaps are a useful way to visualise protein abundance patterns across all samples simultaneously; restricting to significant or highly variable proteins makes them easier to interpret
 - The default Euclidean distance metric in `pheatmap` can be replaced with a correlation-based distance to focus clustering on the shape of abundance profiles; this requires computing the distance matrix manually when missing values are present
+- Ward's minimum variance linkage (`clustering_method = 'ward.D2'`) tends to produce more compact, evenly-sized clusters than the default complete linkage
 - Defining a helper function for repeated plotting tasks (such as heatmaps for different protein subsets) reduces code duplication and makes the analysis easier to extend
 - Scatter plots of log fold changes from two contrasts can reveal proteins with shared or condition-specific responses; reshaping results to wide format with `pivot_wider` is a convenient way to align values from different contrasts for comparison
 

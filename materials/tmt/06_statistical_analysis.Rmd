@@ -158,17 +158,7 @@ The initial model has now been applied to each of the proteins in our
 data. We now update the model using the `eBayes` function. When we do
 this we include two other arguments: `trend = TRUE` and `robust = TRUE`. 
 
--   `trend` - takes a logical value of `TRUE` or `FALSE` to indicate
-    whether an intensity-dependent trend should be allowed for the prior
-    variance (i.e., the population level variance prior to empirical
-    Bayes moderation). This means that when the empirical Bayes
-    moderation is applied the protein variances are not squeezed towards
-    a global mean but rather towards an intensity-dependent trend.
--   `robust` - takes a logical value of `TRUE` or `FALSE` to indicate
-    whether the parameter estimation of the priors should be robust
-    against outlier sample variances.
-    
-See (@Phipson2016 and @Smyth2004) for further details.
+{{< include ../_shared/_trend_robust_args.md >}}
 
 ```{r}
 ## Update the model using the limma eBayes algorithm
@@ -211,6 +201,12 @@ for the multiple hypothesis tests performed.
 
 {{< include ../_shared/_diagnostic_plots.md >}}
 
+
+```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
+knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+```
+
+
 ```{r}
 plotSA(fit = final_model,
        cex = 0.5,
@@ -224,9 +220,7 @@ limma_results %>%
   geom_histogram()
 ```
 
-```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
-knitr::include_graphics("figs/phist_shapes.png", error = FALSE)
-```
+
 
 
 ### Interpreting the output of our statistical model

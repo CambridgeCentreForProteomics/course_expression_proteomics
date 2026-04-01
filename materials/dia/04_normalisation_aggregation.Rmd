@@ -18,9 +18,6 @@ editor_options:
 
 ```{r, eval=TRUE, include=FALSE}
 library("here")
-library("arrow")
-library("readxl")
-library("stringr")
 library("QFeatures")
 library("naniar")
 library("tidyr")
@@ -246,7 +243,7 @@ dia_qf <- normalize(dia_qf,
 We can visualise the effect of normalisation by plotting density curves of
 protein abundance per sample before and after normalisation.
 
-```{r}
+```{r, warning=FALSE}
 pre_norm <- longForm(dia_qf[,,'proteins'], colvars = 'group') %>%
   ggplot(aes(x = value, colour = group, group = colname)) +
   geom_density() +

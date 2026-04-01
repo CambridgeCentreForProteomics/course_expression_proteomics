@@ -181,6 +181,8 @@ and then update the model using the `eBayes` function with `trend = TRUE`
 and `robust = TRUE` to account for the intensity-dependent variance trend
 typical in quantitative proteomics data.
 
+{{< include ../_shared/_trend_robust_args.md >}}
+
 ```{r}
 limma_fit <- lmFit(assay(dia_qf[['norm_proteins_replicated']]), limma_design)
 
@@ -191,7 +193,13 @@ limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
 
 ### Diagnostic plots to verify suitability of our statistical model
 
+
 {{< include ../_shared/_diagnostic_plots.md >}}
+
+
+```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
+knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+```
 
 ```{r}
 plotSA(fit = limma_fit_contrasts,

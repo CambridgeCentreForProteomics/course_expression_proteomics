@@ -10,6 +10,7 @@ editor_options:
 
 * Know how to use `filterFeatures` to filter DIA-NN precursor data by Q-value thresholds
 * Know how to use `joinAssays` to combine per-sample `SummarizedExperiment` objects into a single combined set
+* Know how to identify and remove contaminant proteins
 * Be able to explore and visualise missing values in DIA proteomics data
 * Understand how to filter sparse precursors based on a missing value threshold
 
@@ -160,164 +161,42 @@ culture media, and trypsin used for proteolytic digestion. These proteins are
 not informative for the biological question and should be removed before
 downstream analysis.
 
-It is standard practice to include a curated contaminants database alongside
-the primary sequence database during the database search. In this study the
-data was searched against the
-[Hao Group's Protein Contaminant Libraries for DDA and DIA Proteomics](https://github.com/HaoGroup-ProtContLib/Protein-Contaminant-Libraries-for-DDA-and-DIA-Proteomics/)
-@Frankenfield2022. The entries in this contaminant database are named with a `Cont_` prefix,
-which is carried through into the `Protein.Ids` column of the DIA-NN output,
-making them straightforward to identify computationally.
+It is standard practice to include a curated contaminants database alongside the
+primary sequence database during the database search. For this data, we used a
+modified version of the contaminants fasta from [Hao Group's Protein Contaminant
+Libraries for DDA and DIA
+Proteomics](https://github.com/HaoGroup-ProtContLib/Protein-Contaminant-Libraries-for-DDA-and-DIA-Proteomics/)
+@Frankenfield2022, where we removed the contaminants from Fetal Bovine Serum,
+which are not relevant here. The entries in this contaminant database are named
+with a `Cont_` prefix, which is carried through into the `Protein.Ids` column of
+the DIA-NN output, making them straightforward to identify computationally.
 
-We first extract the `rowData` from the combined precursor set and annotate
-each precursor with a logical column indicating whether it has any contaminant
-hit in its `Protein.Ids` field.
+We can inspect the `rowData` to check the contaminants can be identified as expected.
 
 ```{r}
 # Extract the rowData
 rd <- rowData(dia_qf[['precursors']]) %>%
   data.frame()
 
-# annotate with is_contaminant column
-rd <- rd %>%
-  mutate(is_contaminant=grepl('Cont_', Protein.Ids))
-
-table(rd$is_contaminant)
+table(grepl('Cont_', rd$Protein.Ids))
 ```
-
-It is also worth examining which contaminant proteins are most frequently
-matched, as this can inform whether the contamination is likely to be
-biologically meaningful or simply a consequence of sample preparation.
-For example, a high number of precursor matches to a protein that is also
-genuinely present in the sample type (e.g., a plasma protein that happens to
-appear in the contaminant database) warrants careful thought before simply
-discarding those precursors.
-
-We can identify the most common contaminant hits by filtering to contaminant
-precursors, splitting the semicolon-separated `Protein.Ids` field into
-individual accessions, and counting occurrences.
-
-```{r}
-rd %>%
-  filter(is_contaminant) %>%
-  separate_rows(Protein.Ids, sep = ';') %>%
-  filter(grepl('Cont_', Protein.Ids)) %>%
-  count(Protein.Ids) %>%
-  arrange(desc(n)) %>%
-  head()
-```
-
-:::{.callout-exercise}
-#### Challenge: Fibronectin contaminantion?
-
-{{< level 2 >}}
-
-Fibronectin is a large extracellular matrix glycoprotein abundant in plasma.
-Both human fibronectin (`P02751`) and bovine fibronectin (`Cont_P07589`) are
-present in the database used for this search. Because this is a plasma
-proteomics experiment, fibronectin is expected to be genuinely present in the
-samples.
-
-Count the number of precursors in each of the following three categories:
-
-1. Matched to bovine fibronectin only (not human)
-2. Matched to both bovine and human fibronectin
-3. Matched to human fibronectin only (not bovine)
-
-Based on your counts, what do you conclude about how these precursors should be
-handled? Should fibronectin precursors be removed along with other contaminants?
-
-::: {.callout-answer collapse="true"}
-
-```{r}
-# Filter the rowData to only precursors with human fibronectin (`P02751`) or
-# bovine fibronectin (`Cont_P07589`) and then count instances of each
-# combination of `Protein.Ids` and `Protein.Group`
-rd %>%
-  filter(grepl('Cont_P07589|P02751', Protein.Ids)) %>%
-  count(Protein.Group, Protein.Ids)
-  
-```
-
-Precursors matched only to bovine fibronectin are most likely genuine
-contaminants introduced via bovine-derived reagents and should be removed.
-Precursors matched to both bovine and human fibronectin are ambiguous — the
-peptide sequence is shared between species and therefore cannot be attributed to
-contamination alone. Precursors matched only to human fibronectin are almost
-certainly genuine, as fibronectin is a major plasma protein. Removing all
-fibronectin precursors indiscriminately would discard biologically meaningful
-signal. A conservative approach is to remove only all precursors whose
-`Protein.Ids` include the bovine contaminant entry, retaining just those
-uniquely matched to the human protein.
-
-:::
-
-:::
-
-```{r}
-all_ids <- strsplit(rd$Protein.Ids, ';') %>%
-  unlist() %>%
-  unique()
-
-sample_uids <- all_ids[!grepl('Cont_', all_ids)]
-contaminant_ids <- all_ids[grepl('Cont_', all_ids)]
-
-strict_contaminants <- contaminant_ids[!contaminant_ids %in% paste0('Cont_', sample_uids)]
-
-rd %>%
-  filter(is_contaminant) %>%
-  separate_rows(Protein.Ids, sep = ';') %>%
-  filter(Protein.Group %in% strict_contaminants) %>%
-  count(Protein.Group) %>%
-  arrange(desc(n)) %>%
-head()
-
-rd %>%
-  filter(grepl('Cont_Q1WEI2', Protein.Ids)) %>%
-  count(Protein.Group, Protein.Ids)
-
-```
-
-::: {.callout-discussion}
-#### Discussion
-
-- How many precursors in total are potentially from contaminants? Does this seem like a large or small proportion of the data?
-- Looking at the most commonly matched contaminant proteins — are these likely to be genuine contaminants, or could some be plasma proteins that appear in both the sample and the contaminant database?
-- How should we handle precursors that match a contaminant entry? Should all be removed, or does it depend on the protein?
-
-:::
-
-::: {.callout-answer collapse="true"}
-
-1. The number of contaminant-matched precursors is substantial — a larger
-proportion than might be expected. This reflects the low complexity of plasma as a
-sample type, which is dominated by a relatively small number of highly abundant
-proteins, some of which share peptide sequences with entries in the contaminant
-database.
-
-2. It is a mixture. Keratins are unambiguous contaminants — they derive from
-skin, hair, or nails and have no biological relevance in a plasma proteomics
-experiment. Fibronectin, on the other hand, is a major plasma protein and its
-presence is biologically expected; precursors matched to bovine fibronectin
-likely reflect shared peptide sequences rather than true contamination.
-
-3. We will take a conservative approach and remove all precursors whose
-`Protein.Ids` include any `Cont_` entry. For abundant plasma proteins such as
-fibronectin that are also represented in the contaminant database, many of their
-precursors will not carry a contaminant match and will be retained. Those that
-are removed represent the most ambiguous in their origin.
-
-:::
 
 
 ## Filtering contaminants
 
-We now remove precursors with a contaminant match from our data. As with all
-filtering steps, we first create a copy of the `"precursors"` set and add an
-assay link to preserve the unfiltered data for reference.
+We now remove precursors with a contaminant match from our data. 
+
+{{< include ../_shared/_copy_assay_rationale.md >}}
+
+We create a copy of the `"precursors"` set called `"precursors_no_cont"`. After
+filtering, this set will contain only precursors do not originate from
+contaminants. We use `plot` to visualise the assay structure before and after adding the link.
 
 ```{r, fig.height=3, fig.width=3}
 dia_qf <- addAssay(dia_qf, dia_qf[["precursors"]],
                    name = "precursors_no_cont")
+
+plot(dia_qf)
 
 dia_qf <- addAssayLink(dia_qf, from = "precursors",
                        to = "precursors_no_cont")
@@ -325,8 +204,11 @@ dia_qf <- addAssayLink(dia_qf, from = "precursors",
 plot(dia_qf)
 ```
 
-We then use `filterFeatures` to retain only precursors whose `Protein.Ids`
-field contains no `Cont_` entry.
+We then use `filterFeatures` to retain only precursors whose `Protein.Ids` field
+contains no `Cont_` entry. We specifying the `i` argument to apply the filter
+only to the `"precursors_no_cont"` set. This retains the original `"precursors"`
+assay with all precursors for reference, while the new set contains only those
+precursors that pass the missing value threshold.
 
 ```{r}
 dia_qf <- filterFeatures(dia_qf, ~ !grepl("Cont_", Protein.Ids),
@@ -421,25 +303,19 @@ replicates per group before testing.
 
 ## Filtering sparse precursors
 
-{{< include ../_shared/_copy_assay_rationale.md >}}
-
-We call the copy `"precursors_filtered_missing"` — after filtering, this set
-will contain only precursors that meet the missing value threshold. We use
-`plot` to visualise the assay structure before and after adding the link.
+We create a copy called `"precursors_filtered_missing"` — after filtering, this set
+will contain only precursors that meet the missing value threshold. 
 
 ```{r, fig.height=3, fig.width=3}
 dia_qf <- addAssay(dia_qf, dia_qf[["precursors_no_cont"]],
                    name = "precursors_filtered_missing")
 
-plot(dia_qf) # no link yet
-
 dia_qf <- addAssayLink(dia_qf, from = "precursors_no_cont",
                        to = "precursors_filtered_missing")
 
-plot(dia_qf) # link now shown
 ```
 
-Now we perform the missing value filtering on the new assay, specifying the `i` argument to apply the filter only to the `"precursors_filtered_missing"` assay. This retains the original `"precursors "` assay with all precursors for reference, while the new set contains only those precursors that pass the missing value threshold.
+Now we perform the missing value filtering on the new assay, again specifying the `i` argument to apply the filter to only the desired set.
 
 ```{r}
 dia_qf <- dia_qf %>%
@@ -464,13 +340,17 @@ save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
   confidence of cross-run matches
 - `filterFeatures` applies row-level filters based on `rowData` variables,
   and can be applied to the whole `QFeatures` object or to specific sets
+- Contaminant proteins (e.g., keratins, trypsin, BSA) should be removed before
+  downstream analysis; including a curated contaminant database in the search
+  and filtering on a `Cont_` prefix in `Protein.Ids` is a straightforward way
+  to do this
 - `joinAssays` combines per-sample `SummarizedExperiment` objects into a single
   combined set, with missing values (`NA`) where a precursor was not detected
   in a given sample
 - `nNA` provides a convenient summary of missing values per feature (row) and
   per sample (column)
-- DIA data typically has a higher proportion of missing values than TMT-labelled
-  data, as proteins must be detected independently in each sample
+- DIA data typically has a relatively high proportion of missing values,
+  as proteins must be detected independently in each sample
 - `filterNA` removes precursors that are missing above a specified proportion
   of samples, with the threshold chosen based on the experimental context
 

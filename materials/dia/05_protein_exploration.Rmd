@@ -60,7 +60,7 @@ long_form_protein <- longForm(dia_qf[,,"norm_proteins"],
 We can then filter to a set of proteins of interest and plot abundance
 values per sample, grouped by condition.
 
-```{r, fig.height=6, fig.width=8}
+```{r, fig.height=6, fig.width=8, warning=FALSE}
 proteins_of_interest <- c('P02766', # TTR
                           'P18428',  # LBP
                           'P13796') # LCP1
@@ -117,9 +117,8 @@ fviz_screeplot(protein_pca)
 ::: {.callout-discussion}
 #### Discussion
 
-- Looking at the PCA plot, which factor appears to drive the most variation between samples — group, age group, or something else?
-- What would you expect to see in a well-behaved proteomics experiment, and does this data meet those expectations?
-- Are there any samples that look like outliers? What might explain this?
+- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples? Is this what you expected based on the experimental design?
+- Are there any samples that look like outliers or behave differently? What might explain this?
 
 :::
 
@@ -160,34 +159,50 @@ showing how many precursors support the protein-level quantification for
 this protein.
 
 We can use this subset to visualise how the precursor data was aggregated
-to protein level for this particular feature.
+to protein level for this particular feature. Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
 
 ```{r, warning=FALSE, message=FALSE}
 TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%
-  mutate(assay_order = factor(assay,
-                              levels = c("precursors_filtered_missing",
-                                         "proteins"))) %>%
+# Log2 transform the precursor-level data for better visualisation
   mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
   ggplot(aes(x = colname, y = value, colour = assay)) +
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7)) +
-  facet_wrap(~ assay_order) +
-  labs(x='Sample', y='Abundance (log2)')
+  facet_wrap(~ assay) +
+  labs(x='Sample', y='Intensity (log2)')
 ```
 
+In the plot above, the profile of the precursors is very similar, but it's hard to see this because of the differences in overall intensity. We can modify the intensities to put them on the same scale and make this clearer. Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
+
+```{r, warning=FALSE, message=FALSE}
+TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+  longForm() %>%
+  as_tibble() %>%
+  mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
+  # Centre the values for each assay to put them on the same scale
+  group_by(rowname) %>% mutate(value=value-mean(value, na.rm=TRUE)) %>%
+  # colour by feature (rowname) to make it easier to distinguish the precursor profiles
+  ggplot(aes(x = colname, y = value, colour = rowname)) +
+  geom_point() +
+  geom_line(aes(group = rowname)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7),
+        legend.position='none') +
+  facet_wrap(~ assay) +
+  labs(x='Sample', y='Intensity (log2)')
+```
 
 ::: {.callout-tip}
 #### Key Points
 
 - Plotting protein abundances for specific proteins of interest is a useful way to inspect the data before formal statistical testing
-- PCA must be run on a complete data matrix; proteins with missing values in any sample should be removed with `filterNA` before applying `prcomp`
-- In DIA data, `filterNA` prior to PCA may remove a substantial proportion of proteins due to the higher rate of missing values compared to TMT
+- PCA wiht `prcomp` uses only the complete data matrix.
 - Colouring PCA plots by all potential sources of variation (e.g., group, age group) helps identify which factors drive the observed structure in the data
-- The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object
+- The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object. We can use this to visualise how the precursor-level data was aggregated to protein level for a specific feature, and to verify that the processing pipeline has behaved as expected.
 
 :::
 
