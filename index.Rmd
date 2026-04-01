@@ -10,7 +10,7 @@ number-sections: false
 
 These materials focus on expression proteomics, which aims to characterise the protein diversity and abundance in a particular system. 
 You will learn about the bioinformatic analysis steps involved when working with these kind of data, in particular several dedicated proteomics Bioconductor packages, part of the R programming language.
-We will use a real-world dataset obtained from a tandem mass tag (TMT) mass spectrometry experiment. 
+We use real-world datasets from two complementary quantitative proteomics approaches: tandem mass tag (TMT) labelling and data-independent acquisition (DIA). 
 We cover the basic data structures used to store and manipulate protein abundance data, how to do quality control and filtering of the data, as well as several visualisations. 
 Finally, we include statistical analysis of differential abundance across sample groups (e.g. control vs. treated) and further evaluation and biological interpretation of the results via gene ontology analysis. 
 
@@ -21,8 +21,8 @@ You will learn about:
 
 - How mass spectrometry can be used to quantify protein abundance and some of the methods used for peptide quantitation.
 - The bioinformatics steps involved in processing and analysing expression proteomics data.
-- How to assess the quality of your data, deal with missing values and summarise PSM-level (peptide-spectrum match) data to protein-level.
-- How to perform differential expression analysis to compare protein abundances between different groups of samples.
+- How to assess the quality of your data, deal with missing values, and summarise feature-level data to protein-level.
+- How to perform differential abundance analysis to compare protein abundances between different groups of samples.
 :::
 
 
