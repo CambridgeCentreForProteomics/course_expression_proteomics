@@ -36,5 +36,8 @@ course_files/output
 _freeze
 
 # Quarto render artifacts
-**/*_files/
+materials/**/*_files/
 figure/
+*html
+site_libs
+*.rmarkdown
