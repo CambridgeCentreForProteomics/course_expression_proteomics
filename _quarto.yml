@@ -10,7 +10,7 @@ project:
     - index.Rmd
     - setup.Rmd
     - materials.Rmd
-    - materials/*
+    - materials/**
     - "!materials/*/no_render"
 
 format: crit-format-html

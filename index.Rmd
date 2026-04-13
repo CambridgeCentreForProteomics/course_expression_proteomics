@@ -10,7 +10,7 @@ number-sections: false
 
 These materials focus on expression proteomics, which aims to characterise the protein diversity and abundance in a particular system. 
 You will learn about the bioinformatic analysis steps involved when working with these kind of data, in particular several dedicated proteomics Bioconductor packages, part of the R programming language.
-We will use a real-world dataset obtained from a tandem mass tag (TMT) mass spectrometry experiment. 
+We use real-world datasets from two complementary quantitative proteomics approaches: tandem mass tag (TMT) labelling and data-independent acquisition (DIA). 
 We cover the basic data structures used to store and manipulate protein abundance data, how to do quality control and filtering of the data, as well as several visualisations. 
 Finally, we include statistical analysis of differential abundance across sample groups (e.g. control vs. treated) and further evaluation and biological interpretation of the results via gene ontology analysis. 
 
@@ -21,8 +21,8 @@ You will learn about:
 
 - How mass spectrometry can be used to quantify protein abundance and some of the methods used for peptide quantitation.
 - The bioinformatics steps involved in processing and analysing expression proteomics data.
-- How to assess the quality of your data, deal with missing values and summarise PSM-level (peptide-spectrum match) data to protein-level.
-- How to perform differential expression analysis to compare protein abundances between different groups of samples.
+- How to assess the quality of your data, deal with missing values, and summarise feature-level data to protein-level.
+- How to perform differential abundance analysis to compare protein abundances between different groups of samples.
 :::
 
 
@@ -84,9 +84,9 @@ About the authors:
   _Roles_: writing - original draft; conceptualisation; coding
 - **Tom Smith**
   <a href="https://orcid.org/0000-0002-0697-8777" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a>
-  <a href="https://github.com/TomSmithCGAT" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
-  _Affiliation_: MRC Laboratory of Molecular Biology, Cambridge  
-  _Roles_: writing-review-editing; coding
+  <a href="https://github.com/TomSmithCGAT" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>
+  _Affiliation_: MRC Laboratory of Molecular Biology, Cambridge
+  _Roles_: writing - original draft; writing - review and editing; coding
 - **Charlotte Dawson**
   <a href="https://github.com/csdaw" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
   _Affiliation_: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge. 
@@ -106,13 +106,13 @@ For example, you can cite us in the methods section of your paper: "We carried o
 
 You can cite these materials as:
 
-> Hutchings C, Breckels LM (2024) "CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R", https://cambridgecentreforproteomics.github.io/course_expression_proteomics
+> Hutchings C, Breckels LM, Smith T, Dawson CS (2024) "CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R", https://cambridgecentreforproteomics.github.io/course_expression_proteomics
 
 Or in BibTeX format:
 
 ```
 @Misc{,
-  author = {Charlotte Hutchings and Lisa M Breckels},
+  author = {Charlotte Hutchings and Lisa M Breckels and Tom Smith and Charlotte S Dawson},
   title = {CambridgeCentreForProteomics/course_expression_proteomics: Analysis of expression proteomics data in R},
   month = {November},
   year = {2024},
@@ -141,7 +141,13 @@ Case-study data
 
 > Queiroz, R.M.L., Smith, T., Villanueva, E., Marti-Solano, M., Monti, M., Pizzinga, M., Mirea, D.-M., Ramakrishna, M., Harvey, R.F., Dezi, V., Thomas, G.H., Willis, A.E. & Lilley, K.S. (2019) Comprehensive identification of RNA–protein interactions in any organism using orthogonal organic phase separation (OOPS). Nature Biotechnology. 37 (2), 169–178. doi:10.1038/s41587-018-0001-2.
 
-Mass spectrometry-based proteomics: 
+> Wang, Z., Tober-Lau, P., Farztdinov, V., Lemke, O., Schwecke, T., Steinbrecher, S., Muenzner, J., Kriedemann, H., Sander, L.E., Hartl, J., Mülleder, M., Ralser, M. & Kurth, F. (2022) The human host response to monkeypox infection: a proteomic case series study. EMBO Molecular Medicine. 14 (11), e16643. doi:10.15252/emmm.202216643.
+
+DIA proteomics data processing:
+
+> Lou, R. & Shui, W. (2024) Acquisition and Analysis of DIA-Based Proteomic Data: A Comprehensive Survey in 2023. Molecular & Cellular Proteomics. 23 (2), 100712. doi:10.1016/j.mcpro.2024.100712.
+
+Mass spectrometry-based proteomics:
 
 > Dupree, E.J., Jayathirtha, M., Yorkey, H., Mihasan, M., Petre, B.A. & Darie, C.C. (2020) A Critical Review of Bottom-Up Proteomics: The Good, the Bad, and the Future of This Field. Proteomes. 8 (3), 14. doi:10.3390/proteomes8030014.
 

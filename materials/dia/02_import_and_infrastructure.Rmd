@@ -1,0 +1,296 @@
+---
+title: Import and infrastructure
+bibliography: ../course_refs.bib
+editor_options:
+  chunk_output_type: console
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+* Understand the structure of `SummarizedExperiment` and `QFeatures` objects and how the two are related
+* Understand how DIA-NN output data is structured and how it can be imported into R
+* Know how to use `readQFeaturesFromDIANN` to create a `QFeatures` object from DIA-NN output
+* Be able to access sample metadata via `colData` in a `QFeatures` object
+* Be able to explore the data within a `QFeatures` object using `assay`, `rowData`, and `colData`
+
+:::
+
+
+```{r, eval=TRUE, include=FALSE}
+library("here")
+library("arrow")
+library("readxl")
+library("QFeatures")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
+```
+
+
+## The data structure
+
+The raw DIA mass spectrometry data was processed using DIA-NN, which outputs a
+report file in `.parquet` format. Unlike a simple abundance matrix, this is a
+**long-format** table — each row corresponds to a single precursor–sample
+combination, rather than one row per precursor across all samples simultaneously.
+The file contains precursor-level identifications and quantities for every
+sample, along with quality metrics from the DIA-NN search.
+
+We read this file into R using the `read_parquet` function from the `arrow`
+package.
+
+```{r}
+diann_df <- read_parquet(here("course_files/dia/data/monkeypox_plasma_proteomes.parquet"))
+```
+
+We can inspect the dimensions and column names to understand what the data
+contains.
+
+```{r}
+dim(diann_df)
+names(diann_df)
+```
+
+The key columns we will use in our analysis are:
+
+- **`Precursor.Id`**: a unique identifier for each precursor — typically the
+  modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
+- **`Protein.Group`**: the canonical protein group identifier used for
+  aggregation to protein level
+- **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the
+  precursor is assigned
+- **`Genes`**: the gene symbol(s) associated with the identified proteins
+- **`Run`**: the identifier for the sample run — one value per biological sample
+- **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
+- **`Q.Value`**: the precursor-level Q-value, representing the estimated false
+  discovery rate at the precursor level; lower values indicate more confident
+  identifications
+- **`Lib.Q.Value`**: the library-level Q-value — the confidence that the
+  precursor was matched to the correct entry in the spectral library
+- **`Protein.Q.Value`**: the protein-level Q-value, representing the estimated
+  FDR at the protein level
+
+The report also contains chromatographic quality metrics per precursor per run.
+For example:
+
+- **`FWHM`**: Full-Width at Half Maximum of the chromatographic peak, a measure
+  of peak shape quality — narrow, symmetrical peaks are preferred
+
+We will use these Q-value columns and quality metrics to filter the data in the
+next lesson.
+
+We will be using the `QFeatures` Bioconductor package to import, store, and
+manipulate our data. Before we import the data it is first necessary to
+understand the structure of a `QFeatures` object and its underlying
+`SummarizedExperiment` objects.
+
+{{< include ../_shared/_qfeatures_structure.md >}}
+
+The best way to get our head around the `QFeatures` infrastructure is to import
+our data into a `QFeatures` object and start exploring.
+
+### Cleaning run names
+
+DIA-NN pastes together the name of the `.wiff2` folder and the `.wiff.scan`
+files into the `Run` column. We need to clean up these run names so that they
+match the `sample_id` field in our metadata.
+
+```{r}
+### Clean Run names
+print(head(unique(diann_df$Run), 2))
+
+# DIANN has pasted the name of the .wiff2 folder as well as the .wiff.scan files together.
+# So we need to clean up the Run names so that they match the metadata `sample_id` field.
+diann_df <- diann_df %>%
+  mutate(Run = sub('\\..*', '', Run))
+
+print(head(unique(diann_df$Run), 2))
+```
+
+{{< include ../_shared/_pipe.md >}}
+
+## Importing sample metadata
+
+We import the sample metadata from an Excel file. This provides information
+about each sample, including which group (MPXV, COVID-19, or Control) each
+run belongs to.
+
+```{r}
+colData <- read_excel(here("course_files/dia/data/monkeypox_metadata.xlsx"))
+```
+
+The metadata also contains a `shortname` column — a concise, human-readable
+label for each sample. We merge this into the DIA-NN data frame so that it is
+available as an identifier when we import into `QFeatures`, making it easier to
+work with the data in R and to label visualisations.
+
+```{r}
+diann_df <- diann_df %>%
+  merge(colData[, c('sample_id', 'shortname')], by.x = "Run", by.y = "sample_id")
+```
+
+## Reading into a `QFeatures` object
+
+We use the `readQFeaturesFromDIANN` function to import the cleaned DIA-NN data
+into a `QFeatures` object. This function creates one `SummarizedExperiment` per
+run, with each set containing the precursor-level quantification data for that
+run. The `runCol` argument specifies which column in the input data frame
+identifies the run.
+
+```{r}
+# readQFeaturesFromDIANN requires colData to have a column called 'runCol'
+colData <- colData %>%
+  mutate(runCol = shortname)
+
+dia_qf <- QFeatures::readQFeaturesFromDIANN(
+  diann_df, quantCols = "Precursor.Quantity", fnames = "Precursor.Id",
+  runCol = 'shortname', colData = colData)
+```
+
+
+
+## Exploring the data
+
+When we inspect our `QFeatures` object, we see that it contains 31 sets, each corresponding to a different sample run. Each set contains the
+precursor-level quantification data for that run, with feature names given by the `Precursor.Id` column from the original DIA-NN output.
+
+```{r}
+dia_qf
+
+head(assay(dia_qf[[1]]))
+```
+
+::: {.callout-discussion}
+#### Discussion
+
+Why does `readQFeaturesFromDIANN` create one `SummarizedExperiment` per run,
+rather than a single combined set across all runs from the outset?
+
+:::
+
+::: {.callout-answer collapse="true"}
+
+The DIA-NN output contains per-run quality metrics
+stored in the `rowData` of each precursor. These are run-specific values and
+would be ambiguous or impossible to retain if all runs were immediately merged
+into a single matrix. By keeping one `SummarizedExperiment` per run, we can
+inspect and filter on these per-run metrics before joining the data. We will
+join the per-sample sets into a single combined precursor set in the next
+lesson, once filtering is complete.
+
+:::
+
+### How many precursors per sample?
+
+Each sample will have a different number of precursors identified and quantified. We can explore
+this by inspecting the number of rows in each per-sample set, which corresponds to the number of precursors quantified in that sample.
+
+:::{.callout-exercise}
+#### Challenge: Precursors per sample
+
+{{< level 2 >}}
+
+1. Find a function to determine how many precursors are quantified in each
+sample. Use it to plot a histogram of precursor counts across samples.
+
+2. Create a bar plot showing the number of precursors identified in each
+sample, coloured by group. Based on your plot:
+
+- Which group tends to have the most precursors identified?
+- Is there any sample that looks like an outlier?
+
+<details><summary>Hint</summary>Browse the `QFeatures` documentation with
+`?QFeatures` to find a suitable function for obtaining per-sample feature
+counts.</details>
+
+::: {.callout-answer collapse="true"}
+
+**Task 1**
+
+```{r, fig.height=4, fig.width=4}
+hist(nrows(dia_qf),
+     xlab="Precursors",
+     main="Precursor counts per sample")
+
+```
+
+**Task 2**
+
+```{r}
+data.frame(
+  n_precursors = nrows(dia_qf),
+  sample = names(nrows(dia_qf))) %>%
+  merge(data.frame(colData(dia_qf)), by.x = "sample", by.y = "runCol") %>%
+  ggplot(aes(x = sample, y = n_precursors, fill = group)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Sample", y = "Number of precursors") +
+  coord_flip() +
+  theme_classic()
+```
+
+:::
+
+:::
+
+
+### Exploring the row data
+
+The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
+from DIA-NN, including the Full-Width at Half Maximum (FWHM) of the
+chromatographic peaks. We can extract this information across all runs using the
+`rbindRowData` function. If we merge with the column data, we can then visualise
+the distribution of FWHM values per sample, coloured by group.
+
+```{r, fig.width=5, fig.height=5}
+cdata <- data.frame(colData(dia_qf))
+
+rdata <- rbindRowData(dia_qf, i = names(dia_qf)) %>%
+  data.frame() %>%
+  # Our data is in separate sets, so the sample names are in the 'assay' column
+  # We merge with the column data (using the runCol column) to get group
+  # information for each sample
+  merge(cdata, by.x = "assay", by.y = "runCol")
+
+rdata %>%
+  ggplot(aes(FWHM, group = Run, colour = group)) +
+  geom_density() +
+  theme_classic()
+```
+
+:::{.callout-exercise}
+#### Challenge: Exploring rowData quality metrics
+
+{{< level 2 >}}
+
+The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
+
+1. Use `str(rdata)` to identify other numerical quality metric columns.
+2. Choose one metric and create a plot to visualise its distribution across
+   samples, coloured by group.
+3. Do any metrics appear to differ systematically between groups, or between
+   individual samples?
+
+:::
+
+
+
+## Save data
+
+```{r, include=FALSE}
+save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
+```
+
+
+::: {.callout-tip}
+#### Key Points
+
+- DIA-NN outputs a `.parquet` format report file containing precursor- and protein-level quantification data for each sample
+- The `readQFeaturesFromDIANN` function imports DIA-NN output into a `QFeatures` object, creating one `SummarizedExperiment` per sample run
+- Sample metadata is stored in the `colData` of the `QFeatures` object and can be used to annotate samples with experimental group information
+- The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics from DIA-NN (e.g. FWHM, Q-values) that can be used to explore data quality and guide downstream filtering decisions
+
+:::
+
+## References {-}
