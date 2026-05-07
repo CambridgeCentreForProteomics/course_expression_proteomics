@@ -58,11 +58,13 @@ The key columns we will use in our analysis are:
 - **`Precursor.Id`**: a unique identifier for each precursor — typically the
   modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
 - **`Protein.Group`**: the canonical protein group identifier used for
-  aggregation to protein level
+  aggregation to protein level. Proteins that cannot be distinguished from each
+  other based on proteotypic peptides detected in the data are grouped together
+  under one Protein Group.
 - **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the
   precursor is assigned
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
-- **`Run`**: the identifier for the sample run — one value per biological sample
+- **`Run`**: the identifier for the sample run — one value per LC-MS sample injection
 - **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
 - **`Q.Value`**: the precursor-level Q-value, representing the estimated false
   discovery rate at the precursor level; lower values indicate more confident
