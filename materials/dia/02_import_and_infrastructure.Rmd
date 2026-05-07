@@ -280,7 +280,7 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
 ## Save data
 
-```{r, include=FALSE}
+```{r, include= TRUE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
 
