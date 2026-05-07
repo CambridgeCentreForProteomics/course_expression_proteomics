@@ -1,5 +1,5 @@
 This is to be expected since the majority of proteins exist at low abundances
-within the cell and only a few are highly abundant. However, **raw protein
+within the cell or in serum and only a few are highly abundant. However, **raw protein
 abundances are not normally distributed**, which means parametric statistical
 tests cannot be applied directly.
 
