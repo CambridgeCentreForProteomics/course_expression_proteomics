@@ -171,7 +171,7 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7)) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1, size = 5)) +
   facet_wrap(~ assay) +
   labs(x='Sample', y='Intensity (log2)')
 ```
@@ -190,7 +190,7 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1, size = 7),
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1, size = 5),
         legend.position='none') +
   facet_wrap(~ assay) +
   labs(x='Sample', y='Intensity (log2)')
