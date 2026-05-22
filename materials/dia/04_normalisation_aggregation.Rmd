@@ -95,6 +95,8 @@ dia_qf <- aggregateFeatures(dia_qf,
 dia_qf
 ```
 
+{{< include ../_shared/_two_peptide_rule.md >}}
+
 :::{.callout-exercise}
 #### Challenge: Quantification completeness at the protein level
 
@@ -210,6 +212,7 @@ random.
 :::
 
 :::
+
 
 ## Normalisation
 

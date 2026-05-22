@@ -146,6 +146,7 @@ conditions, when in reality they are referring to protein groups.
 
 :::
 
+{{< include ../_shared/_two_peptide_rule.md >}}
 
 
 ## Logarithmic transformation
