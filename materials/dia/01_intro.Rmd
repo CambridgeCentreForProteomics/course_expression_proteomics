@@ -26,7 +26,7 @@ Plasma samples were collected from three groups:
 - **COVID-19**: patients with confirmed COVID-19 infection
 - **Control**: healthy control individuals
 
-Protein was extracted and digested to peptides for bottom-up mass spectrometry analysis.
+Proteins were extracted and digested to peptides for bottom-up mass spectrometry analysis.
 Samples were run individually (label-free) on the mass spectrometer using a
 Data-Independent Acquisition (DIA) method.
 
@@ -47,7 +47,7 @@ which is particularly valuable for the detection and quantification of low abund
 ## DIA-NN: the identification and quantification software
 
 The raw DIA mass spectrometry data was processed using
-[DIA-NN](https://github.com/vdemichev/DiaNN), a neural-network-based software
+[DIA-NN](https://github.com/vdemichev/DiaNN), a freely available neural-network-based software
 tool for DIA data analysis. DIA-NN performs spectral library searching and
 quantification, outputting a report file (in `.parquet` format) containing precursor-
 and protein-level identifications and quantities for each sample.DIA-NN can use 
