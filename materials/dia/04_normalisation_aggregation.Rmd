@@ -261,7 +261,6 @@ post_norm <- longForm(dia_qf[,,'norm_proteins'], colvars = 'group') %>%
 pre_norm + post_norm
 ```
 
-## Save data
 
 ```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))

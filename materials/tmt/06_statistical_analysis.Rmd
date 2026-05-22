@@ -199,19 +199,21 @@ for the multiple hypothesis tests performed.
 
 ### Diagnostic plots to verify suitability of our statistical model
 
-{{< include ../_shared/_diagnostic_plots.md >}}
-
-
-```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
-knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
-```
-
+{{< include ../_shared/_diagnostic_plots1.md >}}
 
 ```{r}
 plotSA(fit = final_model,
        cex = 0.5,
        xlab = "Average log2 abundance")
 ```
+
+{{< include ../_shared/_diagnostic_plots2.md >}}
+
+
+```{r p-value_hist, echo = FALSE, fig.cap = "Examples of p-value histograms.", fig.align = "center", out.width = "100%"}
+knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+```
+
 
 ```{r, message=FALSE, warning=FALSE}
 limma_results %>%
