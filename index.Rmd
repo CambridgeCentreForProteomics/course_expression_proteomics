@@ -1,5 +1,5 @@
 ---
-author: "Charlotte Hutchings, Lisa Breckels, Tom Smith"
+author: "Charlotte Hutchings, Lisa Breckels, Tom Smith, Simran Aulakh"
 date: today
 number-sections: false
 ---
@@ -51,17 +51,18 @@ Exercises in these materials are labelled according to their level of difficulty
 
 ## Instructors
 
-This workshop will be run by: 
+Current workshops are run by: 
 
-- **Lisa Breckels** - Cambridge Centre for Proteomics, University of Cambridge
 - **Tom Smith** - MRC Laboratory of Molecular Biology, Cambridge
-- **Alistair Hines** - Cambridge Centre for Proteomics, University of Cambridge
+- **Lisa Breckels** - Cambridge Centre for Proteomics, University of Cambridge
+- **Simran Aulakh** - MRC Toxicology Unit, University of Cambridge 
 - **Oliver Crook** - Kavli Institute for NanoScience Discovery, University of Oxford
 
 Previous instructors include:
 
 * Charlotte Hutchings - Cambridge Centre for Proteomics, University of Cambridge
 * Thomas Krueger - Department of Biochemistry, University of Cambridge
+* Alistair Hines - Cambridge Centre for Proteomics, University of Cambridge
 * Charlotte S. Dawson - Cambridge Centre for Proteomics, University of Cambridge
 
 ## Authors
@@ -91,6 +92,11 @@ About the authors:
   <a href="https://github.com/csdaw" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>  
   _Affiliation_: Cambridge Centre for Proteomics, Department of Biochemistry, University of Cambridge. 
   _Roles_: writing-review-editing; coding
+- **Simran Aulakh**
+  <a href="https://orcid.org/0000-0002-1580-7144" target="_blank"><i class="fa-brands fa-orcid" style="color:#a6ce39"></i></a>
+  <a href="https://github.com/simranolak" target="_blank"><i class="fa-brands fa-github" style="color:#4078c0"></i></a>
+  _Affiliation_: MRC Toxicology Unit, Cambridge
+  _Roles_: writing - original draft; writing - review and editing; coding
 
 
 ## Citation
