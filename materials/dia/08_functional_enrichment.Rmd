@@ -53,7 +53,7 @@ limma_results_covid_control <- limma_results_all_contrasts %>%
 
 {{< include ../_shared/_go_enrichment_theory.md >}}
 
-TS: I wouldn't ever use `clusterProfiler` in my own work to perform GO term ORA as I'd want to use the GO annotations direct to the UniprotIDs. Also, where mapping is required, I'd want to have control/insight in the mapping of my protein IDs to gene IDs and the GO annotations. I would also want to explore whether there's a relationship between abundance and probability of being significant as this is likely to be an artifact that needs to be accounted for using, e.g `goseq` package. However, `clusterProfiler` is a popular package and is easy to use.
+<!-- TS: I wouldn't ever use `clusterProfiler` in my own work to perform GO term ORA as I'd want to use the GO annotations direct to the UniprotIDs. Also, where mapping is required, I'd want to have control/insight in the mapping of my protein IDs to gene IDs and the GO annotations. I would also want to explore whether there's a relationship between abundance and probability of being significant as this is likely to be an artifact that needs to be accounted for using, e.g `goseq` package. However, `clusterProfiler` is a popular package and is easy to use. -->
 
 We use the `enrichGO` function from the `clusterProfiler` package to perform
 GO ORA on the proteins with significantly decreased abundance in COVID-19 patients
@@ -142,12 +142,12 @@ significant GO terms based on their pairwise semantic similarity and
 displays them as a tree, making the relationships between terms easier
 to interpret.
 
+<!--  TS: treeplot has some fairly horrible arguments to control the plot parameters -->
+<!--  and stop labels overlapping. Honestly, I just played with the values until it -->
+<!--  worked! -->
+  
 
 ```{r, fig.height=6, fig.width=10}
-# TS: treeplot has some fairly horrible arguments to control the plot parameters
-# and stop labels overlapping. Honestly, I just played with the values until it
-# worked!
-  
 treeplot(go_down_similarity,
          showCategory = Inf,
          nCluster = 3,
