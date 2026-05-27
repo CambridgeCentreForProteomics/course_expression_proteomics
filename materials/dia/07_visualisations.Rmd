@@ -25,6 +25,7 @@ library("tibble")
 library("ggplot2")
 library("ggrepel")
 library("pheatmap")
+library("RColorBrewer")
 
 load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
 ```
@@ -69,9 +70,11 @@ correlation-based distance manually using `cor` with
 `use = "pairwise.complete.obs"` to handle missing values appropriately.
 We also use Ward's minimum variance method (`clustering_method = 'ward.D2'`)
 for the hierarchical clustering, which tends to produce more compact,
-evenly-sized clusters than the default complete linkage.
+evenly-sized clusters than the default complete linkage. Using `scale = 'row'`
+standardises each row to mean=0 and sd=1 (Z-score), which allows us to focus on
+relative abundance patterns across samples for each protein.
 
-```{r, fig.height=10, fig.width=8}
+```{r, fig.height=5, fig.width=8}
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
 
 # Rename the samples with their runCol
@@ -90,12 +93,18 @@ dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
 dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
 
 pheatmap(quant_mtx,
-         scale = 'row',
+         scale = 'row', # standardise each row to mean=0 and sd=1 (Z-score)
          show_rownames = FALSE,
          annotation_col = sample_annotations,
          clustering_method = 'ward.D2', # Use Ward's method for hierarchical clustering
          clustering_distance_rows = dist_rows,
-         clustering_distance_cols = dist_cols)
+         clustering_distance_cols = dist_cols,
+         color = colorRampPalette(brewer.pal(n = 7, name = "RdBu"))(100), # Use a diverging color palette
+         annotation_names_col = FALSE, # Hide annotation title
+         treeheight_row = 100,   # default is 50 — increase to give row dendrogram more space
+         treeheight_col = 100,   # default is 50 — increase to give col dendrogram more space
+         cellwidth = 10,         # fix cell width in points
+         cellheight = 0.25)
 ```
 
 
@@ -125,6 +134,8 @@ plot_heatmap_for_uids <- function(uids){
   pheatmap(quant_mtx,
            scale = 'row',
            clustering_method = 'ward.D2', 
+           annotation_names_col = FALSE, 
+           color = colorRampPalette(brewer.pal(n = 7, name = "RdBu"))(100),
            annotation_col = sample_annotations,
            clustering_distance_rows = dist_rows,
            clustering_distance_cols = dist_cols,
