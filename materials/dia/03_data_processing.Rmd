@@ -146,9 +146,26 @@ samples and remove them. This isn't strictly necessary for this dataset, but it
 may be if you have a very large experiment. It also helps to keep the object
 tidy and focused on the combined set for downstream analysis.
 
+The `sampleMap` is an internal table in a `QFeatures` object that records which
+samples are present in each assay. We can inspect it before removing the
+per-sample sets — at this point it contains one row per sample per assay,
+so with 31 samples, it has 62 rows - one row each for the original per-sample
+assay and for the `"precursors"` assay.
+
+```{r}
+sampleMap(dia_qf)
+```
+
+After calling `removeAssay`, the 31 per-sample assays are dropped and their
+corresponding `sampleMap` entries are removed, leaving only the rows for
+`"precursors"`. You will see a message indicating that sampleMap rows have
+been harmonized — this is expected behaviour.
+
 ```{r}
 sets_to_rm <- which(names(dia_qf) != "precursors")
 dia_qf <- removeAssay(dia_qf, i = sets_to_rm)
+
+sampleMap(dia_qf)
 ```
 
 ## Removing contaminant proteins

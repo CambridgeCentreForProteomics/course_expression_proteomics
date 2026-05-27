@@ -46,12 +46,12 @@ We can plot the quantification values for these proteins to inspect them
 directly before any formal statistical testing.
 
 We first convert the protein-level data to long format using `longForm`,
-extracting both sample-level metadata (group, shortname) and feature-level
+extracting both sample-level metadata (group, runCol) and feature-level
 metadata (gene names, protein names).
 
 ```{r}
 long_form_protein <- longForm(dia_qf[,,"norm_proteins"],
-                              colvars = c('shortname', 'group'),
+                              colvars = c('runCol', 'group'),
                               rowvars = c('Genes', 'Protein.Names')) %>%
   data.frame() %>%
   dplyr::rename(UniprotID = rowname)

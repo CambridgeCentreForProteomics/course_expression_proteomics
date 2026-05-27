@@ -55,7 +55,7 @@ to reveal groups of proteins and samples with similar abundance patterns.
 
 We start by plotting a heatmap of all proteins that were retained after
 the replication filter in the statistical analysis. We rename the sample
-columns using the `shortname` column from the `colData` and add a column
+columns using the `runCol` column from the `colData` and add a column
 annotation bar to indicate group membership.
 
 The default Euclidean distance metric used for hierarchical clustering in
@@ -74,13 +74,13 @@ evenly-sized clusters than the default complete linkage.
 ```{r, fig.height=10, fig.width=8}
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
 
-# Rename the samples with their shortname
-colnames(quant_mtx) <- dia_qf$shortname
+# Rename the samples with their runCol
+colnames(quant_mtx) <- dia_qf$runCol
 
 sample_annotations <- colData(dia_qf) %>%
   data.frame() %>%
   tibble::remove_rownames() %>%
-  tibble::column_to_rownames('shortname') %>%
+  tibble::column_to_rownames('runCol') %>%
   select(group)
 
 head(sample_annotations)
@@ -112,7 +112,7 @@ formatting.
 ```{r}
 plot_heatmap_for_uids <- function(uids){
   quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids,])
-  colnames(quant_mtx) <- dia_qf$shortname
+  colnames(quant_mtx) <- dia_qf$runCol
 
   # Use concatenation of UniprotID and Gene name as row label
   rownames(quant_mtx) <- sprintf('%s (%s)',

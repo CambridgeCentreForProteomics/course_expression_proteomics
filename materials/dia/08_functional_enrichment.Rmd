@@ -247,11 +247,11 @@ dia_qf_lipids[, , c("precursors_filtered_missing", "proteins")] %>%
 sample_annotations <- colData(dia_qf) %>%
   data.frame() %>%
   tibble::remove_rownames() %>%
-  tibble::column_to_rownames("shortname") %>%
+  tibble::column_to_rownames("runCol") %>%
   select(group)
 
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids, ])
-colnames(quant_mtx) <- dia_qf$shortname
+colnames(quant_mtx) <- dia_qf$runCol
 
 rownames(quant_mtx) <- rowData(dia_qf[["norm_proteins_replicated"]][uids, ])$Genes
 
