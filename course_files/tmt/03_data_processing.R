@@ -15,8 +15,6 @@ library("tidyverse")
 ## Loading data from previous lesson
 ## ---------------------------------------------------------------------------------------------------------
 
-load("preprocessed/lesson02.rda", verbose = TRUE)
-
 
 ## ---------------------------------------------------------------------------------------------------------
 ## Add a new data level for filtering

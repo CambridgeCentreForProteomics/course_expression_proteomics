@@ -14,8 +14,6 @@ library("factoextra")
 ## Loading data from previous lesson
 ## ---------------------------------------------------------------------------------------------------------
 
-load("preprocessed/lesson04.rda", verbose = TRUE)
-
 ## Part 1 - assay links
 ## ---------------------------------------------------------------------------------------------------------
 ## Add explicit link between final protein data "log_norm_proteins"

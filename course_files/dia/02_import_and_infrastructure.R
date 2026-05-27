@@ -7,98 +7,99 @@
 ## Load R/Bioconductor libraries
 ## ---------------------------------------------------------------------------------------------------------
 
+library("arrow")
+library("readxl")
 library("QFeatures")
-library("tidyverse")
+library("tidyr")
+library("dplyr")
+library("ggplot2")
+library("patchwork")
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Import data into QF object
+## Read the DIA-NN parquet report
+## ---------------------------------------------------------------------------------------------------------
+
+## Inspect the dimensions and column names
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Import sample metadata
 ## ---------------------------------------------------------------------------------------------------------
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Accessing and indexing SEs/datasets
+## Clean Run names
+## ---------------------------------------------------------------------------------------------------------
+
+## DIA-NN pastes the .wiff2 folder and .wiff.scan filenames together in the Run column.
+## We strip everything from the first "." onwards to match the metadata sample_id field.
+
+print(head(unique(diann_df$Run), 2))
+
+## Merge the runCol label from the metadata into the DIA-NN data frame
+
+
+
+dim(diann_df)
+names(diann_df)
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Read into a QFeatures object
 ## ---------------------------------------------------------------------------------------------------------
 
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## The quantitation data
+## Exploring the QFeatures object
 ## ---------------------------------------------------------------------------------------------------------
 
 
-
-
 ## ---------------------------------------------------------------------------------------------------------
-## The rowData container
-## ---------------------------------------------------------------------------------------------------------
-
-
-
-## ---------------------------------------------------------------------------------------------------------
-## The colData slot
-## ---------------------------------------------------------------------------------------------------------
-
-cc_qf[["psms_raw"]] %>%
-  colData()
-
-## Read in coldata .csv
-
-## Annotate the global colData with experiment info
-
-## Annotate the first SE/set with experiment info
-
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Change col names to represent the sample
-## ---------------------------------------------------------------------------------------------------------
-
-colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
-
-## ---------------------------------------------------------------------------------------------------------
-## Challenge 1: Accessing information
+## Challenge 1: Precursors per sample
 ##
-## Explore the QFeatures object you have just created.
-## 1. How many sets/SEs do we currently have in the QF object?
-## 2. How many PSMs have been identified in the data?
-## 3. How do you access and view the quantitation/abundance?
+## 1. Find a function to determine how many precursors are quantified in each
+##    sample. Use it to plot a histogram of precursor counts across samples.
 ##
+## 2. Create a bar plot showing the number of precursors identified in each
+##    sample, coloured by group. Which group tends to have the most precursors
+##    identified? Is there any sample that looks like an outlier?
+##
+## Hint: Browse the QFeatures documentation with ?QFeatures to find a suitable
+## function for obtaining per-sample feature counts.
 ## ---------------------------------------------------------------------------------------------------------
 
 
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Challenge 2: Calculating the number of peptides
-## and proteins of in the dataset
-##
-## Explore the information stored in the rowData from the 
-## Proteome Discoverer search.
-##
-## 1. What class is the rowData container? 
-##    How many rows and columns are in this data structure?
-##
-## 2. (i) Extract the rowData and convert it to a tibble or data.frame
-##    (ii) Find a column that contains the peptide sequence.
-##    (iii) Pull and find how many unique peptide sequences we have
-##
-## 3. How many protein groups (master proteins) are there?
+## Exploring rowData quality metrics
 ## ---------------------------------------------------------------------------------------------------------
 
+## rbindRowData collects rowData from all per-sample sets into a single data frame.
+## Merge with colData to get group information for plotting.
 
 
+
+## Plot FWHM distribution per sample, coloured by group
+
+rdata %>%
+  ggplot(aes(FWHM, group = Run, colour = group)) +
+  geom_density() +
+  theme_classic()
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Challenge 3: Miscleavages
+## Challenge 2: Exploring rowData quality metrics
 ##
-## One of the pieces of information given by the 3rd party
-## software used is the number of missed cleavages. This is 
-## stored in a rowData column named "Number.of.Missed.Cleavages". 
+## The rdata object contains many columns from the DIA-NN rowData beyond FWHM.
 ##
-## Can you count how many occurrences of missed cleavages 
-## there are in our data?
+## 1. Use str(rdata) to identify other numerical quality metric columns.
+## 2. Choose one metric and create a plot to visualise its distribution
+##    across samples, coloured by group.
+## 3. Do any metrics appear to differ systematically between groups, or
+##    between individual samples?
 ## ---------------------------------------------------------------------------------------------------------
 
 
