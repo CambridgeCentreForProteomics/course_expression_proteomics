@@ -196,6 +196,32 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   labs(x='Sample', y='Intensity (log2)')
 ```
 
+We can go one step further and also facet by condition  so we can see the differences between the conditions more clearly.
+
+```{r}
+TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+  longForm() %>%
+  as_tibble() %>%
+  mutate(
+    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value),
+    condition = case_when(
+      grepl('COVID', colname) ~ 'Covid19',
+      grepl('Ctr',   colname) ~ 'control',
+      grepl('MPX',   colname) ~ 'MPXV'
+    )
+  ) %>%
+  group_by(rowname) %>% 
+  mutate(value = value - mean(value, na.rm = TRUE)) %>%
+  ggplot(aes(x = colname, y = value, colour = rowname)) +
+  geom_point() +
+  geom_line(aes(group = rowname)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
+        legend.position = 'none') +
+  facet_grid(assay ~ condition, scales = 'free_x') +
+  labs(x = 'Sample', y = 'Intensity (log2)')
+```
+
 ::: {.callout-tip}
 #### Key Points
 
