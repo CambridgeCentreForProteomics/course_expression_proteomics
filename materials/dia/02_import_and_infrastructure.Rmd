@@ -42,7 +42,7 @@ We read this file into R using the `read_parquet` function from the `arrow`
 package.
 
 ```{r}
-diann_df <- read_parquet(here("course_files/dia/data/monkeypox_plasma_proteomes.parquet"))
+diann_df <- read_parquet("data/monkeypox_plasma_proteomes.parquet")
 ```
 
 We can inspect the dimensions and column names to understand what the data
@@ -106,7 +106,7 @@ which group (MPXV, COVID-19, or Control) each run belongs to. We use the
 `read_excel` function from the `readxl` package to import the data into R.
 
 ```{r}
-sample_metadata <- read_excel(here("course_files/dia/data/monkeypox_metadata.xlsx"))
+sample_metadata <- read_excel("data/monkeypox_metadata.xlsx")
 print(sample_metadata)
 ```
 
@@ -396,7 +396,7 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
 ## Save data
 
-```{r, include= TRUE}
+```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
 
