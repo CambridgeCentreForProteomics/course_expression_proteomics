@@ -117,6 +117,8 @@ sample which we add to our `diann_df` to in the next section to use in our
 analysis.
 
 
+{{< include ../_shared/_pipe.md >}}
+
 ### Cleaning run names
 
 In DIA-NN the names in the `Run` column often inherit the full raw file path
@@ -128,18 +130,23 @@ metadata.
 
 
 ```{r}
-### Clean Run names
-print(head(unique(diann_df$Run), 2))
+# Clean Run names
+diann_df[, "Run"] %>% 
+  unique() %>% 
+  head(2)
 
-# DIANN has pasted the name of the .wiff2 folder as well as the .wiff.scan files together.
-# So we need to clean up the Run names so that they match the metadata `sample_id` field.
+# DIANN has pasted the name of the .wiff2 folder as well as the .wiff.scan 
+# files together. So we need to clean up the Run names so that they match 
+# the metadata `sample_id` field.
 diann_df <- diann_df %>%
   mutate(Run = sub('\\..*', '', Run))
 
-print(head(unique(diann_df$Run), 2))
+# Check we have cleaned the Run names
+diann_df[, "Run"] %>% 
+  unique() %>% 
+  head(2)
 ```
 
-{{< include ../_shared/_pipe.md >}}
 
 In the following code chunk we add a new column called `runCol` to the 
 `diann_df` data. This column will serve as a link between the metadata
@@ -148,7 +155,9 @@ and annotating our data at a later stage in the analysis.
 
 ```{r}
 diann_df <- diann_df %>%
-  merge(sample_metadata[, c('sample_id', 'runCol')], by.x = "Run", by.y = "sample_id")
+  merge(sample_metadata[, c("sample_id", "runCol")], 
+        by.x = "Run", 
+        by.y = "sample_id")
 ```
 
 If we look at the column dimensions and names of the `diann_df` we now see the
@@ -186,13 +195,48 @@ dia_qf <-
 
 ## Exploring the data
 
-When we inspect our `QFeatures` object, we see that it contains 31 sets, each corresponding to a different sample run. Each set contains the
-precursor-level quantification data for that run, with feature names given by the `Precursor.Id` column from the original DIA-NN output.
+When we inspect our `QFeatures` object, we see that it contains 31 sets, each
+corresponding to a different sample run. Each set contains the precursor-level
+quantification data for that run, with feature names given by the `Precursor.Id`
+column from the original DIA-NN output.
 
 ```{r}
 dia_qf
+```
 
-head(assay(dia_qf[[1]]))
+By default if a `QFeatures` object has more than 6 samples, only the first three
+and last three sample summaries are printed to the screen. To see all samples 
+and their respective data summary, we can use the `experiments` function.
+
+```{r}
+experiments(dia_qf)
+```
+
+We can quickly see how many precursors were measure per sample for example,
+we see for the first sample called `r names(dia_qf)[1]` there are 
+`r nrow(dia_qf[[1]])` precursors.
+
+We can access individual samples (sets, or `SummarizedExperiment`s) using
+standard double bracket nomenclature (this is how you would normally access
+items of a list in R). As with all indexing we can use the list position or
+dataset name.
+
+```{r}
+dia_qf[[1]]
+```
+
+Is the same as,
+
+```{r}
+dia_qf[["COVID_E1"]]
+```
+
+The quantitation data for each sample is store in the `assay` container and can
+be extracted using the `assay` function.
+
+```{r}
+assay(dia_qf[[1]]) %>% 
+  head()
 ```
 
 ::: {.callout-discussion}
@@ -205,20 +249,22 @@ rather than a single combined set across all runs from the outset?
 
 ::: {.callout-answer collapse="true"}
 
-The DIA-NN output contains per-run quality metrics
-stored in the `rowData` of each precursor. These are run-specific values and
-would be ambiguous or impossible to retain if all runs were immediately merged
-into a single matrix. By keeping one `SummarizedExperiment` per run, we can
-inspect and filter on these per-run metrics before joining the data. We will
-join the per-sample sets into a single combined precursor set in the next
-lesson, once filtering is complete.
+The DIA-NN output contains per-run quality metrics stored in the `rowData` of
+each precursor. These are run-specific values and would be ambiguous or
+impossible to retain if all runs were immediately merged into a single matrix.
+By keeping one `SummarizedExperiment` per run, we can inspect and filter on
+these per-run metrics before joining the data. We will join the per-sample sets
+into a single combined precursor set in the next lesson, once filtering is
+complete.
 
 :::
 
 ### How many precursors per sample?
 
-Each sample will have a different number of precursors identified and quantified. We can explore
-this by inspecting the number of rows in each per-sample set, which corresponds to the number of precursors quantified in that sample.
+Each sample will have a different number of precursors identified and
+quantified. We can explore this by inspecting the number of rows in each
+per-sample set, which corresponds to the number of precursors quantified in that
+sample.
 
 :::{.callout-exercise}
 #### Challenge: Precursors per sample
@@ -271,28 +317,67 @@ data.frame(
 ### Exploring the row data
 
 The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
-from DIA-NN, including the Full-Width at Half Maximum (FWHM) of the
-chromatographic peaks. We can extract this information across all runs using the
-`rbindRowData` function. If we merge with the column data, we can then visualise
-the distribution of FWHM values per sample, coloured by group.
+from DIA-NN. This information can be accessed on a sample by sample
+level by using the `rowData` function.
+
+```{r}
+rowData(dia_qf[[1]]) %>% 
+  head(2)
+```
+
+However, we want to access this information across all the samples. To do this
+we can use the `rbindRowData` function. 
+
+```{r}
+rdata <- rbindRowData(dia_qf, i = names(dia_qf))
+```
+
+The `rbindRowData` functions returns a `DFrame` table that contains the row
+binded `rowData` tables from the selected assays. In this context, `i` is a
+`character()`, `integer()` or `logical()` object for subsetting assays. Only
+`rowData` variables that are common to all assays are kept.
+
+Recall, there is also a slot in the `QFeatures` object that stores information on
+the samples. This is the `colData` slot.
+
+```{r}
+colData(dia_qf)
+```
+
+In the below code chunk we create a `data.frame` called `cdata` containing
+the sample information and merge this with the `rdata` so we get group 
+information for each sample. This will help with our data exploration.
 
 ```{r, fig.width=5, fig.height=5}
+# 1. Create a data.frame of the sample information
+
 cdata <- data.frame(colData(dia_qf))
 
-rdata <- rbindRowData(dia_qf, i = names(dia_qf)) %>%
-  data.frame() %>%
-  # Our data is in separate sets, so the sample names are in the 'assay' column
-  # We merge with the column data (using the runCol column) to get group
-  # information for each sample
-  merge(cdata, by.x = "assay", by.y = "runCol")
+# 2. Merge this with the row data
+# Note: Our data is in separate sets, so the sample names are in the 'assay' 
+# column. We merge with the column data (using the runCol column) to get group
+# information for each sample
 
+rdata <- rdata %>%
+  data.frame() %>%
+  merge(cdata, by.x = "assay", by.y = "runCol")
+```
+
+Now we have one `data.frame` with precursor-level and sample-level information
+we can now visualise quality metrics from DIA-NN including the Full-Width at
+Half Maximum (FWHM) of the chromatographic peaks. In the code below we plot the
+distribution of FWHM values per sample, coloured by group.
+
+```{r}
 rdata %>%
   ggplot(aes(FWHM, group = Run, colour = group)) +
   geom_density() +
   theme_classic()
 ```
 
+
 :::{.callout-exercise}
+
 #### Challenge: Exploring rowData quality metrics
 
 {{< level 2 >}}
