@@ -24,7 +24,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
 This workflow is an adjunct to the [Statistical analysis](./06_statistical_analysis.html) section which demonstrates how to perform single comparison statistical with `limma` (@Smyth2004). Please first read through that material, since it includes background explanations and clarifications which are not repeated here.
 :::
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("NormalyzerDE")
 library("limma")

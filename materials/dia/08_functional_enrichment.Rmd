@@ -15,7 +15,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("ggplot2")
@@ -147,7 +147,7 @@ to interpret.
 <!--  worked! -->
   
 
-```{r, fig.height=6, fig.width=10}
+```{r, fig.height = 6, fig.width = 10}
 treeplot(go_down_similarity,
          showCategory = Inf,
          nCluster = 3,
@@ -215,7 +215,7 @@ Use the UniProt IDs retrieved above to assess whether the protein abundances for
 
 ::: {.callout-answer collapse="true"}
 
-```{r, fig.height=10, fig.width=20}
+```{r, fig.height = 10, fig.width = 20}
 # extract UniProt IDs for the proteins driving the enrichment of the 'plasma lipoprotein particle clearance' term
 uids <- g2p$UNIPROT
 
@@ -241,7 +241,7 @@ dia_qf_lipids[, , c("precursors_filtered_missing", "proteins")] %>%
   theme(aspect.ratio=1/2)
 ```
 
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height = 6, fig.width = 6}
 
 # 2. Protein-level heatmap for plasma lipoprotein particle clearance proteins
 sample_annotations <- colData(dia_qf) %>%

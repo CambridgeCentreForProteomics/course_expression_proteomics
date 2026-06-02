@@ -28,7 +28,7 @@ material, since it includes background explanations and discussions which
 are not repeated here.
 :::
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("NormalyzerDE")
 library("limma")
@@ -72,7 +72,7 @@ norm_qf
 your `QFeatures` object (`norm_qf`) that aggregates the data from this level 
 directly to protein level. Call this assay `"proteins_direct"`.
 
-```{r, message=FALSE, warning=FALSE, eval=TRUE}
+```{r, message = FALSE, warning = FALSE}
 norm_qf <- aggregateFeatures(norm_qf, 
                              i = "psms_filtered",
                              fcol = "Master.Protein.Accessions",
@@ -93,7 +93,7 @@ data as the `normalyzer` function does an internal log2 transformation as part
 of its pipeline. For more details on using the `NormalyzerDE` package take a
 look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 normalyzer(jobName = "normalyzer",
            experimentObj = norm_qf[["proteins_direct"]],
            sampleColName = "sample",

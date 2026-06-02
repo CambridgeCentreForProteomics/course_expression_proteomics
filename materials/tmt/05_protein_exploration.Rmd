@@ -17,7 +17,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -196,7 +196,7 @@ cc_qf[["log_norm_proteins"]] %>%
   table()
 ```
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 .support <- 
   cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
@@ -356,7 +356,7 @@ to a long format `DataFrame`. We can then use the standard `ggplot2` functions
 to visualise the processing of this protein.
 
 
-```{r, warning = FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 O43583[, , c("psms_filtered", "peptides", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%

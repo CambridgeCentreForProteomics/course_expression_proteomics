@@ -19,7 +19,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.002.png", error = FALSE)
 ```
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -920,7 +920,7 @@ complete this within the `QFeatures` infrastructure, please see the
 
 
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson03.rda"))
 ```
 

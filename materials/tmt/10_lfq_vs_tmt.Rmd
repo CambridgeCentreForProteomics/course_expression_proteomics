@@ -18,7 +18,7 @@ from that of the TMT use-case data.
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -211,7 +211,7 @@ MsCoreUtils::imputeMethods()
 
 For example, to impute using a k-NN method, we would use the following code,
 
-```{r, results = "hide", warning = FALSE, message =FALSE, eval = FALSE}
+```{r, results = "hide", warning = FALSE, message = FALSE, eval = FALSE}
 cc_qf <- impute(object = cc_qf,
                 method = "knn", 
                 i = "psms_filtered",

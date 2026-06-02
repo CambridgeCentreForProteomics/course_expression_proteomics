@@ -16,7 +16,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("limma")
@@ -60,7 +60,7 @@ long_form_protein <- longForm(dia_qf[,,"norm_proteins"],
 We can then filter to a set of proteins of interest and plot abundance
 values per sample, grouped by condition.
 
-```{r, fig.height=6, fig.width=8, warning=FALSE}
+```{r, fig.height = 6, fig.width = 8, warning = FALSE}
 proteins_of_interest <- c('P02766', # TTR
                           'P18428',  # LBP
                           'P13796') # LCP1
@@ -161,7 +161,7 @@ this protein.
 We can use this subset to visualise how the precursor data was aggregated
 to protein level for this particular feature. Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%
@@ -178,7 +178,7 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
 
 In the plot above, the profile of the precursors is very similar, but it's hard to see this because of the differences in overall intensity. We can modify the intensities to put them on the same scale and make this clearer. Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 TTR[, , c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%

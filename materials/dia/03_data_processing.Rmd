@@ -17,7 +17,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("tidyr")
@@ -96,7 +96,7 @@ dia_qf
 We can see how many precursors remain per sample after filtering by inspecting
 the number of rows in each per-sample set.
 
-```{r, fig.height=4, fig.width=4}
+```{r, fig.height = 4, fig.width = 4}
 hist(nrows(dia_qf),
      xlab = "Precursors",
      main = "Precursor counts per sample\nafter Q-value filtering")
@@ -211,7 +211,7 @@ We create a copy of the `"precursors"` set called `"precursors_no_cont"`. After
 filtering, this set will contain only precursors do not originate from
 contaminants. We use `plot` to visualise the assay structure before and after adding the link.
 
-```{r, fig.height=3, fig.width=3}
+```{r, fig.height = 3, fig.width = 3}
 dia_qf <- addAssay(dia_qf, dia_qf[["precursors"]],
                    name = "precursors_no_cont")
 
@@ -325,7 +325,7 @@ replicates per group before testing.
 We create a copy called `"precursors_filtered_missing"` — after filtering, this set
 will contain only precursors that meet the missing value threshold. 
 
-```{r, fig.height=3, fig.width=3}
+```{r, fig.height = 3, fig.width = 3}
 dia_qf <- addAssay(dia_qf, dia_qf[["precursors_no_cont"]],
                    name = "precursors_filtered_missing")
 
@@ -343,7 +343,7 @@ dia_qf <- dia_qf %>%
 
 ## Save data
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
 ```
 

@@ -17,8 +17,11 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
+```
+
+```{r, message = FALSE, results = "hide", warning = FALSE}
 library("arrow")
 library("readxl")
 library("QFeatures")
@@ -288,7 +291,7 @@ counts.</details>
 
 **Task 1**
 
-```{r, fig.height=4, fig.width=4}
+```{r, fig.height = 4, fig.width = 4}
 hist(nrows(dia_qf),
      xlab="Precursors",
      main="Precursor counts per sample")
@@ -348,7 +351,7 @@ In the below code chunk we create a `data.frame` called `cdata` containing
 the sample information and merge this with the `rdata` so we get group 
 information for each sample. This will help with our data exploration.
 
-```{r, fig.width=5, fig.height=5}
+```{r, fig.width = 5, fig.height = 5}
 # 1. Create a data.frame of the sample information
 
 cdata <- data.frame(colData(dia_qf))
@@ -396,7 +399,7 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
 ## Save data
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
 

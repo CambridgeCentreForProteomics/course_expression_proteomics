@@ -15,7 +15,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("matrixStats")
@@ -74,7 +74,7 @@ evenly-sized clusters than the default complete linkage. Using `scale = 'row'`
 standardises each row to mean=0 and sd=1 (Z-score), which allows us to focus on
 relative abundance patterns across samples for each protein.
 
-```{r, fig.height=5, fig.width=8}
+```{r, fig.height = 5, fig.width = 8}
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
 
 # Rename the samples with their runCol
@@ -152,7 +152,7 @@ Plotting all proteins can make it difficult to see structure. A common
 approach is to restrict the heatmap to the most variable proteins, which are
 more likely to reveal biologically meaningful patterns.
 
-```{r, fig.width=20, fig.height=10}
+```{r, fig.width = 20, fig.height = 10}
 var <- rowVars(assay(dia_qf[["norm_proteins_replicated"]]), na.rm = TRUE)
 
 most_variable <- sort(var, decreasing = TRUE)[1:50] %>% names()
@@ -184,7 +184,7 @@ For each heatmap, consider:
 
 ### Heatmap of proteins significant by F-test
 
-```{r, fig.height=10, fig.width=10}
+```{r, fig.height = 10, fig.width = 10}
 sig_prot_F <- limma_results_F %>%
   filter(adj.P.Val < 0.05) %>%
   pull(UniprotID)
@@ -194,7 +194,7 @@ plot_heatmap_for_uids(sig_prot_F)
 
 ### Heatmap of proteins significant in any pairwise contrast
 
-```{r, fig.height=10, fig.width=10}
+```{r, fig.height = 10, fig.width = 10}
 sig_prot_contrasts <- limma_results_all_contrasts %>%
   filter(adj.P.Val < 0.05) %>%
   pull(UniprotID) %>%

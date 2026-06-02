@@ -17,7 +17,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("limma")
@@ -118,7 +118,7 @@ dia_qf <- addAssayLink(dia_qf,
 dia_qf
 ```
 
-```{r, fig.height=8}
+```{r, fig.height = 8}
 plot(dia_qf)
 ```
 
@@ -479,7 +479,7 @@ statistically and practically meaningful.
 
 ## Save data
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(dia_qf, limma_results_F, limma_results_all_contrasts,
      file = here("course_files/dia/preprocessed/lesson06.rda"))
 ```

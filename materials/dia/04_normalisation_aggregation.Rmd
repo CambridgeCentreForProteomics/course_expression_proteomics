@@ -16,7 +16,7 @@ editor_options:
 :::
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("here")
 library("QFeatures")
 library("naniar")
@@ -40,7 +40,7 @@ data ready for downstream statistical analysis.
 If we look at the distribution of raw precursor intensities, we will see that
 the abundance values are dramatically skewed towards zero.
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 dia_qf[["precursors_filtered_missing"]] %>%
   assay() %>%
   longForm() %>%
@@ -84,7 +84,7 @@ approach can handle missing values without imputation, as it only considers
 finite data. The only requirement is that a precursor must be quantified in
 at least two samples.
 
-```{r qfeatures-aggregate-precursors-to-proteins, message=FALSE}
+```{r qfeatures-aggregate-precursors-to-proteins, message = FALSE}
 dia_qf <- aggregateFeatures(dia_qf,
                             i = "precursors_filtered_missing_log",
                             fcol = "Protein.Ids",
@@ -187,7 +187,7 @@ shown.</details>
 
 ::: {.callout-answer collapse="true"}
 
-```{r, fig.height=10, fig.width=10, warning=FALSE}
+```{r, fig.height = 10, fig.width = 10, warning = FALSE}
 missing_data <- dia_qf[['proteins']] %>% assay() %>% data.frame()
 
 # The sets argument is required to make the keep_order work as intended,
@@ -246,7 +246,7 @@ dia_qf <- normalize(dia_qf,
 We can visualise the effect of normalisation by plotting density curves of
 protein abundance per sample before and after normalisation.
 
-```{r, warning=FALSE}
+```{r, warning = FALSE}
 pre_norm <- longForm(dia_qf[,,'proteins'], colvars = 'group') %>%
   ggplot(aes(x = value, colour = group, group = colname)) +
   geom_density() +
@@ -265,7 +265,7 @@ pre_norm + post_norm
 ```
 
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))
 ```
 

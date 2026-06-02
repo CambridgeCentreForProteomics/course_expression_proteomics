@@ -55,7 +55,7 @@ During this course we will use several R/Bioconductor packages.
 Let's begin by opening RStudio and loading these packages into our working
 environment. 
 
-```{r load_packages, message = FALSE, results = "hide", warning=FALSE}
+```{r load_packages, message = FALSE, results = "hide", warning = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -182,7 +182,7 @@ Let's use these functions to explore the data structure further.
 Let's start with the quantitation data of our SE called `psms_raw`. This is
 stored in the `assay` slot.
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 assay(cc_qf[["psms_raw"]])
 ```
 
@@ -327,7 +327,7 @@ colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
 colData(cc_qf[["psms_raw"]])
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r, include = FALSE}
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson02.rda"))
 ```
 
@@ -388,14 +388,14 @@ cc_qf[["psms_raw"]] %>%
 
 We can use the `assay` accessor,
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 cc_qf[["psms_raw"]] %>% 
   assay()
 ```
 
 or equivalently,
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 assay(cc_qf[["psms_raw"]])
 ```
 

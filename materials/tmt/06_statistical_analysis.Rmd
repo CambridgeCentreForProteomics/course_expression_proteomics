@@ -25,7 +25,7 @@ editor:
 knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
 ```
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -215,7 +215,7 @@ knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
 ```
 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message = FALSE, warning = FALSE}
 limma_results %>%
   as_tibble() %>%
   ggplot(aes(x = P.Value)) +
@@ -474,7 +474,7 @@ pheatmap(mat = quant_data,
 A more in-depth overview of `pheatmap` and how to customise these plots further
 can be found in the documentation (`?pheatmap`) and [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 ## Save results
 save(limma_results, all_proteins, file = here("course_files/tmt/preprocessed/lesson06.rda"))
 ```

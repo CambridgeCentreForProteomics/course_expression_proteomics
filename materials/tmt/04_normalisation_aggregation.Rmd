@@ -16,7 +16,7 @@ editor_options:
 
 
 
-```{r, eval=TRUE, include=FALSE}
+```{r, include = FALSE}
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -81,7 +81,7 @@ We wish to aggregate from PSM to peptide level so pass the argument `i =
 `fcol = "Sequence"` to specify we wish to group by the peptide amino acid
 sequence.
 
-```{r, warning = FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 cc_qf <- aggregateFeatures(cc_qf, 
                            i = "psms_filtered", 
                            fcol = "Sequence",
@@ -121,7 +121,7 @@ protein level data. Let's again use the `aggregateFeatures` function and pass
 `fcol = "Master.Protein.Accessions"` to specify we wish to
 group by `"Master.Protein.Accessions"`. 
 
-```{r, warning = FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 cc_qf <- aggregateFeatures(cc_qf, 
                            i = "peptides", 
                            fcol = "Master.Protein.Accessions",
@@ -156,7 +156,7 @@ quantitative data. If we take a look at our current (raw) quantitative data we w
 see that our abundance values are dramatically skewed towards zero.
 
 
-```{r, warning = FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 ## Look at distribution of abundance values in untransformed data
 cc_qf[["proteins"]] %>%
   assay() %>%
@@ -183,7 +183,7 @@ and this method requires the data to **not** be log transformed.
 :::
 
 
-```{r, warning = FALSE, message=FALSE}
+```{r, warning = FALSE, message = FALSE}
 ## Look at distribution of abundance values in untransformed data
 cc_qf[["proteins"]] %>%
   assay() %>%
@@ -345,7 +345,7 @@ To explore the use of alternative normalisation strategies, the [`NormalyzerDE`]
 Please refer to the [Using NormalyzerDE to explore normalisation methods](./09_normalyzer.html) section.
 
 
-```{r, include=FALSE}
+```{r, include = FALSE}
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson04.rda"))
 ```
 
