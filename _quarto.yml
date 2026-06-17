@@ -19,7 +19,7 @@ filters:
   - callout-exercise
 
 execute:
-  freeze: auto
+  freeze: true
 
 knitr:
   opts_knit:
