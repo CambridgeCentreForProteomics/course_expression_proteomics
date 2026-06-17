@@ -1,0 +1,12 @@
+"","sample","rep","condition","tag"
+"Abundance.126","Control",NA,"Pre-treatment","126"
+"Abundance.127N","M_1",1,"M","127N"
+"Abundance.127C","M_2",2,"M","127C"
+"Abundance.128N","M_3",3,"M","128N"
+"Abundance.128C","G1_1",1,"G1","128C"
+"Abundance.129N","G1_2",2,"G1","129N"
+"Abundance.129C","G1_3",3,"G1","129C"
+"Abundance.130N","DS_1",1,"Desynch","130N"
+"Abundance.130C","DS_2",2,"Desynch","130C"
+"Abundance.131","DS_3",3,"Desynch","131"
+

@@ -4,18 +4,30 @@ book:
     #   chapters:
     #     - materials/00_overview.Rmd
     #     - materials/00_setup.Rmd
-    - part: "Expression proteomics"
+    - part: "DIA proteomics"
       chapters:
-        - materials/01_intro.Rmd
-        - materials/02_import_and_infrastructure.Rmd
-        - materials/03_data_processing.Rmd
-        - materials/04_normalisation_aggregation.Rmd
-        - materials/05_protein_exploration.Rmd
-        - materials/06_statistical_analysis.Rmd
-        - materials/07_biological_interpretation.Rmd
-    - part: "Extended materials"
+        - materials/dia/01_intro.Rmd
+        - materials/dia/02_import_and_infrastructure.Rmd
+        - materials/dia/03_data_processing.Rmd
+        - materials/dia/04_normalisation_aggregation.Rmd
+        - materials/dia/05_protein_exploration.Rmd
+        - materials/dia/06_statistical_analysis.Rmd
+        - materials/dia/07_visualisations.Rmd
+        - materials/dia/08_functional_enrichment.Rmd
+    - part: "TMT proteomics"
+
       chapters:
-        - materials/08_maxquant_notes.Rmd
-        - materials/09_normalyzer.Rmd
-        - materials/10_lfq_vs_tmt.Rmd
-        - materials/11_statistical_analysis_all_stages.Rmd
+        - materials/tmt/01_intro.Rmd
+        - materials/tmt/02_import_and_infrastructure.Rmd
+        - materials/tmt/03_data_processing.Rmd
+        - materials/tmt/04_normalisation_aggregation.Rmd
+        - materials/tmt/05_protein_exploration.Rmd
+        - materials/tmt/06_statistical_analysis.Rmd
+        - materials/tmt/07_biological_interpretation.Rmd
+    - part: "TMT proteomics: extended materials"
+
+      chapters:
+        - materials/tmt/08_maxquant_notes.Rmd
+        - materials/tmt/09_normalyzer.Rmd
+        - materials/tmt/10_lfq_vs_tmt.Rmd
+        - materials/tmt/11_statistical_analysis_all_stages.Rmd
