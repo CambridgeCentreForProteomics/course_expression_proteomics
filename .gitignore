@@ -1,6 +1,7 @@
 # Quarto files
 /.quarto/
 _site
+/figure/
 
 # python notebooks
 *.ipynb
