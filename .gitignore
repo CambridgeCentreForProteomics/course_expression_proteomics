@@ -37,10 +37,10 @@ course_files/output
 .DS_Store
 
 **/*.quarto_ipynb
-_freeze
 
 # Quarto render artifacts
 materials/**/*_files/
+materials_files/
 figure/
 *html
 site_libs
