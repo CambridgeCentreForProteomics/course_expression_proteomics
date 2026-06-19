@@ -1,11 +1,11 @@
 ---
-bibliography: setup_refs.bib  
+bibliography: setup_refs.bib
 number-sections: false
 ---
 
 # Data & Setup {.unnumbered}
 
-<!-- 
+<!--
 Note for Training Developers:
 We provide instructions for commonly-used software as commented sections below.
 Uncomment the sections relevant for your materials, and add additional instructions where needed (e.g. specific packages used).
@@ -15,40 +15,33 @@ Note that we use tabsets to provide instructions for all three major operating s
 ::: {.callout-tip level=2}
 ## Workshop Attendees
 
-If you are attending one of our workshops, we will provide a training
-environment with all of the required software and data. If you want to setup
-your own computer to run the analysis demonstrated on this course, you can
-follow the instructions below.
+If you are attending one of our workshops, we will provide a training environment with all of the required software and data.
+If you want to setup your own computer to run the analysis demonstrated on this course, you can follow the instructions below.
 :::
 
 ## Data
 
-The data used in these materials is provided as a zip file. 
+The data used in these materials is provided as a zip file.
 Download and unzip the folder to your Desktop to follow along with the materials.
 
 <!-- Note for Training Developers: add the link to 'href' -->
-<a href="https://www.dropbox.com/scl/fo/9plgp7pie1uivaijqo14c/ABPdE9x2a3wwX5LkNJ2V_EY?rlkey=bhgv86ihvsu4z8ibmp0rsg98l&st=magy6j2f&dl=1">  
-<button class="btn"><i class="fa fa-download"></i> Download</button>
-</a>
+<a href="https://www.dropbox.com/scl/fo/9plgp7pie1uivaijqo14c/ABPdE9x2a3wwX5LkNJ2V_EY?rlkey=bhgv86ihvsu4z8ibmp0rsg98l&st=magy6j2f&dl=1">\
+<button class="btn"><i class="fa fa-download"></i> Download</button> </a>
 
 ## Working on your own laptop
 
-If you wish to work on your own laptop during the course and not the training
-machines you will need to have the latest stable versions of R, RStudio and
-Bioconductor including the packages listed below.
+If you wish to work on your own laptop during the course and not the training machines you will need to have the latest stable versions of R, RStudio and Bioconductor including the packages listed below.
 
 ### R and RStudio
 
-This lesson assumes that you have current versions of the following installed on 
-your computer:
+This lesson assumes that you have current versions of the following installed on your computer:
 
 1. The [R software](https://cran.r-project.org/mirrors.html) itself, and
-2. [RStudio Desktop](https://www.rstudio.com/products/rstudio/download/#download).
+2. [RStudio    Desktop](https://www.rstudio.com/products/rstudio/download/#download).
 
-R and RStudio require separate downloads and installations. R itself refers to 
-the underlying language and computing environment required to write and read 
-this language. RStudio is a graphical integrated development environment which
-essentially makes running R much easier and more interactive.  
+R and RStudio require separate downloads and installations.
+R itself refers to the underlying language and computing environment required to write and read this language.
+RStudio is a graphical integrated development environment which essentially makes running R much easier and more interactive.\
 
 <!-- ### Quarto -->
 
@@ -59,9 +52,7 @@ essentially makes running R much easier and more interactive.
 <!-- - If you are developing materials using **JupyterLab** or **Jupyter Notebooks**, please install [Jupytext](https://jupytext.readthedocs.io/en/latest/install.html). -->
 <!--   - Use the [paired notebook](https://jupytext.readthedocs.io/en/latest/paired-notebooks.html) feature to have synchronised `.ipynb`/`.qmd` files. Only `.qmd` files should be pushed to the repository (`.ipynb` files have been added to `.gitignore`). -->
 
-
 ::: {.tabset group="os"}
-
 #### Windows
 
 Download and install all these using default options:
@@ -81,47 +72,62 @@ Download and install all these using default options:
 
 - Go to the [R installation](https://cran.r-project.org/bin/linux/) folder and look at the instructions for your distribution.
 - Download the [RStudio](https://www.rstudio.com/products/rstudio/download/#download) installer for your distribution and install it using your package manager.
-
 :::
 
 ### R package installation
 
-In this workshop we make use of open-source software from the 
-[R](https://www.r-project.org) [Bioconductor](https://bioconductor.org) 
-[@Huber2015] project. The [Bioconductor initiative](https://bioconductor.org) 
-provides [R](https://www.r-project.org) software packages dedicated
-to the processing of high-throughput complex biological data. Packages are
-open-source, well-documented and benefit from an active community of developers.
+In this workshop we make use of open-source software from the [R](https://www.r-project.org) [Bioconductor](https://bioconductor.org) [@Huber2015] project.
+The [Bioconductor initiative](https://bioconductor.org) provides [R](https://www.r-project.org) software packages dedicated to the processing of high-throughput complex biological data.
+Packages are open-source, well-documented and benefit from an active community of developers.
 
-Detailed instructions for the installation of Bioconductor packages are
-documented on the [Bioconductor Installation page](http://bioconductor.org/install/). 
+Detailed instructions for the installation of Bioconductor packages are documented on the [Bioconductor Installation page](http://bioconductor.org/install/).
 The main packages required for this workshop are installed using the code below.
-Additional packages required for downstream statistics and interpretation are
-installed as required.
+Additional packages required for downstream statistics and interpretation are installed as required.
 
-```{r install_packages, eval = FALSE, message = FALSE}
+```{r}
+#| label: install_packages
+#| eval: false
+#| message: false
+
 if (!require("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
 
-BiocManager::install(c("QFeatures",
-                       "NormalyzerDE",
-                       "limma",
-                       "factoextra",
-                       "org.Hs.eg.db",
-                       "clusterProfiler",
-                       "enrichplot",
-                       "patchwork",
-                       "tidyverse",
-                       "pheatmap",
-                       "ggupset"))
+BiocManager::install(c(
+  "QFeatures",
+  "NormalyzerDE",
+  "limma",
+  "factoextra",
+  "org.Hs.eg.db",
+  "clusterProfiler",
+  "enrichplot",
+  "patchwork",
+  "tidyverse",
+  "pheatmap",
+  "ggupset",
+  "arrow",
+  "readxl",
+  "naniar",
+  "ggbeeswarm",
+  "ggrepel",
+  "matrixStats",
+  "GOSemSim",
+  "MsCoreUtils",
+  "RColorBrewer",
+  "AnnotationDbi"
+))
 ```
 
-After installation, each package must be loaded before it can be used in the R
-session. This is achieved via the `library` function. Here we load all packages 
-included in this course.
+After installation, each package must be loaded before it can be used in the R session.
+This is achieved via the `library` function.
+Here we load all packages included in this course.
 
-```{r load_packages, message = FALSE, results = "hide", message=FALSE, warning=FALSE}
+```{r}
+#| label: load_packages
+#| message: false
+#| results: "hide"
+#| warning: false
+
 library("QFeatures")
 library("NormalyzerDE")
 library("limma")
@@ -133,8 +139,17 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
+library("arrow")
+library("readxl")
+library("naniar")
+library("ggbeeswarm")
+library("ggrepel")
+library("matrixStats")
+library("GOSemSim")
+library("MsCoreUtils")
+library("RColorBrewer")
+library("AnnotationDbi")
 ```
-
 
 <!--
 ### Conda
@@ -160,7 +175,7 @@ Note: Windows users can use WSL2 (see @wsl).
 
 #### Windows
 
-You can use _Singularity_ from the _Windows Subsystem for Linux_ (see @wsl).  
+You can use _Singularity_ from the _Windows Subsystem for Linux_ (see @wsl).
 Once you setup WSL, you can follow the instructions for Linux.
 
 #### Mac OS
@@ -184,23 +199,22 @@ rm singularity.deb
 :::
 -->
 
-
-<!-- 
+<!--
 ### Visual Studio Code
 
 ::: {.panel-tabset group="os"}
 
 #### Windows
 
-- Go to the [Visual Studio Code download page](https://code.visualstudio.com/Download) and download the installer for your operating system. 
-  Double-click the downloaded file to install the software, accepting all the default options. 
-- After completing the installation, go to your Windows Menu, search for "Visual Studio Code" and launch the application. 
+- Go to the [Visual Studio Code download page](https://code.visualstudio.com/Download) and download the installer for your operating system.
+  Double-click the downloaded file to install the software, accepting all the default options.
+- After completing the installation, go to your Windows Menu, search for "Visual Studio Code" and launch the application.
 - Go to "_File > Preferences > Settings_", then select "_Text Editor > Files_" on the drop-down menu on the left. Scroll down to the section named "_EOL_" and choose "_\\n_" (this will ensure that the files you edit on Windows are compatible with the Linux operating system).
 
 #### Mac OS
 
 - Go to the [Visual Studio Code download page](https://code.visualstudio.com/Download) and download the installer for Mac.
-- Go to the Downloads folder and double-click the file you just downloaded to extract the application. Drag-and-drop the "Visual Studio Code" file to your "Applications" folder. 
+- Go to the Downloads folder and double-click the file you just downloaded to extract the application. Drag-and-drop the "Visual Studio Code" file to your "Applications" folder.
 - You can now open the installed application to check that it was installed successfully (the first time you launch the application you will get a warning that this is an application downloaded from the internet - you can go ahead and click "Open").
 
 #### Linux (Ubuntu)
