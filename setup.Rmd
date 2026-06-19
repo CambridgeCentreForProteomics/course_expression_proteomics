@@ -85,7 +85,7 @@ The main packages required for this workshop are installed using the code below.
 Additional packages required for downstream statistics and interpretation are installed as required.
 
 ```{r}
-#| label: install_packages
+#| label: install-packages
 #| eval: false
 #| message: false
 
@@ -123,7 +123,7 @@ This is achieved via the `library` function.
 Here we load all packages included in this course.
 
 ```{r}
-#| label: load_packages
+#| label: load-packages
 #| message: false
 #| results: "hide"
 #| warning: false

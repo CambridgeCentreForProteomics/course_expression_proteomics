@@ -16,6 +16,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-tmt-for-exploration
 #| include: false
 
 library("QFeatures")
@@ -37,6 +38,7 @@ Before we carry out statistical analysis to determine which of our proteins show
 This includes determining some information that may be required for reporting and publication purposes as well as information corresponding to quality control.
 
 ```{r}
+#| label: check-sample-distributions
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -52,6 +54,7 @@ However, before we started filtering the data, we created a copy of the raw data
 Hence, our `"raw_psms"` dataset is not currently linked to any of our higher level data.
 
 ```{r}
+#| label: examine-value-ranges
 plot(cc_qf)
 ```
 
@@ -59,6 +62,7 @@ It may be beneficial to add a link between our raw and filtered PSM data.
 This can be achieved using the `addAssayLink` function as demonstrated below.
 
 ```{r}
+#| label: create-histogram-protein-abundance
 ## Create assay link
 cc_qf <- addAssayLink(object = cc_qf, from = "psms_raw", to = "psms_filtered")
 
@@ -76,12 +80,14 @@ We may want to know how many PSMs, peptides and proteins the `log_norm_proteins`
 We can easily find the number master proteins by printing our `QFeatures` object
 
 ```{r}
+#| label: calculate-summary-statistics
 cc_qf
 ```
 
 We can see we have `r nrow(cc_qf[["log_norm_proteins"]])` master proteins, each representing a protein group.
 
 ```{r}
+#| label: display-statistics
 cc_qf[["log_norm_proteins"]] %>%
   nrow()
 ```
@@ -97,6 +103,7 @@ Determine how many PSMs, peptides and proteins were lost during processing of th
 We started with,
 
 ```{r}
+#| label: create-heatmap-top-proteins
 psm_count <- cc_qf[["psms_raw"]] %>% nrow()
 
 peptide_count <-
@@ -128,6 +135,7 @@ message(
 After filtering we have,
 
 ```{r}
+#| label: create-boxplot-samples
 psm_final <- cc_qf[["psms_filtered"]] %>% nrow()
 
 peptide_final <- cc_qf[["peptides"]] %>% nrow()
@@ -147,6 +155,7 @@ message(
 During the course of data processing we have lost,
 
 ```{r}
+#| label: create-violin-plot
 message(
   psm_count - psm_final,
   " PSMs, ",
@@ -167,6 +176,7 @@ This column was not present in the PSM level datasets.
 For example,
 
 ```{r}
+#| label: calculate-variance
 ## Check columns in the log normalised peptide set
 cc_qf[["peptides"]] %>%
   rowData() %>%
@@ -180,6 +190,7 @@ Since we aggregated completed two steps of aggregation (1) PSMs to peptides, (2)
 Let's examine peptide support,
 
 ```{r}
+#| label: create-ma-plot
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -188,6 +199,7 @@ cc_qf[["log_norm_proteins"]] %>%
 ```
 
 ```{r}
+#| label: create-scatter-plot-log-ratios
 #| include: false
 
 .support <-
@@ -208,7 +220,7 @@ The output tells us that we have `r .support[1]` proteins with `r names(.support
 1. Using the information we have in the `.n` column create a graph to visualise peptide support.
 
 <details><summary>Inspiration</summary> The ["from Data to Viz project"](https://www.data-to-viz.com)
-provides some great ideas for visualisation in R and a brilliant platform for 
+provides some great ideas for visualisation in R and a brilliant platform for
 exploring your data. The [R Graph Gallery](https://r-graph-gallery.com/ggplot2-package.html)
 is another great source of inspiration with coded examples to follow.</details>
 
@@ -228,6 +240,7 @@ There are many ways we can visualise peptide support.
 The first thing we could do is plot a histogram.
 
 ```{r}
+#| label: examine-protein-correlations
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -243,6 +256,7 @@ Let's bin peptides with > 8 peptides per protein group into one category and the
 In the next code chunk we create a new `tibble` which tells us how many proteins we have which have `n` number of peptides.
 
 ```{r}
+#| label: hierarchical-clustering
 ## Summarise the number of peptides per protein if we have greater than 8
 peptide_df <- cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
@@ -257,6 +271,7 @@ peptide_df
 Now let's plot this data.
 
 ```{r}
+#| label: pca-analysis
 ## Plot the data using a lollipop
 ggplot(peptide_df, aes(x = peptide_n, y = n)) +
   geom_segment(aes(x = peptide_n, xend = peptide_n, y = 0, yend = n)) +
@@ -269,6 +284,7 @@ ggplot(peptide_df, aes(x = peptide_n, y = n)) +
 We can also plot as a percentage.
 
 ```{r}
+#| label: pca-biplot
 ## Plot the data using a lollipop
 peptide_df %>%
   mutate(n, n_percent = n / sum(n) * 100) %>%
@@ -285,6 +301,7 @@ peptide_df %>%
 Let's again pull the column `.n` and tabulate the output
 
 ```{r}
+#| label: extract-pca-variance
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -295,6 +312,7 @@ cc_qf[["log_norm_proteins"]] %>%
 Let's now calculate summary statistics to find the median number of peptides,
 
 ```{r}
+#| label: plot-pca-screeplot
 cc_qf[["log_norm_proteins"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -320,6 +338,7 @@ The output is a new `QFeatures` object with only data corresponding to the speci
 Let's take a look at O43583, the human density-regulated protein.
 
 ```{r}
+#| label: examine-missing-data-pattern
 O43583 <- subsetByFeature(cc_qf, "O43583")
 
 experiments(O43583)
@@ -332,6 +351,7 @@ To do so, we extract the sets of interest from our `"O43583"` `QFeatures` object
 We can then use the standard `ggplot2` functions to visualise the processing of this protein.
 
 ```{r}
+#| label: visualise-missing-data
 #| warning: false
 #| message: false
 
@@ -366,6 +386,7 @@ Our protein data does not contain missing values.
 However, if there were any missing values in the data, these would need to be removed using `filterNA` to facilitate compatibility with PCA.
 
 ```{r}
+#| label: analyze-technical-variation
 protein_pca <- cc_qf[["log_norm_proteins"]] %>%
   filterNA() %>%
   assay() %>%
@@ -388,6 +409,7 @@ To visualise the resulting PCs and how much of the data variation they explain w
 The resulting plot displays the proportion of total data variation explained by each of PC.
 
 ```{r}
+#| label: compare-technical-replicates
 fviz_screeplot(protein_pca)
 ```
 
@@ -397,6 +419,7 @@ To do this we will use the `protein_pca$x` data.
 Typically a 2D PCA plot will display PC1 and PC2, since these are the PCs that explain the most variation within the dataset, but it can also be useful to plot later PCs if they also explain a large proportion of variation.
 
 ```{r}
+#| label: sample-correlation-analysis
 protein_pca$x %>%
   as_tibble() %>%
   ggplot(aes(x = PC1, y = PC2)) +
@@ -424,6 +447,7 @@ of each sample and then use `colour = condition` within our ggplot aesthetics.</
 **Task 1**
 
 ```{r}
+#| label: annotate-sample-groups
 protein_pca$x %>%
   as_tibble() %>%
   mutate(condition = cc_qf[["log_norm_proteins"]]$condition) %>%

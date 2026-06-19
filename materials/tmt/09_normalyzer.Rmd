@@ -15,6 +15,7 @@ editor:
 :::
 
 ```{r}
+#| label: load-tmt-for-normalyzer
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -28,6 +29,7 @@ Please first read through that material, since it includes background explanatio
 :::
 
 ```{r}
+#| label: prepare-normalyzer-input
 #| include: false
 
 library("QFeatures")
@@ -58,6 +60,7 @@ The `normalyzer` function however **requires a raw intensity matrix as input, pr
    Let's call this `norm_qf`.
 
 ```{r}
+#| label: run-normalyzer
 norm_qf <- cc_qf
 
 norm_qf
@@ -67,6 +70,7 @@ norm_qf
    Call this assay `"proteins_direct"`.
 
 ```{r}
+#| label: examine-normalyzer-results
 #| message: false
 #| warning: false
 
@@ -90,6 +94,7 @@ We pass the un-transformed data as the `normalyzer` function does an internal lo
 For more details on using the `NormalyzerDE` package take a look at the [package vignette](https://bioconductor.org/packages/release/bioc/vignettes/NormalyzerDE/inst/doc/vignette.html).
 
 ```{r}
+#| label: extract-normalyzer-plots
 #| eval: false
 
 normalyzer(

@@ -14,6 +14,7 @@ bibliography: ../course_refs.bib
 :::
 
 ```{r}
+#| label: load-tmt-qfeatures
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -22,6 +23,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.002.png", error = FALSE)
 ```
 
 ```{r}
+#| label: check-raw-values
 #| include: false
 
 library("QFeatures")
@@ -49,6 +51,7 @@ However, as with all data analyses, it is sensible to keep a copy of our raw dat
 We call the copy `psms_filtered` --- by the end of our data cleaning, this set will have had all unwanted features removed.
 
 ```{r}
+#| label: remove-contaminants
 raw_data_copy <- cc_qf[["psms_raw"]]
 
 cc_qf <- addAssay(x = cc_qf, y = raw_data_copy, name = "psms_filtered")
@@ -108,6 +111,7 @@ Let's begin by filtering out any PSMs that **do not have a master protein**.
 These instances are characterised by an empty `character` i.e. `""`.
 
 ```{r}
+#| label: examine-contamination-removal
 ## Before filtering
 cc_qf
 
@@ -136,6 +140,7 @@ The Proteome Discoverer software flags a potential contaminant in the `Contamina
 We can count how many contaminants there are using,
 
 ```{r}
+#| label: remove-low-quality-peptides
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -145,6 +150,7 @@ cc_qf[["psms_filtered"]] %>%
 Examine the `class` of this column,
 
 ```{r}
+#| label: show-removal-summary
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -161,6 +167,7 @@ It is a `character` and takes two values, `"True"` or `"False"`.
 
 ::::: {.callout-answer collapse=true}
 ```{r}
+#| label: filter-fdr-threshold
 cc_qf <- cc_qf %>%
   filterFeatures(~ Contaminant != "True", i = "psms_filtered")
 
@@ -188,6 +195,7 @@ For users who have considered both lysine and N-terminal TMT labels as static mo
 See @Hutchings2023 for how to filter your data if you have TMT modifications set as dynamic.
 
 ```{r}
+#| label: verify-fdr-filtering
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -222,6 +230,7 @@ To be conservative and ensure accurate quantitation, we also only retain PSMs th
 First let's examine the columns in the `rowData`
 
 ```{r}
+#| label: normalise-sum-intensity
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   names()
@@ -230,6 +239,7 @@ cc_qf[["psms_filtered"]] %>%
 Let's examine the columns `Rank` and `Search.Engine.Rank`,
 
 ```{r}
+#| label: check-normalization
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -244,6 +254,7 @@ cc_qf[["psms_filtered"]] %>%
 We can also visualise this by piping the results to `ggplot`
 
 ```{r}
+#| label: normalise-quantiles
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -266,6 +277,7 @@ cc_qf[["psms_filtered"]] %>%
 Now let's keep only PSMs with a rank of 1,
 
 ```{r}
+#| label: verify-quantile-norm
 cc_qf <- cc_qf %>%
   filterFeatures(~ Rank == 1, i = "psms_filtered") %>%
   filterFeatures(~ Search.Engine.Rank == 1, i = "psms_filtered") %>%
@@ -289,6 +301,7 @@ Therefore, differential expression analysis will be based on protein groups, and
 This means removing PSMs where "Number.of.Protein.Groups" is not equal to 1.
 
 ```{r}
+#| label: filter-missing-values
 cc_qf <- cc_qf %>%
   filterFeatures(~ Number.of.Protein.Groups == 1, i = "psms_filtered")
 
@@ -299,6 +312,7 @@ cc_qf
 ### Addititional quality control filters available for TMT data
 
 ```{r}
+#| label: examine-filtering-results
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -339,6 +353,7 @@ We also remove features that do not have information regarding these quality con
 To remove these features we include the `na.rm = TRUE` argument.
 
 ```{r}
+#| label: create-sample-wise-filtering
 cc_qf <- cc_qf %>%
   filterFeatures(
     ~ Average.Reporter.SN >= 10,
@@ -365,6 +380,7 @@ For code and more information please see @Hutchings2023.
 ### Controlling false discovery rate (FDR)
 
 ```{r}
+#| label: aggregate-to-protein-level
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -402,7 +418,7 @@ The proportion of false positives within this population of PSMs is taken as its
 In this way, the FDR can be thought of as the proportion of false positives above the critical score threshold.
 
 ```{r}
-#| label: fdr_figure
+#| label: fdr-figure
 #| echo: false
 #| fig-align: "center"
 #| out-width: "50%"
@@ -419,6 +435,7 @@ The local FDR indirectly tells us the probability of a PSM being a false positiv
 Let's double check that we only have high confidence PSMs.
 
 ```{r}
+#| label: examine-aggregation-protein
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -443,6 +460,7 @@ The file is called `cell_cycle_total_proteome_analysis_Proteins.txt`.
 We begin by using the `read.delim` function to read in the data,
 
 ```{r}
+#| label: verify-protein-counts
 ## Applying protein level FDR - import protein output from database search
 protein_data_PD <- read.delim(
   file = "data/cell_cycle_total_proteome_analysis_Proteins.txt"
@@ -452,6 +470,7 @@ protein_data_PD <- read.delim(
 Let's check the dimensions of the protein level output,
 
 ```{r}
+#| label: show-protein-levels
 dim(protein_data_PD)
 ```
 
@@ -459,6 +478,7 @@ The output contains `r nrow(protein_data_PD)` proteins.
 Let's compare this to the number of master protein accessions in our raw and filtered PSM data,
 
 ```{r}
+#| label: create-sample-prep-groups
 ## Number of master proteins in our raw data
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
@@ -483,6 +503,7 @@ This makes sense because we did not set any quality control thresholds on co-iso
 Now let's look to see where information about the protein level FDR is stored.
 
 ```{r}
+#| label: compare-sample-prep-methods
 names(protein_data_PD) %>%
   head(10)
 ```
@@ -493,6 +514,7 @@ Let's add this information to our `rowData` of the `psms_filtered` set of our `Q
 First let's extract the `rowData` and convert it to a `data.frame` so we can make use of `dplyr`,
 
 ```{r}
+#| label: summarize-by-batch
 ## Extract the rowData and convert to a data.frame
 psm_data_QF <-
   cc_qf[["psms_filtered"]] %>%
@@ -503,6 +525,7 @@ psm_data_QF <-
 Now let's subset the `protein_data_PD` data to keep only accession and FDR information,
 
 ```{r}
+#| label: setup-reference-normalization
 ## Select only the Accession and FDR info
 protein_data_PD <-
   protein_data_PD %>%
@@ -515,6 +538,7 @@ Note, in the `rowData` of the `QFeatures` object we have `"Master.Protein.Access
 Check with your own data the explicit naming of your data files as this will differ between third party softwares.
 
 ```{r}
+#| label: create-aggregated-dataset
 ## Use left.join from dplyr to add the FDR data to PSM rowData data.frame
 fdr_confidence <- left_join(
   x = psm_data_QF,
@@ -534,6 +558,7 @@ This tells `left_join` we want to match join the two `data.frames` by matching a
 Now let's add the FDR information back to the `QFeatures` object,
 
 ```{r}
+#| label: show-aggregated-structure
 ## Now add this data to the QF object
 rowData(cc_qf[["psms_filtered"]])$Protein.FDR.Confidence <- fdr_confidence
 ```
@@ -541,6 +566,7 @@ rowData(cc_qf[["psms_filtered"]])$Protein.FDR.Confidence <- fdr_confidence
 Now we can print a table to see how many of the PSMs in our data were found to have a high confidence after protein level FDR calculations.
 
 ```{r}
+#| label: assign-reference-channel
 cc_qf[["psms_filtered"]] %>%
   rowData() %>%
   as_tibble() %>%
@@ -554,6 +580,7 @@ Even though we set a PSM level FDR threshold of 0.01, some of the resulting prot
 We can now use the `filterFeatures` function to remove PSMs that do not have a `Protein_Confidence` of 'High'.
 
 ```{r}
+#| label: calculate-reference-ratios
 cc_qf <- cc_qf %>%
   filterFeatures(~ Protein.FDR.Confidence == "High", i = "psms_filtered")
 ```
@@ -562,6 +589,7 @@ Notice, we see a message output to the terminal after running the function that 
 This is correct and expected.
 
 ```{r}
+#| label: verify-reference-ratios
 cc_qf[["psms_filtered"]] %>%
   rowData %>%
   as_tibble %>%
@@ -574,6 +602,7 @@ For more information about how FDR values are calculated and used see @Prieto201
 ## Management of missing data
 
 ```{r}
+#| label: apply-log2-transformation
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -622,6 +651,7 @@ Let's try to use this function.
 Again, we use the `i =` argument to specify which `SummarizedExperiment` within the `QFeatures` object that we wish to look at.
 
 ```{r}
+#| label: verify-log-transformation
 nNA(cc_qf, i = "psms_filtered")
 ```
 
@@ -633,6 +663,7 @@ The next two data frames also give us `nNA` and `pNA` but this time on a per row
 Let's direct the output of `nNA` on each `SummarizedExperiment` to an object,
 
 ```{r}
+#| label: show-normalised-data
 mv_raw <- nNA(cc_qf, i = "psms_raw")
 mv_filtered <- nNA(cc_qf, i = "psms_filtered")
 ```
@@ -642,18 +673,21 @@ To access one `DataFrame` within a list we use the standard `$` operator, follow
 **Missing values down columns (sample)** Print information regarding the number of missing values per column in the `"mv_raw"` data,
 
 ```{r}
+#| label: check-batch-structure
 mv_raw$nNAcols
 ```
 
 and after filtering,
 
 ```{r}
+#| label: verify-batch-effect
 mv_filtered$nNAcols
 ```
 
 Now, we can extract the proportion of NAs in each sample,
 
 ```{r}
+#| label: examine-batch-means
 mv_raw$nNAcols$pNA
 ```
 
@@ -667,6 +701,7 @@ In the following code chunk we visualise the proportion of missing values per sa
 In the raw data,
 
 ```{r}
+#| label: filter-low-signal-features
 mv_raw$nNAcols %>%
   as_tibble() %>%
   mutate(condition = colData(cc_qf)$condition) %>%
@@ -679,6 +714,7 @@ mv_raw$nNAcols %>%
 In the filtered data,
 
 ```{r}
+#| label: verify-signal-filtering
 mv_filtered$nNAcols %>%
   as_tibble() %>%
   mutate(condition = colData(cc_qf)$condition) %>%
@@ -706,12 +742,14 @@ It is important to check that the data corresponds to the experimental setup.
 In the `"psms_raw"` data,
 
 ```{r}
+#| label: show-final-structure
 mv_raw$nNArows
 ```
 
 The `"psms_filtered"` data,
 
 ```{r}
+#| label: verify-final-data
 mv_filtered$nNArows
 ```
 
@@ -729,12 +767,14 @@ Calling `table` on the output number of missing values we have across samples,
 On the raw data,
 
 ```{r}
+#| label: show-batch-structure
 mv_raw$nNArows$nNA %>% table()
 ```
 
 On the filtered data,
 
 ```{r}
+#| label: verify-batch-info
 mv_filtered$nNArows$nNA %>% table()
 ```
 :::::
@@ -754,6 +794,7 @@ Since the use-case data only has a small number of missing values, it makes sens
 This is done using the `filterNA` function where the `pNA` argument specifies the maximum proportion of missing values to allow per feature.
 
 ```{r}
+#| label: create-final-qfeatures
 cc_qf <- cc_qf %>%
   filterNA(pNA = 0, i = "psms_filtered")
 ```
@@ -761,6 +802,7 @@ cc_qf <- cc_qf %>%
 Check that we now have no missing values,
 
 ```{r}
+#| label: verify-final-qfeatures
 nNA(cc_qf, i = "psms_filtered")$nNA
 ```
 
@@ -781,6 +823,7 @@ Label-free proteomics experiments in particular have many more missing values th
 For a more in-depth discussion of imputation and how to complete this within the `QFeatures` infrastructure, please see the [Adapting this workflow to label-free proteomics data](./10_lfq_vs_tmt.html) section.
 
 ```{r}
+#| label: show-saved-data-info
 #| include: false
 
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson03.rda"))

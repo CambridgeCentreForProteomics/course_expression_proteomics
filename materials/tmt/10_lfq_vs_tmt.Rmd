@@ -17,6 +17,7 @@ editor:
 :::
 
 ```{r}
+#| label: load-lfq-tmt-comparison-data
 #| include: false
 
 library("QFeatures")
@@ -35,6 +36,7 @@ library("here")
 The processing and analysis of label-free quantitative proteomics data to discover differentially abundant proteins follows the same overall workflow presented in this course for our TMT use-case.
 
 ```{r}
+#| label: create-comparison-setup
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -46,8 +48,8 @@ However, some of the decisions made and exact approaches to each stage may diffe
 These decisions are discussed below and summarised in @tbl-comparison.
 
 ```{r}
-#| echo: false
 #| label: tbl-comparison
+#| echo: false
 #| tbl-cap: "Main differences between processing workflow for TMT and label-free quantitative proteomics data prior to differential expression analyses"
 
 table1 <- data.frame(
@@ -181,12 +183,14 @@ Imputation can be achieved within the `QFeatures` infrastructure using the `impu
 To see what imputation methods this function facilitates we can use `MsCoreUtils::imputeMethods()`.
 
 ```{r}
+#| label: extract-common-proteins
 MsCoreUtils::imputeMethods()
 ```
 
 For example, to impute using a k-NN method, we would use the following code,
 
 ```{r}
+#| label: analyze-lfq-tmt-correlation
 #| results: "hide"
 #| warning: false
 #| message: false

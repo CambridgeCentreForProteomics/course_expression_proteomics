@@ -42,6 +42,6 @@ course_files/output
 materials/**/*_files/
 materials_files/
 figure/
-*html
-site_libs
+*.html
+# site_libs
 *.rmarkdown

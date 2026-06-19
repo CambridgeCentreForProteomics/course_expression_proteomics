@@ -16,6 +16,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: prepare-limma-design
 #| include: false
 
 library("here")
@@ -65,6 +66,7 @@ We first split the data by group, then count the number of finite (non-missing) 
 We begin by extracting the normalised protein level data `"norm_protiens"` in the QF object.
 
 ```{r}
+#| label: setup-contrasts
 se <- getWithColData(dia_qf, "norm_proteins")
 print(se)
 ```
@@ -72,6 +74,7 @@ print(se)
 Now let's subset the dataset by condition,
 
 ```{r}
+#| label: fit-linear-model
 control <- se[, se$group == "control"]
 mpxv <- se[, se$group == "MPXV"]
 cov <- se[, se$group == "Covid19"]
@@ -80,6 +83,7 @@ cov <- se[, se$group == "Covid19"]
 Finally, we keep only proteins quantified in at least 3 replicates.
 
 ```{r}
+#| label: fit-contrasts
 control_replicated <- rowSums(!is.na(assay(control))) >= 3
 mpxv_replicated <- rowSums(!is.na(assay(mpxv))) >= 3
 cov_replicated <- rowSums(!is.na(assay(cov))) >= 3
@@ -92,6 +96,7 @@ print(table(tokeep))
 We now add a new set containing only the proteins that pass the replication filter, and link it to the parent set.
 
 ```{r}
+#| label: extract-results-mpxv-vs-ctrl
 dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "norm_proteins_replicated")
 
 dia_qf <- addAssayLink(
@@ -104,6 +109,7 @@ dia_qf
 ```
 
 ```{r}
+#| label: extract-results-covid-vs-ctrl
 #| fig-height: 8
 
 plot(dia_qf)
@@ -116,6 +122,7 @@ Since we have three groups and are interested in all pairwise comparisons, we us
 This means the model estimates the mean abundance for each group directly.
 
 ```{r}
+#| label: examine-top-results
 group <- factor(dia_qf$group, levels = c("control", "MPXV", "Covid19"))
 
 limma_design <- model.matrix(formula(~ 0 + group))
@@ -131,6 +138,7 @@ We then define the **contrasts** --- the specific pairwise comparisons we wish t
 The `makeContrasts` function creates a contrast matrix specifying how differences between group means should be calculated.
 
 ```{r}
+#| label: multiple-testing-correction
 ## Specify contrasts of interest
 contrasts_matrix <- makeContrasts(
   MPXV_control = MPXV - control,
@@ -154,6 +162,7 @@ We fit the linear model to the replicated protein data, apply the contrasts, and
 {{< include ../_shared/_trend_robust_args.md >}}
 
 ```{r}
+#| label: volcano-plot-mpxv
 data <- assay(dia_qf[['norm_proteins_replicated']])
 
 limma_fit <- lmFit(data, limma_design)
@@ -171,13 +180,14 @@ limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
 {{< include ../_shared/_diagnostic_plots1.md >}}
 
 ```{r}
+#| label: examine-log-fold-changes
 plotSA(fit = limma_fit_contrasts, cex = 0.5, xlab = "Average log2 abundance")
 ```
 
 {{< include ../_shared/_diagnostic_plots2.md >}}
 
 ```{r}
-#| label: p-value_hist
+#| label: p-value-histogram
 #| echo: false
 #| fig-cap: "Examples of p-value histograms."
 #| fig-align: "center"
@@ -200,6 +210,7 @@ We can first test for an overall significant difference across all groups using 
 Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.
 
 ```{r}
+#| label: volcano-plot-covid
 ## Format results
 limma_results_F <- topTable(
   fit = limma_fit_contrasts,
@@ -226,6 +237,7 @@ We use `topTable` with `coef = "MPXV_control"` to get the results for this speci
 We also merge in gene name annotations from the `rowData`.
 
 ```{r}
+#| label: plot-gene-expression
 limma_results_mpxv_control <- topTable(
   limma_fit_contrasts,
   coef = "MPXV_control",
@@ -253,6 +265,7 @@ limma_results_mpxv_control %>%
 How many significant changes in abundance are there?
 
 ```{r}
+#| label: create-upset-plot
 table(
   sig = limma_results_mpxv_control$adj.P.Val < 0.05,
   ifelse(limma_results_mpxv_control$logFC > 0, 'Increased', 'Decreased')
@@ -276,6 +289,7 @@ table(
 We produce a volcano plot for the MPXV vs Control contrast, labelling the top 30 most significant proteins by gene name.
 
 ```{r}
+#| label: heatmap-top-proteins
 data_for_highlighting <- limma_results_mpxv_control %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -312,6 +326,7 @@ Rather than extracting results for each contrast separately, we can loop through
 This format is well-suited for downstream visualisation with `ggplot2`.
 
 ```{r}
+#| label: advanced-heatmap-annotation
 contrasts <- colnames(contrasts_matrix)
 
 limma_results_all_contrasts_list <- vector('list', length(contrasts))
@@ -333,6 +348,7 @@ for (contrast in contrasts) {
 ```
 
 ```{r}
+#| label: get-significant-proteins
 # bind into one data.frame
 limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 ```
@@ -347,6 +363,7 @@ limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 :::
 
 ```{r}
+#| label: compare-regulation-directions
 limma_results_all_contrasts %>%
   ggplot(aes(P.Value)) +
   geom_histogram() +
@@ -370,6 +387,7 @@ The standard Benjamini-Hochberg method was designed for independent tests, but o
 Fortunately, BH remains valid under this kind of positive dependence (formally called Positive Regression Dependency on a Subset, PRDS), so applying BH globally across all contrasts is statistically justified and more rigorous than correcting each contrast separately.
 
 ```{r}
+#| label: get-down-regulated-proteins
 limma_results_all_contrasts <- limma_results_all_contrasts %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
 ```
@@ -385,6 +403,7 @@ How many significant changes in abundance are there in each contrast?
 :::
 
 ```{r}
+#| label: examine-go-candidates
 table(
   sig = limma_results_all_contrasts$adj.P.Val < 0.05,
   ifelse(limma_results_all_contrasts$logFC > 0, 'Increased', 'Decreased'),
@@ -395,6 +414,7 @@ table(
 ### Volcano plots for all contrasts
 
 ```{r}
+#| label: create-ranking-for-go
 data_for_highlighting_all_contrasts <- limma_results_all_contrasts %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -443,6 +463,7 @@ The `treat` function from `limma` instead tests the null hypothesis that the abs
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
+#| label: advanced-ranking-analysis
 limma_fit_treat <- treat(
   limma_fit_contrasts,
   fc = 1.2,
@@ -477,6 +498,7 @@ This reduces the number of hits compared to `eBayes`, retaining only those chang
 ## Save data
 
 ```{r}
+#| label: examine-ranking-distribution
 #| include: false
 
 save(

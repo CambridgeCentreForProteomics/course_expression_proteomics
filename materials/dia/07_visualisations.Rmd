@@ -14,6 +14,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-analysis-results
 #| include: false
 
 library("here")
@@ -60,6 +61,7 @@ We also use Ward's minimum variance method (`clustering_method = 'ward.D2'`) for
 Using `scale = 'row'` standardises each row to mean=0 and sd=1 (Z-score), which allows us to focus on relative abundance patterns across samples for each protein.
 
 ```{r}
+#| label: create-comprehensive-heatmap
 #| fig-height: 5
 #| fig-width: 8
 
@@ -103,6 +105,7 @@ This keeps each subsequent heatmap call concise and ensures all plots are produc
 The function below takes a vector of UniProt IDs, extracts the corresponding rows from the quantification matrix, applies the correlation-based distance metrics, and calls `pheatmap` with consistent formatting.
 
 ```{r}
+#| label: volcano-plot-customised
 plot_heatmap_for_uids <- function(uids) {
   quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids, ])
   colnames(quant_mtx) <- dia_qf$runCol
@@ -137,6 +140,7 @@ Plotting all proteins can make it difficult to see structure.
 A common approach is to restrict the heatmap to the most variable proteins, which are more likely to reveal biologically meaningful patterns.
 
 ```{r}
+#| label: density-plot-fold-changes
 #| fig-width: 20
 #| fig-height: 10
 
@@ -170,6 +174,7 @@ For each heatmap, consider:
 ### Heatmap of proteins significant by F-test
 
 ```{r}
+#| label: ma-plot-mpxv-covid
 #| fig-height: 10
 #| fig-width: 10
 
@@ -183,6 +188,7 @@ plot_heatmap_for_uids(sig_prot_F)
 ### Heatmap of proteins significant in any pairwise contrast
 
 ```{r}
+#| label: ma-plot-mpxv-ctrl
 #| fig-height: 10
 #| fig-width: 10
 
@@ -203,6 +209,7 @@ A scatter plot of log fold changes from two contrasts --- here MPXV vs Control a
 We first use `pivot_wider` to reshape the results so that each protein occupies a single row, with separate columns for the log fold change and adjusted p-value from each contrast.
 
 ```{r}
+#| label: extract-genes-below-threshold
 compare_limma_results <- limma_results_all_contrasts %>%
   select(UniprotID, Genes, adj.P.Val, logFC, contrast) %>%
   pivot_wider(names_from = contrast, values_from = c(adj.P.Val, logFC))
@@ -211,6 +218,7 @@ compare_limma_results <- limma_results_all_contrasts %>%
 We can now plot the log fold changes against each other.
 
 ```{r}
+#| label: scatter-fold-changes
 compare_limma_results %>%
   ggplot(aes(x = logFC_MPXV_control, y = logFC_Covid19_control)) +
   geom_point() +
@@ -225,6 +233,7 @@ We'd like to highlight the significance status of each protein across the two co
 We can create a `sig` column that categorises each protein by its significance status across the two contrasts, distinguishing proteins significant in both, in only one, or in neither.
 
 ```{r}
+#| label: create-complex-scatter
 compare_limma_results <- compare_limma_results %>%
   mutate(
     sig = case_when(
@@ -242,6 +251,7 @@ Now we can re-plot the log fold changes against each other, colouring points by 
 We will label only those significant in both contrasts to keep the plot legible.
 
 ```{r}
+#| label: combine-plots-grid
 p <- compare_limma_results %>%
   arrange(desc(sig)) %>%
   ggplot(aes(x = logFC_MPXV_control, y = logFC_Covid19_control)) +
@@ -273,6 +283,7 @@ print(p)
 Finally, we map transparency (`alpha`) to the significance category to draw the eye towards proteins significant in both contrasts, and add a linear regression line with `geom_smooth(method = 'lm')` to show the overall relationship between log fold changes across the two infections.
 
 ```{r}
+#| label: combined-figure-publication
 p2 <- p +
   aes(alpha = sig) +
   scale_alpha_manual(

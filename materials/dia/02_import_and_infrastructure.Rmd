@@ -16,12 +16,14 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-here
 #| include: false
 
 library("here")
 ```
 
 ```{r}
+#| label: load-required-packages
 #| message: false
 #| results: "hide"
 #| warning: false
@@ -44,12 +46,14 @@ The file contains precursor-level identifications and quantities for every sampl
 We read this file into R using the `read_parquet` function from the `arrow` package.
 
 ```{r}
+#| label: read-diann-data
 diann_df <- read_parquet("data/monkeypox_plasma_proteomes.parquet")
 ```
 
 We can inspect the dimensions and column names to understand what the data contains.
 
 ```{r}
+#| label: examine-data-structure
 dim(diann_df)
 names(diann_df)
 ```
@@ -93,6 +97,7 @@ It provides information about each sample, including which group (MPXV, COVID-19
 We use the `read_excel` function from the `readxl` package to import the data into R.
 
 ```{r}
+#| label: explore-assay-structure
 sample_metadata <- read_excel("data/monkeypox_metadata.xlsx")
 print(sample_metadata)
 ```
@@ -108,6 +113,7 @@ In DIA-NN the names in the `Run` column often inherit the full raw file path pas
 We need to clean up these run names so that they match the `sample_id` field in our metadata.
 
 ```{r}
+#| label: parse-sample-metadata
 # Clean Run names
 diann_df[, "Run"] %>%
   unique() %>%
@@ -129,6 +135,7 @@ In the following code chunk we add a new column called `runCol` to the `diann_df
 This column will serve as a link between the metadata and the `diann_df` proteomics data as well as being useful for visualisation and annotating our data at a later stage in the analysis.
 
 ```{r}
+#| label: view-column-data
 diann_df <- diann_df %>%
   merge(
     sample_metadata[, c("sample_id", "runCol")],
@@ -140,14 +147,17 @@ diann_df <- diann_df %>%
 If we look at the column dimensions and names of the `diann_df` we now see the `runCol` column has been added.
 
 ```{r}
+#| label: check-column-data-types
 dim(diann_df)
 ```
 
 ```{r}
+#| label: access-column-names
 names(diann_df)
 ```
 
 ```{r}
+#| label: access-row-names
 head(diann_df)
 ```
 
@@ -158,6 +168,7 @@ This function creates one `SummarizedExperiment` per run, with each set containi
 The `runCol` argument specifies which column in the input data frame identifies the run.
 
 ```{r}
+#| label: explore-missing-values
 dia_qf <-
   readQFeaturesFromDIANN(
     diann_df,
@@ -174,6 +185,7 @@ When we inspect our `QFeatures` object, we see that it contains 31 sets, each co
 Each set contains the precursor-level quantification data for that run, with feature names given by the `Precursor.Id` column from the original DIA-NN output.
 
 ```{r}
+#| label: extract-protein-names
 dia_qf
 ```
 
@@ -181,6 +193,7 @@ By default if a `QFeatures` object has more than 6 samples, only the first three
 To see all samples and their respective data summary, we can use the `experiments` function.
 
 ```{r}
+#| label: count-unique-proteins
 experiments(dia_qf)
 ```
 
@@ -190,18 +203,21 @@ We can access individual samples (sets, or `SummarizedExperiment`s) using standa
 As with all indexing we can use the list position or dataset name.
 
 ```{r}
+#| label: examine-peptide-counts
 dia_qf[[1]]
 ```
 
 Is the same as,
 
 ```{r}
+#| label: create-class-summary
 dia_qf[["COVID_E1"]]
 ```
 
 The quantitation data for each sample is store in the `assay` container and can be extracted using the `assay` function.
 
 ```{r}
+#| label: show-dimensions
 assay(dia_qf[[1]]) %>%
   head()
 ```
@@ -246,6 +262,7 @@ counts.</details>
 **Task 1**
 
 ```{r}
+#| label: access-metadata-slots
 #| fig-height: 4
 #| fig-width: 4
 
@@ -255,6 +272,7 @@ hist(nrows(dia_qf), xlab = "Precursors", main = "Precursor counts per sample")
 **Task 2**
 
 ```{r}
+#| label: create-subset
 data.frame(
   n_precursors = nrows(dia_qf),
   sample = names(nrows(dia_qf))
@@ -275,6 +293,7 @@ The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
 This information can be accessed on a sample by sample level by using the `rowData` function.
 
 ```{r}
+#| label: compare-sample-counts
 rowData(dia_qf[[1]]) %>%
   head(2)
 ```
@@ -283,6 +302,7 @@ However, we want to access this information across all the samples.
 To do this we can use the `rbindRowData` function.
 
 ```{r}
+#| label: subset-multiple-features
 rdata <- rbindRowData(dia_qf, i = names(dia_qf))
 ```
 
@@ -294,6 +314,7 @@ Recall, there is also a slot in the `QFeatures` object that stores information o
 This is the `colData` slot.
 
 ```{r}
+#| label: compare-subset-counts
 colData(dia_qf)
 ```
 
@@ -301,6 +322,7 @@ In the below code chunk we create a `data.frame` called `cdata` containing the s
 This will help with our data exploration.
 
 ```{r}
+#| label: aggregate-features
 #| fig-width: 5
 #| fig-height: 5
 
@@ -322,6 +344,7 @@ Now we have one `data.frame` with precursor-level and sample-level information w
 In the code below we plot the distribution of FWHM values per sample, coloured by group.
 
 ```{r}
+#| label: join-features
 rdata %>%
   ggplot(aes(FWHM, group = Run, colour = group)) +
   geom_density() +
@@ -343,6 +366,7 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 ## Save data
 
 ```{r}
+#| label: filter-by-fdr
 #| include: false
 
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))

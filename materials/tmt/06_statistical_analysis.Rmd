@@ -18,6 +18,7 @@ editor:
 :::
 
 ```{r}
+#| label: prepare-limma-design-tmt
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -26,6 +27,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
 ```
 
 ```{r}
+#| label: create-design-matrix
 #| include: false
 
 library("QFeatures")
@@ -82,6 +84,7 @@ For a multifactorial comparison of all cell cycle stages, see [Statistical analy
 We subset to our log2 transformed protein-level data and retain just the M and G1 phase samples
 
 ```{r}
+#| label: create-contrast-matrix
 # extract the log-normalised experiment from our QFeatures object
 all_proteins <- cc_qf[["log_norm_proteins"]]
 
@@ -103,6 +106,7 @@ Simply put, the model design is determined by how samples are distributed across
 Below, we define the model matrix with `condition` as the explanatory variable.
 
 ```{r}
+#| label: examine-design
 ## Design a matrix containing all factors that we wish to model
 condition <- all_proteins$condition
 
@@ -115,6 +119,7 @@ The second level of the variable (here, G1) is then modeled by an additional ter
 This is the most appropriate way to model the data since the term `conditionG1` captures the difference we are interested in.
 
 ```{r}
+#| label: fit-limma-model-tmt
 ## Inspect the design matrix
 m_design
 ```
@@ -134,6 +139,7 @@ We could still use contrasts to explore the differences between the groups an in
 After we have specified the design matrix, the next step is to apply the statistical model
 
 ```{r}
+#| label: fit-contrasts-tmt
 ## Fit linear model using the design matrix and desired contrasts
 fit_model <- lmFit(object = assay(all_proteins), design = m_design)
 ```
@@ -145,6 +151,7 @@ When we do this we include two other arguments: `trend = TRUE` and `robust = TRU
 {{< include ../_shared/_trend_robust_args.md >}}
 
 ```{r}
+#| label: extract-contrast-results
 ## Update the model using the limma eBayes algorithm
 
 final_model <- eBayes(fit = fit_model, trend = TRUE, robust = TRUE)
@@ -157,6 +164,7 @@ By default, `topTable` outputs a table of the top 10 ranked proteins, that is th
 To get the results for all of our proteins we use the `number = Inf` argument.
 
 ```{r}
+#| label: adjust-p-values
 ## Format results
 limma_results <- topTable(
   fit = final_model,
@@ -186,13 +194,14 @@ This provides p-values adjusted to account for the multiple hypothesis tests per
 {{< include ../_shared/_diagnostic_plots1.md >}}
 
 ```{r}
+#| label: examine-adjusted-p-values
 plotSA(fit = final_model, cex = 0.5, xlab = "Average log2 abundance")
 ```
 
 {{< include ../_shared/_diagnostic_plots2.md >}}
 
 ```{r}
-#| label: p-value_hist
+#| label: p-value-histogram
 #| echo: false
 #| fig-cap: "Examples of p-value histograms."
 #| fig-align: "center"
@@ -202,6 +211,7 @@ knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
 ```
 
 ```{r}
+#| label: extract-top-proteins
 #| message: false
 #| warning: false
 
@@ -216,6 +226,7 @@ limma_results %>%
 Having checked that the model we fitted was appropriate for the data, we can now take a look at the results of our test
 
 ```{r}
+#| label: examine-top-proteins
 head(limma_results)
 ```
 
@@ -249,6 +260,7 @@ Here we are going to define significance based on an `adj.P.Val` \< 0.01.
 We can add a column to our results to indicate significance as well as the direction of change.
 
 ```{r}
+#| label: volcano-plot-tmt
 ## Add direction and significance information
 limma_results <- limma_results %>%
   mutate(
@@ -264,6 +276,7 @@ head(limma_results)
 ## Visualising the results of our statistical model
 
 ```{r}
+#| label: ma-plot-tmt
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -274,6 +287,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.011.png", error = FALSE)
 {{< include ../_shared/_volcano_plot_intro.md >}}
 
 ```{r}
+#| label: create-summary-statistics
 limma_results %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
   geom_point(shape = 21, stroke = 0.25, size = 3) +
@@ -289,6 +303,7 @@ Re-generate your volcano plot defining significance based on an adjusted P-value
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
+#| label: heatmap-top-differentially-abundant
 my_results <-
   limma_results %>%
   mutate(
@@ -315,6 +330,7 @@ This test whether the fold-change is greater than a specific value is more strin
 Here we will use a threshold of absolute logFC > 0.5 (>1.4 fold-change).
 
 ```{r}
+#| label: advanced-heatmap-tmt
 final_model_treat <- treat(
   final_model,
   lfc = 0.5, # null hypothesis is 'absolute logFC < 0.5'
@@ -334,6 +350,7 @@ limma_results_treat <- topTreat(
 Again, we add columns specifying the direction of change and significance (using the adjusted p-value alone).
 
 ```{r}
+#| label: get-significant-proteins-tmt
 ## Add direction and significance information
 limma_results_treat <- limma_results_treat %>%
   mutate(
@@ -345,6 +362,7 @@ limma_results_treat <- limma_results_treat %>%
 Finally, we visualise the volcano plot.
 
 ```{r}
+#| label: examine-specific-proteins
 limma_results_treat %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
   geom_point(shape = 21, stroke = 0.25, size = 3) +
@@ -364,6 +382,7 @@ limma_results_treat %>%
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
+#| label: create-ranking-vector
 # Tabulate direction of change and significance
 # for both logFC threshold approaches
 table(my_results$direction, my_results$significance)
@@ -372,6 +391,7 @@ table(limma_results_treat$direction, limma_results_treat$significance)
 ```
 
 ```{r}
+#| label: run-gse-analysis
 # Identify the proteins which are significant using
 # TREAT, but not with the post hoc threshold on fold-change
 post_hoc_not_sig <- my_results %>%
@@ -386,6 +406,7 @@ sig_treat_only <- intersect(post_hoc_not_sig, treat_sig)
 ```
 
 ```{r}
+#| label: gse-results-summary
 # Make a volcano plot highlighting these proteins
 my_results %>%
   # Add a new column to annotate the proteins to highlight
@@ -438,6 +459,7 @@ We first extract the accessions of proteins with significant differences.
 We use these accessions to subset the original quantification data which is currently stored in the `assay` of our `cp_qf` object.
 
 ```{r}
+#| label: plot-gsea-results
 ## Extract accessions of significant proteins
 sig_proteins <- limma_results %>%
   filter(significance == "sig") %>%
@@ -453,6 +475,7 @@ Now we use the quantitative data to plot a heatmap using `pheatmap`.
 We will normalise each row of protein abundances to Z-scores (standard deviations away from the mean).
 
 ```{r}
+#| label: extract-enriched-pathways
 pheatmap(
   mat = quant_data,
   scale = 'row', # Z-score normalise across the rows (proteins)
@@ -463,6 +486,7 @@ pheatmap(
 A more in-depth overview of `pheatmap` and how to customise these plots further can be found in the documentation (`?pheatmap`) and [here](https://davetang.org/muse/2018/05/15/making-a-heatmap-in-r-with-the-pheatmap-package/).
 
 ```{r}
+#| label: create-pathway-heatmap
 #| include: false
 
 ## Save results

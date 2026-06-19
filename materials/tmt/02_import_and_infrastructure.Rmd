@@ -14,6 +14,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-tmt-data
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -46,7 +47,7 @@ During this course we will use several R/Bioconductor packages.
 Let's begin by opening RStudio and loading these packages into our working environment.
 
 ```{r}
-#| label: load_packages
+#| label: load-packages
 #| message: false
 #| results: "hide"
 #| warning: false
@@ -87,12 +88,14 @@ The first step is to read the data into R as a `data.frame`.
 We use the `read.delim` function.
 
 ```{r}
+#| label: explore-quantification-cols
 df <- read.delim("data/cell_cycle_total_proteome_analysis_PSMs.txt")
 ```
 
 Before we can create a `QFeatures` object we need to first identify which columns the quantitation data is stored in.
 
 ```{r}
+#| label: show-tmt-assay-structure
 df %>% names()
 ```
 
@@ -105,6 +108,7 @@ We will pass this information to the `quantCols` argument when we use the `readQ
 As this is the first data import before any processing so let's call this data level `"psms_raw"`.
 
 ```{r}
+#| label: examine-metadata-structure
 ## Import data into QF object
 cc_qf <- readQFeatures(assayData = df, quantCols = 47:56, name = "psms_raw")
 ```
@@ -126,6 +130,7 @@ This will help you to make sure that the function does what you are expecting it
 Let's take a look at our newly created object.
 
 ```{r}
+#| label: view-peptide-metadata
 cc_qf
 ```
 
@@ -137,6 +142,7 @@ We can access individual `SummarizedExperiment`s within a `QFeatures` object usi
 As with all indexing we can use the list position or dataset name.
 
 ```{r}
+#| label: explore-missing-values-tmt
 ## Indexing using position
 cc_qf[[1]]
 
@@ -153,6 +159,7 @@ Let's start with the quantitation data of our SE called `psms_raw`.
 This is stored in the `assay` slot.
 
 ```{r}
+#| label: count-features-per-sample
 #| eval: false
 
 assay(cc_qf[["psms_raw"]])
@@ -164,12 +171,14 @@ Let's use the `head` command to show only the 6 lines (default) of the quantitat
 Type into your R console,
 
 ```{r}
+#| label: extract-protein-ids
 head(assay(cc_qf[["psms_raw"]]))
 ```
 
 This is equivalent to,
 
 ```{r}
+#| label: count-proteins-genes
 cc_qf[["psms_raw"]] %>%
   assay() %>%
   head()
@@ -179,6 +188,7 @@ The first code chunk uses nested functions and the second uses pipes.
 Throughout this course for ease of coding and clarity we will use pipes and where appropriate follow the `tidyverse` style of coding for clarity.
 
 ```{r}
+#| label: examine-feature-types
 cc_qf[["psms_raw"]] %>%
   assay() %>%
   ncol()
@@ -192,6 +202,7 @@ We see some quantitative values and some missing values, here denotated `NA`.
 Now let's examine the the `rowData` slot,
 
 ```{r}
+#| label: summarise-class
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   names()
@@ -206,6 +217,7 @@ We will come across more of the variables stored in the `rowData` when we come t
 We again use the `head` command to print the first 6 rows of the `rowData`
 
 ```{r}
+#| label: show-dimensions
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   head()
@@ -216,6 +228,7 @@ cc_qf[["psms_raw"]] %>%
 The final slot within our `SummarizedExperiment` is the `colData`.
 
 ```{r}
+#| label: get-long-format
 cc_qf[["psms_raw"]] %>%
   colData()
 ```
@@ -223,6 +236,7 @@ cc_qf[["psms_raw"]] %>%
 We see this is also a `DataFrame` structure.
 
 ```{r}
+#| label: inspect-long-format
 cc_qf[["psms_raw"]] %>%
   colData() %>%
   class()
@@ -236,6 +250,7 @@ Each row of this 10 by 0 `DataFrame` corresponds to some feature of the quantita
 The names of these rows are the TMT sample names,
 
 ```{r}
+#| label: show-metadata-access
 cc_qf[["psms_raw"]] %>%
   colData() %>%
   rownames()
@@ -250,6 +265,7 @@ Let's open the file `coldata.csv` and then read it into R and add it to our `QFe
 We use the `read.csv` function and pass the argument `row.names = 1` which tells the function that the in the .csv file the row names are located in column 1.
 
 ```{r}
+#| label: demonstrate-subsetting
 ## Read in coldata .csv
 metadata_df <- read.csv("data/samples_meta_data.csv", row.names = 1)
 
@@ -262,6 +278,7 @@ This .csv file has 10 rows, importantly the rows are annotated using the names o
 We can add information from this .csv to our `colData`
 
 ```{r}
+#| label: subset-features-samples
 ## Annotate colData with the sample data
 colData(cc_qf) <- metadata_df
 
@@ -276,6 +293,7 @@ We can also change the names of our samples to simplify our downstream coding as
 This is done by changing the `colnames`.
 
 ```{r}
+#| label: compare-subset-results
 ## Change col names to represent the sample
 colnames(cc_qf[["psms_raw"]]) <- cc_qf$sample
 
@@ -284,6 +302,7 @@ colData(cc_qf[["psms_raw"]])
 ```
 
 ```{r}
+#| label: show-filter-options
 #| include: false
 
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson02.rda"))
@@ -309,18 +328,21 @@ When we type the name of the the object `cc_qf` a summary of the data is printed
 This summary shows us a summary of the number of sets (`SummarizedExperiments`) we have in the data.
 
 ```{r}
+#| label: filter-empty-rows
 cc_qf
 ```
 
 Since a `QFeatures` object is a list of `SummarizedExperiment` objects, we can use `length(cc_qf)` to check how many objects we have inside it
 
 ```{r}
+#| label: verify-filtering
 length(cc_qf)
 ```
 
 Alternatively, we can also extract the list of experiments directly using
 
 ```{r}
+#| label: verify-samples
 experiments(cc_qf)
 ```
 
@@ -332,6 +354,7 @@ Similarly, the object summary also tells us the number of PSMs.
 We can also extract the number of rows (PSMs in our case) for a given level (i.e. `psms_raw`)
 
 ```{r}
+#| label: aggregate-to-protein
 cc_qf[["psms_raw"]] %>%
   nrow()
 ```
@@ -343,6 +366,7 @@ cc_qf[["psms_raw"]] %>%
 We can use the `assay` accessor,
 
 ```{r}
+#| label: verify-aggregation
 #| eval: false
 
 cc_qf[["psms_raw"]] %>%
@@ -352,6 +376,7 @@ cc_qf[["psms_raw"]] %>%
 or equivalently,
 
 ```{r}
+#| label: examine-aggregation-results
 #| eval: false
 
 assay(cc_qf[["psms_raw"]])
@@ -388,6 +413,7 @@ identification.</details>
 **Task 1**
 
 ```{r}
+#| label: join-features
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   class()
@@ -398,6 +424,7 @@ This is a type of data frame.
 Will will convert this to a `data.frame` or `tibble` throughout this couse to make use of `tidyverse` functions.
 
 ```{r}
+#| label: verify-join-results
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   dim()
@@ -422,6 +449,7 @@ We could use the `as.data.frame` or `as_tibble` functions, respectively, which w
 - Finally, we use the `length` command to count the number of peptides.
 
 ```{r}
+#| label: calculate-igg-ratios
 ## Using pipes
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
@@ -434,6 +462,7 @@ cc_qf[["psms_raw"]] %>%
 Alternative solution (among many others)
 
 ```{r}
+#| label: verify-igg-ratios
 ## Without pipes
 rd <- rowData(cc_qf[["psms_raw"]])
 tbl <- unique(rd$Sequence)
@@ -449,6 +478,7 @@ We have `r length(tbl)` peptides.
 Information regarding the protein groups is found in the `Master.Protein.Accessions` column.
 
 ```{r}
+#| label: set-igg-as-reference
 ## Using pipes
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
@@ -461,6 +491,7 @@ cc_qf[["psms_raw"]] %>%
 Alternative solution (among many others)
 
 ```{r}
+#| label: verify-igg-normalization
 ## Without pipes
 tbl <- unique(rd$Master.Protein.Accessions)
 length(tbl)
@@ -483,6 +514,7 @@ Can you count how many occurrences of missed cleavages there are in our data?
 
 ::::: {.callout-answer collapse=true}
 ```{r}
+#| label: final-qfeatures-structure
 cc_qf[["psms_raw"]] %>%
   rowData() %>%
   as_tibble() %>%

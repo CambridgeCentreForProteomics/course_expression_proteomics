@@ -15,6 +15,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: aggregate-precursor-to-protein
 #| include: false
 
 library("here")
@@ -36,6 +37,7 @@ In this lesson we will log2 transform the precursor-level data, aggregate to pro
 If we look at the distribution of raw precursor intensities, we will see that the abundance values are dramatically skewed towards zero.
 
 ```{r}
+#| label: check-aggregation
 #| warning: false
 #| message: false
 
@@ -61,6 +63,7 @@ Here we apply it **before** aggregation to protein level, because we use `robust
 We apply a log2 transformation to the filtered precursor data using the `logTransform` function, which creates a new set in our `QFeatures` object.
 
 ```{r}
+#| label: subset-for-analysis
 dia_qf <- logTransform(
   dia_qf,
   base = 2,
@@ -107,6 +110,7 @@ The `colvars` argument specifies which columns from the `colData` to carry acros
 Run the following code and inspect the output --- what does each row represent?
 
 ```{r}
+#| label: filter-missing-high-proportion
 # dia_qf[,,'proteins'] subsets the QFeatures object to the "proteins" set
 longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
   data.frame() %>%
@@ -126,6 +130,7 @@ per group using `sum(is.finite(value))`.</details>
 Each row in the long-format data represents one protein--sample observation, with `value` containing the protein abundance and `group` indicating which experimental group that sample belongs to.
 
 ```{r}
+#| label: examine-filtered-data
 longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
   data.frame() %>%
   group_by(rowname, group) %>%
@@ -165,6 +170,7 @@ shown.</details>
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
+#| label: normalise-median-centering
 #| fig-height: 10
 #| fig-width: 10
 #| warning: false
@@ -206,7 +212,7 @@ However, applying it within the QFeatures pipeline requires extracting and repla
 :::
 
 ```{r}
-#| label: qfeatures-normalize
+#| label: qfeatures-normalise
 
 dia_qf <- normalize(
   dia_qf,
@@ -219,6 +225,7 @@ dia_qf <- normalize(
 We can visualise the effect of normalisation by plotting density curves of protein abundance per sample before and after normalisation.
 
 ```{r}
+#| label: visualise-normalization-effect
 #| warning: false
 
 pre_norm <- longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
@@ -239,6 +246,7 @@ pre_norm + post_norm
 ```
 
 ```{r}
+#| label: verify-normalization
 #| include: false
 
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))

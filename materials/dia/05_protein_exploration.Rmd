@@ -15,6 +15,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-processed-data
 #| include: false
 
 library("here")
@@ -43,6 +44,7 @@ We can plot the quantification values for these proteins to inspect them directl
 We first convert the protein-level data to long format using `longForm`, extracting both sample-level metadata (group, runCol) and feature-level metadata (gene names, protein names).
 
 ```{r}
+#| label: examine-sample-distributions
 long_form_protein <- longForm(
   dia_qf[,, "norm_proteins"],
   colvars = c('runCol', 'group'),
@@ -55,6 +57,7 @@ long_form_protein <- longForm(
 We can then filter to a set of proteins of interest and plot abundance values per sample, grouped by condition.
 
 ```{r}
+#| label: plot-protein-abundance-distributions
 #| fig-height: 6
 #| fig-width: 8
 #| warning: false
@@ -101,6 +104,7 @@ Since PCA requires a complete data matrix, we first remove proteins with any mis
 We then extract the normalised protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
 
 ```{r}
+#| label: create-boxplots
 protein_pca <- dia_qf[["norm_proteins"]] %>%
   filterNA() %>%
   assay() %>%
@@ -113,6 +117,7 @@ summary(protein_pca)
 We plot a scree plot to inspect how much variance each PC explains.
 
 ```{r}
+#| label: create-violins
 fviz_screeplot(protein_pca)
 ```
 
@@ -128,6 +133,7 @@ fviz_screeplot(protein_pca)
 We then plot the samples in PCA space, colouring by group and using shape to indicate age group.
 
 ```{r}
+#| label: hierarchical-clustering-heatmap
 p <- protein_pca$x %>%
   merge(colData(dia_qf), by = 'row.names') %>%
   data.frame() %>%
@@ -148,6 +154,7 @@ It takes a `QFeatures` object and one or more feature names, and returns a new `
 Let's look at TTR (Transthyretin; UniProt ID P02766), one of the proteins of interest plotted above.
 
 ```{r}
+#| label: visualize-pca
 TTR <- subsetByFeature(dia_qf, "P02766")
 
 experiments(TTR)
@@ -159,6 +166,7 @@ We can use this subset to visualise how the precursor data was aggregated to pro
 Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
 
 ```{r}
+#| label: create-correlation-heatmap
 #| warning: false
 #| message: false
 
@@ -185,6 +193,7 @@ We can modify the intensities to put them on the same scale and make this cleare
 Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
 
 ```{r}
+#| label: plot-protein-correlations
 #| warning: false
 #| message: false
 
@@ -213,6 +222,7 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
 We can go one step further and also facet by condition so we can see the differences between the conditions more clearly.
 
 ```{r}
+#| label: variance-analysis
 TTR[,, c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%

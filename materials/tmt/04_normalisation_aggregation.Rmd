@@ -14,6 +14,7 @@ editor_options:
 :::
 
 ```{r}
+#| label: load-tmt-processed-data
 #| include: false
 
 library("QFeatures")
@@ -46,6 +47,7 @@ In this next lesson we will continue processing the PSM level data, aggregate ou
 ## Feature aggregation
 
 ```{r}
+#| label: aggregate-peptide-to-protein
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -56,6 +58,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
 Let's recap our data,
 
 ```{r}
+#| label: verify-aggregation
 cc_qf
 ```
 
@@ -74,6 +77,7 @@ In your console run the `aggregateFeatures` function on your `QFeatures` object.
 We wish to aggregate from PSM to peptide level so pass the argument `i = "psms_filtered"` to specify we wish to aggregate the PSM data, and then pass `fcol = "Sequence"` to specify we wish to group by the peptide amino acid sequence.
 
 ```{r}
+#| label: normalise-median-centering-tmt
 #| warning: false
 #| message: false
 
@@ -106,6 +110,7 @@ Let's complete our aggregation by now aggregating our peptide level data to prot
 Let's again use the `aggregateFeatures` function and pass `fcol = "Master.Protein.Accessions"` to specify we wish to group by `"Master.Protein.Accessions"`.
 
 ```{r}
+#| label: normalise-variance-stabilizing
 #| warning: false
 #| message: false
 
@@ -138,6 +143,7 @@ We have now reached the point where we are ready to log2 transform the quantitat
 If we take a look at our current (raw) quantitative data we will see that our abundance values are dramatically skewed towards zero.
 
 ```{r}
+#| label: normalise-total-protein
 #| warning: false
 #| message: false
 
@@ -163,6 +169,7 @@ We have chosen to log transform the data in this example **after** protein aggre
 :::
 
 ```{r}
+#| label: normalise-quantile
 #| warning: false
 #| message: false
 
@@ -179,6 +186,7 @@ cc_qf[["proteins"]] %>%
 To apply this log2 transformation to our data we use the `logTransform` function and specify `base = 2`.
 
 ```{r}
+#| label: verify-quantile-normalization
 cc_qf <- logTransform(
   object = cc_qf,
   base = 2,
@@ -190,12 +198,14 @@ cc_qf <- logTransform(
 Let's take a look again at our `QFeatures` object,
 
 ```{r}
+#| label: check-normalization-effect
 cc_qf
 ```
 
 ## Normalisation of quantitative data
 
 ```{r}
+#| label: compare-normalised-distributions
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -210,6 +220,7 @@ knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
 We apply a center median normalisation, which shifts each sample's distribution so that all sample medians are centered at zero.
 
 ```{r}
+#| label: select-normalization-method
 cc_qf <- normalize(
   cc_qf,
   i = "log_proteins",
@@ -222,6 +233,7 @@ Let's verify the normalisation by viewing the `QFeatures` object.
 We can call `experiments` to view all the sets we have created,
 
 ```{r}
+#| label: verify-selected-method
 experiments(cc_qf)
 ```
 
@@ -236,6 +248,7 @@ Create two boxplots pre- and post-normalisation to visualise the effect it has h
 Using `ggplot2`,
 
 ```{r}
+#| label: filter-missing-threshold
 pre_norm <- cc_qf[["log_proteins"]] %>%
   assay() %>%
   longForm() %>%
@@ -256,6 +269,7 @@ pre_norm + post_norm
 Colour coding by condition,
 
 ```{r}
+#| label: filter-specific-conditions
 pre_norm <- cc_qf[["log_proteins"]] %>%
   assay() %>%
   longForm() %>%
@@ -298,6 +312,7 @@ Create three density plots to visualise the distribution of intensities in (1) t
 Using `plotDensities` from the `Limma` package,
 
 ```{r}
+#| label: filter-proportion-missing
 par(mfrow = c(1, 3)) ## Set up panel to hold three figures
 
 cc_qf[["proteins"]] %>%
@@ -322,6 +337,7 @@ To explore the use of alternative normalisation strategies, the [`NormalyzerDE`]
 Please refer to the [Using NormalyzerDE to explore normalisation methods](./09_normalyzer.html) section.
 
 ```{r}
+#| label: create-final-dataset-tmt
 #| include: false
 
 save(cc_qf, file = here("course_files/tmt/preprocessed/lesson04.rda"))

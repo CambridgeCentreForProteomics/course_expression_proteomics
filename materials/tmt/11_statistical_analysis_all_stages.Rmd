@@ -15,6 +15,7 @@ editor:
 :::
 
 ```{r}
+#| label: load-all-stages-data
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
@@ -28,6 +29,7 @@ Please first read through that material, since it includes background explanatio
 :::
 
 ```{r}
+#| label: prepare-multi-stage-design
 #| include: false
 
 library("QFeatures")
@@ -74,6 +76,7 @@ First, we extract the suitable protein experiment.
 We will remove the pre-treatment sample, since this condition is not replicated and so not amenable to statistical testing.
 
 ```{r}
+#| label: prepare-contrasts-all-stages
 # extract the log-normalised experiment from our QFeatures object
 all_proteins <- cc_qf[["log_norm_proteins"]]
 
@@ -97,6 +100,7 @@ For further guidance on generating design matrices for covariates or continuous 
 Below, we define the model matrix without any intercept term using the `model.matrix(~0 + variable)` formulation.
 
 ```{r}
+#| label: fit-limma-all-stages
 ## Ensure that conditions are stored as levels of a factor
 ## Explicitly define level order by cell cycle stage
 all_proteins$condition <- factor(
@@ -124,6 +128,7 @@ The `makeContrasts` function is used by passing the name we wish to give each co
 We also pass the `levels` argument to tell R where the column names come from i.e., which design matrix the contrasts are being applied to.
 
 ```{r}
+#| label: extract-results-stage-comparisons
 ## Specify contrasts of interest
 contrasts <- makeContrasts(
   G1_M = G1 - M,
@@ -141,6 +146,7 @@ contrasts
 After we have specified the design matrix and contrasts we wish to make, the next step is to apply the statistical model.
 
 ```{r}
+#| label: count-significant-all-stages
 ## Fit linear model using the design matrix and desired contrasts
 fit_model <- lmFit(object = assay(all_proteins), design = m_design)
 fit_contrasts <- contrasts.fit(fit = fit_model, contrasts = contrasts)
@@ -150,6 +156,7 @@ The initial model has now been applied to each of the proteins in our data.
 We now update the model using the `eBayes` function.
 
 ```{r}
+#| label: examine-top-results-all-stages
 ## Update the model using the limma eBayes algorithm
 final_model <- eBayes(fit = fit_contrasts, trend = TRUE, robust = TRUE)
 ```
@@ -159,6 +166,7 @@ final_model <- eBayes(fit = fit_contrasts, trend = TRUE, robust = TRUE)
 To get the results for all of our proteins we use the `topTable` function with the `number = Inf` argument.
 
 ```{r}
+#| label: create-heatmap-stage-comparison
 ## Format results
 limma_results_all_contrasts <- topTable(
   fit = final_model,
@@ -177,12 +185,14 @@ head(limma_results_all_contrasts)
 First we examine whether there is the expected relationship between abundance and variance, and that the trend line captures this.
 
 ```{r}
+#| label: extract-stage-specific-proteins
 plotSA(fit = final_model, cex = 0.5, xlab = "Average log2 abundance")
 ```
 
 Next, we check that the p-value distribution is as expected.
 
 ```{r}
+#| label: examine-stage-specific
 limma_results_all_contrasts %>%
   as_tibble() %>%
   ggplot(aes(x = P.Value)) +
@@ -197,6 +207,7 @@ As we saw above, `topTable` will give us the overall output of our linear model.
 We previously used this function to generate our `limma_results_all_contrasts` without specifying any value for the `coef` argument.
 
 ```{r}
+#| label: create-upset-stages
 head(limma_results_all_contrasts)
 ```
 
@@ -217,6 +228,7 @@ We use the `topTable` function to get the results of the `"M_Des"` contrast.
 We use the argument `confint = TRUE` so that the our output reports the 95% confidence interval of the calculated log2FC.
 
 ```{r}
+#| label: advanced-upset-visualization
 M_Desynch_results <- topTable(
   fit = final_model,
   coef = "M_Des",
@@ -251,6 +263,7 @@ As a result, we could over-estimate the number of statistically significant prot
 Below, we produce a volcano plot to visualisation the statistical test results for the M vs Desynchronised contrast.
 
 ```{r}
+#| label: extract-proteins-all-stages
 M_Desynch_results %>%
   mutate(significance = ifelse(adj.P.Val < 0.01, "sig", "not.sig")) %>%
   ggplot(aes(x = logFC, y = -log10(P.Value), fill = significance)) +
@@ -270,6 +283,7 @@ This argument specifies whether p-value adjustment should account only for multi
 Let's first look at the results when we apply the `"separate"` method i.e., consider each contrast separately.
 
 ```{r}
+#| label: create-ranking-all-stages
 dt <- decideTests(
   object = final_model,
   adjust.method = "BH",
@@ -286,6 +300,7 @@ This should be the same as the number of proteins with an adjusted p-value \< 0.
 Let's check.
 
 ```{r}
+#| label: run-go-analysis-all-stages
 M_Desynch_results %>%
   as_tibble() %>%
   filter(adj.P.Val < 0.01) %>%
@@ -295,6 +310,7 @@ M_Desynch_results %>%
 However, if we use the `"global"` method for p-value adjustment and therefore adjust for both per protein and per contrast hypotheses we may see slightly fewer significant proteins in our `M_Des` contrast.
 
 ```{r}
+#| label: plot-go-results-all-stages
 decideTests(
   object = final_model,
   adjust.method = "BH",
@@ -309,6 +325,7 @@ Instead, we can merge the results from our globally adjusted significance summar
 We demonstrate how to do this in the code below.
 
 ```{r}
+#| label: create-go-comparison-plot
 ## Determine global significance using decideTests
 global_sig <- decideTests(
   object = final_model,
@@ -340,6 +357,7 @@ These columns contain -1, 0 or 1 meaning that the protein is significantly downr
 ### Visualising the protein abundances in a heatmap
 
 ```{r}
+#| label: create-comparison-heatmap
 ## Extract accessions of significant proteins
 
 # Summarise how often each protein passes the significance threshold
@@ -363,6 +381,7 @@ quant_data <- cc_qf[["log_norm_proteins"]][sig_proteins, ] %>%
 Now we use the quantitative data to plot a heatmap using `pheatmap`.
 
 ```{r}
+#| label: finalise-analysis-summary
 pheatmap(
   mat = quant_data,
   scale = 'row', # Z-score normalise across the rows (proteins)
