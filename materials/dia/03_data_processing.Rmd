@@ -188,7 +188,7 @@ which are not relevant here. The entries in this contaminant database are named
 with a `Cont_` prefix, which is carried through into the `Protein.Ids` column of
 the DIA-NN output, making them straightforward to identify computationally.
 
-We can inspect the `rowData` to check the contaminants can be identified as expected.\
+We can inspect the `rowData` to check the contaminants can be identified as expected.
 
 It's important to note that because DIA-NN uses a normalisation based on total sample intensity under the assumption that the same amount of peptides were injected in each sample, precursors mapping to contaminants included in the FASTA database are excluded from quantification.
 
@@ -341,7 +341,6 @@ dia_qf <- dia_qf %>%
   filterNA(pNA = 0.75, i = "precursors_filtered_missing")
 ```
 
-## Save data
 
 ```{r, include=FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))

@@ -76,7 +76,8 @@ of each condition. We first split the data by group, then count the number
 of finite (non-missing) values per protein within each group.
 
 We begin by extracting the normalised protein level data `"norm_protiens"` in
-the QF object.
+the QF object. This contains `r `nrow(dia_qf[["norm_proteins"]])` proteins common
+across all conditions.
 
 ```{r}
 se <- getWithColData(dia_qf, "norm_proteins")
@@ -104,7 +105,8 @@ print(table(tokeep))
 ```
 
 We now add a new set containing only the proteins that pass the replication
-filter, and link it to the parent set.
+filter, and link it to the parent set. We see we are left with 
+`r table(tokeep)["TRUE"]` proteins to test.
 
 ```{r}
 dia_qf <- addAssay(dia_qf, 
@@ -477,7 +479,7 @@ statistically and practically meaningful.
 
 :::
 
-## Save data
+
 
 ```{r, include=FALSE}
 save(dia_qf, limma_results_F, limma_results_all_contrasts,

@@ -114,7 +114,9 @@ There are several columns in this file including the `sample_id` which is the
 name of the sample as well as the group, sex and age group. We have also created
 a column called `runCol` which is a concise, human-readable label for each
 sample which we add to our `diann_df` to in the next section to use in our
-analysis.
+analysis. It is important that this column is named `runCol`, as the 
+`readQFeaturesFromDIANN` function expects this column name when importing 
+the DIA-NN results.
 
 
 {{< include ../_shared/_pipe.md >}}
@@ -392,9 +394,6 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
 :::
 
-
-
-## Save data
 
 ```{r, include= TRUE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
