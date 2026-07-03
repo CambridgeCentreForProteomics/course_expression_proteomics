@@ -4,6 +4,7 @@ raw/DIA/2555472098_Report_BGS Factory Report (Normal).tsv
 # Quarto files
 /.quarto/
 _site
+/figure/
 
 # python notebooks
 *.ipynb
@@ -36,11 +37,11 @@ course_files/output
 .DS_Store
 
 **/*.quarto_ipynb
-_freeze
 
 # Quarto render artifacts
 materials/**/*_files/
+materials_files/
 figure/
-*html
-site_libs
+*.html
+# site_libs
 *.rmarkdown

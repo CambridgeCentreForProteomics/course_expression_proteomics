@@ -8,17 +8,26 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Understand the structure of `SummarizedExperiment` and `QFeatures` objects and how the two are related
-* Understand how DIA-NN output data is structured and how it can be imported into R
-* Know how to use `readQFeaturesFromDIANN` to create a `QFeatures` object from DIA-NN output
-* Be able to access sample metadata via `colData` in a `QFeatures` object
-* Be able to explore the data within a `QFeatures` object using `assay`, `rowData`, and `colData`
-
+- Understand the structure of `SummarizedExperiment` and `QFeatures` objects and how the two are related
+- Understand how DIA-NN output data is structured and how it can be imported into R
+- Know how to use `readQFeaturesFromDIANN` to create a `QFeatures` object from DIA-NN output
+- Be able to access sample metadata via `colData` in a `QFeatures` object
+- Be able to explore the data within a `QFeatures` object using `assay`, `rowData`, and `colData`
 :::
 
+```{r}
+#| label: load-here
+#| include: false
 
-```{r, eval=TRUE, include=FALSE}
 library("here")
+```
+
+```{r}
+#| label: load-required-packages
+#| message: false
+#| results: "hide"
+#| warning: false
+
 library("arrow")
 library("readxl")
 library("QFeatures")
@@ -28,85 +37,68 @@ library("ggplot2")
 library("patchwork")
 ```
 
-
 ## The data structure
 
-The raw DIA mass spectrometry data was processed using DIA-NN, which outputs a
-report file in `.parquet` format. Unlike a simple abundance matrix, this is a
-**long-format** table — each row corresponds to a single precursor–sample
-combination, rather than one row per precursor across all samples simultaneously.
-The file contains precursor-level identifications and quantities for every
-sample, along with quality metrics from the DIA-NN search.
+The raw DIA mass spectrometry data was processed using DIA-NN, which outputs a report file in `.parquet` format.
+Unlike a simple abundance matrix, this is a **long-format** table --- each row corresponds to a single precursor--sample combination, rather than one row per precursor across all samples simultaneously.
+The file contains precursor-level identifications and quantities for every sample, along with quality metrics from the DIA-NN search.
 
-We read this file into R using the `read_parquet` function from the `arrow`
-package.
+We read this file into R using the `read_parquet` function from the `arrow` package.
 
 ```{r}
-diann_df <- read_parquet(here("course_files/dia/data/monkeypox_plasma_proteomes.parquet"))
+#| label: read-diann-data
+diann_df <- read_parquet("data/monkeypox_plasma_proteomes.parquet")
 ```
 
-We can inspect the dimensions and column names to understand what the data
-contains.
+We can inspect the dimensions and column names to understand what the data contains.
 
 ```{r}
+#| label: examine-data-structure
 dim(diann_df)
 names(diann_df)
 ```
 
 The key columns we will use in our analysis are:
 
-- **`Precursor.Id`**: a unique identifier for each precursor — typically the
-  modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
-- **`Protein.Group`**: the canonical protein group identifier used for
-  aggregation to protein level. Proteins that cannot be distinguished from each
-  other based on proteotypic peptides detected in the data are grouped together
-  under one Protein Group.
-- **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the
-  precursor is assigned
+- **`Precursor.Id`**: a unique identifier for each precursor --- typically the modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
+- **`Protein.Group`**: the canonical protein group identifier used for aggregation to protein level.
+  Proteins that cannot be distinguished from each other based on proteotypic peptides detected in the data are grouped together under one Protein Group.
+- **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the precursor is assigned
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
-- **`Run`**: the identifier for the sample run — one value per LC-MS sample injection
+- **`Run`**: the identifier for the sample run --- one value per LC-MS sample injection
 - **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
-- **`Q.Value`**: the precursor-level Q-value, representing the estimated false
-  discovery rate at the precursor level; lower values indicate more confident
-  identifications
-- **`Lib.Q.Value`**: the library-level Q-value — the confidence that the
-  precursor was matched to the correct entry in the spectral library
-- **`Protein.Q.Value`**: the protein-level Q-value, representing the estimated
-  FDR at the protein level
+- **`Q.Value`**: the precursor-level Q-value, representing the estimated false discovery rate at the precursor level; lower values indicate more confident identifications
+- **`Lib.Q.Value`**: the library-level Q-value --- the confidence that the precursor was matched to the correct entry in the spectral library
+- **`Protein.Q.Value`**: the protein-level Q-value, representing the estimated FDR at the protein level
 
 The report also contains chromatographic quality metrics per precursor per run.
 For example:
 
-- **`FWHM`**: Full-Width at Half Maximum of the chromatographic peak, a measure
-  of peak shape quality — narrow, symmetrical peaks are preferred
+- **`FWHM`**: Full-Width at Half Maximum of the chromatographic peak, a measure of peak shape quality --- narrow, symmetrical peaks are preferred
 
-We will use these Q-value columns and quality metrics to filter the data in the
-next lesson.
+We will use these Q-value columns and quality metrics to filter the data in the next lesson.
 
-We will be using the `QFeatures` Bioconductor package to import, store, and
-manipulate our data. Before we import the data it is first necessary to
-understand the structure of a `QFeatures` object and its underlying
-`SummarizedExperiment` objects.
+We will be using the `QFeatures` Bioconductor package to import, store, and manipulate our data.
+Before we import the data it is first necessary to understand the structure of a `QFeatures` object and its underlying `SummarizedExperiment` objects.
 
 {{< include ../_shared/_qfeatures_structure.md >}}
 
-The best way to get our head around the `QFeatures` infrastructure is to import
-our data into a `QFeatures` object and start exploring.
+The best way to get our head around the `QFeatures` infrastructure is to import our data into a `QFeatures` object and start exploring.
 
 ## Importing sample metadata
 
-Sample metadata is information related to each sample that helps us interpret,
-organise and analyse our proteomics data. This data is something you must create
-yourself, related to your experiment. You can use a spreadsheet program such as
-Excel, or it can be coded in R directly.
+Sample metadata is information related to each sample that helps us interpret, organise and analyse our proteomics data.
+This data is something you must create yourself, related to your experiment.
+You can use a spreadsheet program such as Excel, or it can be coded in R directly.
 
-Here, we have created a sample metadata file in Excel. This file is called
-`monkeypox_metadata.xlsx`. It provides information about each sample, including
-which group (MPXV, COVID-19, or Control) each run belongs to. We use the
-`read_excel` function from the `readxl` package to import the data into R.
+Here, we have created a sample metadata file in Excel.
+This file is called `monkeypox_metadata.xlsx`.
+It provides information about each sample, including which group (MPXV, COVID-19, or Control) each run belongs to.
+We use the `read_excel` function from the `readxl` package to import the data into R.
 
 ```{r}
-sample_metadata <- read_excel(here("course_files/dia/data/monkeypox_metadata.xlsx"))
+#| label: explore-assay-structure
+sample_metadata <- read_excel("data/monkeypox_metadata.xlsx")
 print(sample_metadata)
 ```
 
@@ -123,161 +115,147 @@ the DIA-NN results.
 
 ### Cleaning run names
 
-In DIA-NN the names in the `Run` column often inherit the full raw file path
-pasting together the name of the `.wiff2` folder and the `.wiff.scan` files
-(.wiff files are raw data formats generated by SCIEX mass spectrometers
-containing unprocessed metadata and scan data from LM-MS/MS runs). We need to
-clean up these run names so that they match the `sample_id` field in our
-metadata.
-
+In DIA-NN the names in the `Run` column often inherit the full raw file path pasting together the name of the `.wiff2` folder and the `.wiff.scan` files (.wiff files are raw data formats generated by SCIEX mass spectrometers containing unprocessed metadata and scan data from LM-MS/MS runs).
+We need to clean up these run names so that they match the `sample_id` field in our metadata.
 
 ```{r}
+#| label: parse-sample-metadata
 # Clean Run names
-diann_df[, "Run"] %>% 
-  unique() %>% 
+diann_df[, "Run"] %>%
+  unique() %>%
   head(2)
 
-# DIANN has pasted the name of the .wiff2 folder as well as the .wiff.scan 
-# files together. So we need to clean up the Run names so that they match 
+# DIANN has pasted the name of the .wiff2 folder as well as the .wiff.scan
+# files together. So we need to clean up the Run names so that they match
 # the metadata `sample_id` field.
 diann_df <- diann_df %>%
   mutate(Run = sub('\\..*', '', Run))
 
 # Check we have cleaned the Run names
-diann_df[, "Run"] %>% 
-  unique() %>% 
+diann_df[, "Run"] %>%
+  unique() %>%
   head(2)
 ```
 
-
-In the following code chunk we add a new column called `runCol` to the 
-`diann_df` data. This column will serve as a link between the metadata
-and the `diann_df` proteomics data as well as being useful for visualisation
-and annotating our data at a later stage in the analysis.
+In the following code chunk we add a new column called `runCol` to the `diann_df` data.
+This column will serve as a link between the metadata and the `diann_df` proteomics data as well as being useful for visualisation and annotating our data at a later stage in the analysis.
 
 ```{r}
+#| label: view-column-data
 diann_df <- diann_df %>%
-  merge(sample_metadata[, c("sample_id", "runCol")], 
-        by.x = "Run", 
-        by.y = "sample_id")
+  merge(
+    sample_metadata[, c("sample_id", "runCol")],
+    by.x = "Run",
+    by.y = "sample_id"
+  )
 ```
 
-If we look at the column dimensions and names of the `diann_df` we now see the
-`runCol` column has been added.
+If we look at the column dimensions and names of the `diann_df` we now see the `runCol` column has been added.
 
 ```{r}
+#| label: check-column-data-types
 dim(diann_df)
 ```
 
 ```{r}
+#| label: access-column-names
 names(diann_df)
 ```
 
 ```{r}
+#| label: access-row-names
 head(diann_df)
 ```
 
 ## Reading into a `QFeatures` object
 
-We use the `readQFeaturesFromDIANN` function to import the cleaned DIA-NN data
-into a `QFeatures` object. This function creates one `SummarizedExperiment` per
-run, with each set containing the precursor-level quantification data for that
-run. The `runCol` argument specifies which column in the input data frame
-identifies the run.
+We use the `readQFeaturesFromDIANN` function to import the cleaned DIA-NN data into a `QFeatures` object.
+This function creates one `SummarizedExperiment` per run, with each set containing the precursor-level quantification data for that run.
+The `runCol` argument specifies which column in the input data frame identifies the run.
 
 ```{r}
-dia_qf <- 
-  readQFeaturesFromDIANN(diann_df,
-                         quantCols = "Precursor.Quantity",
-                         fnames = "Precursor.Id",
-                         runCol = "runCol",
-                         colData = sample_metadata)
+#| label: explore-missing-values
+dia_qf <-
+  readQFeaturesFromDIANN(
+    diann_df,
+    quantCols = "Precursor.Quantity",
+    fnames = "Precursor.Id",
+    runCol = "runCol",
+    colData = sample_metadata
+  )
 ```
-
 
 ## Exploring the data
 
-When we inspect our `QFeatures` object, we see that it contains 31 sets, each
-corresponding to a different sample run. Each set contains the precursor-level
-quantification data for that run, with feature names given by the `Precursor.Id`
-column from the original DIA-NN output.
+When we inspect our `QFeatures` object, we see that it contains 31 sets, each corresponding to a different sample run.
+Each set contains the precursor-level quantification data for that run, with feature names given by the `Precursor.Id` column from the original DIA-NN output.
 
 ```{r}
+#| label: extract-protein-names
 dia_qf
 ```
 
-By default if a `QFeatures` object has more than 6 samples, only the first three
-and last three sample summaries are printed to the screen. To see all samples 
-and their respective data summary, we can use the `experiments` function.
+By default if a `QFeatures` object has more than 6 samples, only the first three and last three sample summaries are printed to the screen.
+To see all samples and their respective data summary, we can use the `experiments` function.
 
 ```{r}
+#| label: count-unique-proteins
 experiments(dia_qf)
 ```
 
-We can quickly see how many precursors were measure per sample for example,
-we see for the first sample called `r names(dia_qf)[1]` there are 
-`r nrow(dia_qf[[1]])` precursors.
+We can quickly see how many precursors were measure per sample for example, we see for the first sample called `r names(dia_qf)[1]` there are `r nrow(dia_qf[[1]])` precursors.
 
-We can access individual samples (sets, or `SummarizedExperiment`s) using
-standard double bracket nomenclature (this is how you would normally access
-items of a list in R). As with all indexing we can use the list position or
-dataset name.
+We can access individual samples (sets, or `SummarizedExperiment`s) using standard double bracket nomenclature (this is how you would normally access items of a list in R).
+As with all indexing we can use the list position or dataset name.
 
 ```{r}
+#| label: examine-peptide-counts
 dia_qf[[1]]
 ```
 
 Is the same as,
 
 ```{r}
+#| label: create-class-summary
 dia_qf[["COVID_E1"]]
 ```
 
-The quantitation data for each sample is store in the `assay` container and can
-be extracted using the `assay` function.
+The quantitation data for each sample is store in the `assay` container and can be extracted using the `assay` function.
 
 ```{r}
-assay(dia_qf[[1]]) %>% 
+#| label: show-dimensions
+assay(dia_qf[[1]]) %>%
   head()
 ```
 
 ::: {.callout-discussion}
 #### Discussion
 
-Why does `readQFeaturesFromDIANN` create one `SummarizedExperiment` per run,
-rather than a single combined set across all runs from the outset?
-
+Why does `readQFeaturesFromDIANN` create one `SummarizedExperiment` per run, rather than a single combined set across all runs from the outset?
 :::
 
 ::: {.callout-answer collapse="true"}
-
-The DIA-NN output contains per-run quality metrics stored in the `rowData` of
-each precursor. These are run-specific values and would be ambiguous or
-impossible to retain if all runs were immediately merged into a single matrix.
-By keeping one `SummarizedExperiment` per run, we can inspect and filter on
-these per-run metrics before joining the data. We will join the per-sample sets
-into a single combined precursor set in the next lesson, once filtering is
-complete.
-
+The DIA-NN output contains per-run quality metrics stored in the `rowData` of each precursor.
+These are run-specific values and would be ambiguous or impossible to retain if all runs were immediately merged into a single matrix.
+By keeping one `SummarizedExperiment` per run, we can inspect and filter on these per-run metrics before joining the data.
+We will join the per-sample sets into a single combined precursor set in the next lesson, once filtering is complete.
 :::
 
 ### How many precursors per sample?
 
-Each sample will have a different number of precursors identified and
-quantified. We can explore this by inspecting the number of rows in each
-per-sample set, which corresponds to the number of precursors quantified in that
-sample.
+Each sample will have a different number of precursors identified and quantified.
+We can explore this by inspecting the number of rows in each per-sample set, which corresponds to the number of precursors quantified in that sample.
 
-:::{.callout-exercise}
+::: {.callout-exercise}
 #### Challenge: Precursors per sample
 
 {{< level 2 >}}
 
-1. Find a function to determine how many precursors are quantified in each
-sample. Use it to plot a histogram of precursor counts across samples.
+1. Find a function to determine how many precursors are quantified in each sample.
+   Use it to plot a histogram of precursor counts across samples.
 
-2. Create a bar plot showing the number of precursors identified in each
-sample, coloured by group. Based on your plot:
+2. Create a bar plot showing the number of precursors identified in each sample, coloured by group.
+   Based on your plot:
 
 - Which group tends to have the most precursors identified?
 - Is there any sample that looks like an outlier?
@@ -286,23 +264,25 @@ sample, coloured by group. Based on your plot:
 `?QFeatures` to find a suitable function for obtaining per-sample feature
 counts.</details>
 
-::: {.callout-answer collapse="true"}
-
+::::: {.callout-answer collapse="true"}
 **Task 1**
 
-```{r, fig.height=4, fig.width=4}
-hist(nrows(dia_qf),
-     xlab="Precursors",
-     main="Precursor counts per sample")
+```{r}
+#| label: access-metadata-slots
+#| fig-height: 4
+#| fig-width: 4
 
+hist(nrows(dia_qf), xlab = "Precursors", main = "Precursor counts per sample")
 ```
 
 **Task 2**
 
 ```{r}
+#| label: create-subset
 data.frame(
   n_precursors = nrows(dia_qf),
-  sample = names(nrows(dia_qf))) %>%
+  sample = names(nrows(dia_qf))
+) %>%
   merge(data.frame(colData(dia_qf)), by.x = "sample", by.y = "runCol") %>%
   ggplot(aes(x = sample, y = n_precursors, fill = group)) +
   geom_bar(stat = "identity") +
@@ -310,53 +290,54 @@ data.frame(
   coord_flip() +
   theme_classic()
 ```
-
+:::::
 :::
-
-:::
-
 
 ### Exploring the row data
 
-The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics
-from DIA-NN. This information can be accessed on a sample by sample
-level by using the `rowData` function.
+The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics from DIA-NN.
+This information can be accessed on a sample by sample level by using the `rowData` function.
 
 ```{r}
-rowData(dia_qf[[1]]) %>% 
+#| label: compare-sample-counts
+rowData(dia_qf[[1]]) %>%
   head(2)
 ```
 
-However, we want to access this information across all the samples. To do this
-we can use the `rbindRowData` function. 
+However, we want to access this information across all the samples.
+To do this we can use the `rbindRowData` function.
 
 ```{r}
+#| label: subset-multiple-features
 rdata <- rbindRowData(dia_qf, i = names(dia_qf))
 ```
 
-The `rbindRowData` functions returns a `DFrame` table that contains the row
-binded `rowData` tables from the selected assays. In this context, `i` is a
-`character()`, `integer()` or `logical()` object for subsetting assays. Only
-`rowData` variables that are common to all assays are kept.
+The `rbindRowData` functions returns a `DFrame` table that contains the row binded `rowData` tables from the selected assays.
+In this context, `i` is a `character()`, `integer()` or `logical()` object for subsetting assays.
+Only `rowData` variables that are common to all assays are kept.
 
-Recall, there is also a slot in the `QFeatures` object that stores information on
-the samples. This is the `colData` slot.
+Recall, there is also a slot in the `QFeatures` object that stores information on the samples.
+This is the `colData` slot.
 
 ```{r}
+#| label: compare-subset-counts
 colData(dia_qf)
 ```
 
-In the below code chunk we create a `data.frame` called `cdata` containing
-the sample information and merge this with the `rdata` so we get group 
-information for each sample. This will help with our data exploration.
+In the below code chunk we create a `data.frame` called `cdata` containing the sample information and merge this with the `rdata` so we get group information for each sample.
+This will help with our data exploration.
 
-```{r, fig.width=5, fig.height=5}
+```{r}
+#| label: aggregate-features
+#| fig-width: 5
+#| fig-height: 5
+
 # 1. Create a data.frame of the sample information
 
 cdata <- data.frame(colData(dia_qf))
 
 # 2. Merge this with the row data
-# Note: Our data is in separate sets, so the sample names are in the 'assay' 
+# Note: Our data is in separate sets, so the sample names are in the 'assay'
 # column. We merge with the column data (using the runCol column) to get group
 # information for each sample
 
@@ -365,21 +346,18 @@ rdata <- rdata %>%
   merge(cdata, by.x = "assay", by.y = "runCol")
 ```
 
-Now we have one `data.frame` with precursor-level and sample-level information
-we can now visualise quality metrics from DIA-NN including the Full-Width at
-Half Maximum (FWHM) of the chromatographic peaks. In the code below we plot the
-distribution of FWHM values per sample, coloured by group.
+Now we have one `data.frame` with precursor-level and sample-level information we can now visualise quality metrics from DIA-NN including the Full-Width at Half Maximum (FWHM) of the chromatographic peaks.
+In the code below we plot the distribution of FWHM values per sample, coloured by group.
 
 ```{r}
+#| label: join-features
 rdata %>%
   ggplot(aes(FWHM, group = Run, colour = group)) +
   geom_density() +
   theme_classic()
 ```
 
-
-:::{.callout-exercise}
-
+::: {.callout-exercise}
 #### Challenge: Exploring rowData quality metrics
 
 {{< level 2 >}}
@@ -387,18 +365,14 @@ rdata %>%
 The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 
 1. Use `str(rdata)` to identify other numerical quality metric columns.
-2. Choose one metric and create a plot to visualise its distribution across
-   samples, coloured by group.
-3. Do any metrics appear to differ systematically between groups, or between
-   individual samples?
-
+2. Choose one metric and create a plot to visualise its distribution across samples, coloured by group.
+3. Do any metrics appear to differ systematically between groups, or between individual samples?
 :::
 
 
-```{r, include= TRUE}
+```{r, include= FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
-
 
 ::: {.callout-tip}
 #### Key Points
@@ -407,7 +381,6 @@ save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 - The `readQFeaturesFromDIANN` function imports DIA-NN output into a `QFeatures` object, creating one `SummarizedExperiment` per sample run
 - Sample metadata is stored in the `colData` of the `QFeatures` object and can be used to annotate samples with experimental group information
 - The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics from DIA-NN (e.g. FWHM, Q-values) that can be used to explore data quality and guide downstream filtering decisions
-
 :::
 
 ## References {-}

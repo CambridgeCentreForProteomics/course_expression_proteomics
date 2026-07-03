@@ -8,15 +8,16 @@ editor_options:
 ::: {.callout-tip}
 #### Learning Objectives
 
-* Be able to visualise protein abundance for specific proteins of interest across experimental groups
-* Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation
-* Complete PCA using the `prcomp` function from the `stats` package
-* Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
-
+- Be able to visualise protein abundance for specific proteins of interest across experimental groups
+- Appreciate the use of Principal Component Analysis (PCA) for visualising key factors that contribute to sample variation
+- Complete PCA using the `prcomp` function from the `stats` package
+- Be able to use the `subsetByFeature` function to get data across all levels for a feature of interest
 :::
 
+```{r}
+#| label: load-processed-data
+#| include: false
 
-```{r, eval=TRUE, include=FALSE}
 library("here")
 library("QFeatures")
 library("limma")
@@ -32,38 +33,40 @@ library("patchwork")
 load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
 ```
 
-Having cleaned, aggregated, and normalised our data, we are now ready to
-explore the protein-level data before carrying out formal statistical testing.
-This includes visualising the abundance of specific proteins of interest,
-assessing overall sample structure using PCA, and tracing individual proteins
-across data levels to verify the processing pipeline has behaved as expected.
+Having cleaned, aggregated, and normalised our data, we are now ready to explore the protein-level data before carrying out formal statistical testing.
+This includes visualising the abundance of specific proteins of interest, assessing overall sample structure using PCA, and tracing individual proteins across data levels to verify the processing pipeline has behaved as expected.
 
 ## Plotting quantification values for proteins of interest
 
-Often we are interested in the quantities of specific proteins, for example,
-proteins we expect to change in abundance based on prior biological knowledge.
-We can plot the quantification values for these proteins to inspect them
-directly before any formal statistical testing.
+Often we are interested in the quantities of specific proteins, for example, proteins we expect to change in abundance based on prior biological knowledge.
+We can plot the quantification values for these proteins to inspect them directly before any formal statistical testing.
 
-We first convert the protein-level data to long format using `longForm`,
-extracting both sample-level metadata (group, runCol) and feature-level
-metadata (gene names, protein names).
+We first convert the protein-level data to long format using `longForm`, extracting both sample-level metadata (group, runCol) and feature-level metadata (gene names, protein names).
 
 ```{r}
-long_form_protein <- longForm(dia_qf[,,"norm_proteins"],
-                              colvars = c('runCol', 'group'),
-                              rowvars = c('Genes', 'Protein.Names')) %>%
+#| label: examine-sample-distributions
+long_form_protein <- longForm(
+  dia_qf[,, "norm_proteins"],
+  colvars = c('runCol', 'group'),
+  rowvars = c('Genes', 'Protein.Names')
+) %>%
   data.frame() %>%
   dplyr::rename(UniprotID = rowname)
 ```
 
-We can then filter to a set of proteins of interest and plot abundance
-values per sample, grouped by condition.
+We can then filter to a set of proteins of interest and plot abundance values per sample, grouped by condition.
 
-```{r, fig.height=6, fig.width=8, warning=FALSE}
-proteins_of_interest <- c('P02766', # TTR
-                          'P18428',  # LBP
-                          'P13796') # LCP1
+```{r}
+#| label: plot-protein-abundance-distributions
+#| fig-height: 6
+#| fig-width: 8
+#| warning: false
+
+proteins_of_interest <- c(
+  'P02766', # TTR
+  'P18428', # LBP
+  'P13796'
+) # LCP1
 
 long_form_protein %>%
   # filter to the proteins of interest
@@ -73,7 +76,11 @@ long_form_protein %>%
   # Using quasirandom from ggbeeswarm to avoid overlapping points
   geom_quasirandom(dodge.width = 0.5, colour = 'grey', pch = 21, size = 2) +
   # Summarise with mean +/- 95% confidence interval
-  stat_summary(fun.data = mean_cl_normal, position = position_dodge(width = 0.5), show.legend = FALSE) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    position = position_dodge(width = 0.5),
+    show.legend = FALSE
+  ) +
   theme_classic() +
   labs(x = '', y = 'Protein abundance (log2)') +
   facet_wrap(~Genes, scales = 'free')
@@ -91,14 +98,13 @@ long_form_protein %>%
 - Why do we need to remove proteins with missing values before running PCA?
 - How many proteins do you expect to lose by applying `filterNA` here, given what we observed about missingness in the earlier lesson?
 - What impact might this have on the PCA result and its biological interpretation?
-
 :::
 
-Since PCA requires a complete data matrix, we first remove proteins with
-any missing values using `filterNA`. We then extract the normalised
-protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
+Since PCA requires a complete data matrix, we first remove proteins with any missing values using `filterNA`.
+We then extract the normalised protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
 
 ```{r}
+#| label: create-boxplots
 protein_pca <- dia_qf[["norm_proteins"]] %>%
   filterNA() %>%
   assay() %>%
@@ -111,21 +117,23 @@ summary(protein_pca)
 We plot a scree plot to inspect how much variance each PC explains.
 
 ```{r}
+#| label: create-violins
 fviz_screeplot(protein_pca)
 ```
 
 ::: {.callout-discussion}
 #### Discussion
 
-- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples? Is this what you expected based on the experimental design?
-- Are there any samples that look like outliers or behave differently? What might explain this?
-
+- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples?
+  Is this what you expected based on the experimental design?
+- Are there any samples that look like outliers or behave differently?
+  What might explain this?
 :::
 
-We then plot the samples in PCA space, colouring by group and using shape
-to indicate age group.
+We then plot the samples in PCA space, colouring by group and using shape to indicate age group.
 
 ```{r}
+#| label: hierarchical-clustering-heatmap
 p <- protein_pca$x %>%
   merge(colData(dia_qf), by = 'row.names') %>%
   data.frame() %>%
@@ -139,85 +147,103 @@ print(p + aes(x = PC3, y = PC4))
 
 ## The `subsetByFeature` function
 
-As well as visualising all proteins, it can be useful to extract all data
-levels corresponding to a specific protein of interest. The `QFeatures`
-infrastructure provides the `subsetByFeature` function to do this. It takes
-a `QFeatures` object and one or more feature names, and returns a new
-`QFeatures` object containing only data corresponding to those features.
+As well as visualising all proteins, it can be useful to extract all data levels corresponding to a specific protein of interest.
+The `QFeatures` infrastructure provides the `subsetByFeature` function to do this.
+It takes a `QFeatures` object and one or more feature names, and returns a new `QFeatures` object containing only data corresponding to those features.
 
-Let's look at TTR (Transthyretin; UniProt ID P02766), one of the proteins
-of interest plotted above.
+Let's look at TTR (Transthyretin; UniProt ID P02766), one of the proteins of interest plotted above.
 
 ```{r}
+#| label: visualize-pca
 TTR <- subsetByFeature(dia_qf, "P02766")
 
 experiments(TTR)
 ```
 
-From this we can see the dimensions of the TTR data at each data level,
-showing how many precursors support the protein-level quantification for
-this protein.
+From this we can see the dimensions of the TTR data at each data level, showing how many precursors support the protein-level quantification for this protein.
 
-We can use this subset to visualise how the precursor data was aggregated
-to protein level for this particular feature. Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
+We can use this subset to visualise how the precursor data was aggregated to protein level for this particular feature.
+Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
 
-```{r, warning=FALSE, message=FALSE}
-TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+```{r}
+#| label: create-correlation-heatmap
+#| warning: false
+#| message: false
+
+TTR[,, c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%
-# Log2 transform the precursor-level data for better visualisation
-  mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
+  # Log2 transform the precursor-level data for better visualisation
+  mutate(
+    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value)
+  ) %>%
   ggplot(aes(x = colname, y = value, colour = assay)) +
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1, size = 5)) +
-  facet_wrap(~ assay) +
-  labs(x='Sample', y='Intensity (log2)')
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)
+  ) +
+  facet_wrap(~assay) +
+  labs(x = 'Sample', y = 'Intensity (log2)')
 ```
 
-In the plot above, the profile of the precursors is very similar, but it's hard to see this because of the differences in overall intensity. We can modify the intensities to put them on the same scale and make this clearer. Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
+In the plot above, the profile of the precursors is very similar, but it's hard to see this because of the differences in overall intensity.
+We can modify the intensities to put them on the same scale and make this clearer.
+Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
 
-```{r, warning=FALSE, message=FALSE}
-TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+```{r}
+#| label: plot-protein-correlations
+#| warning: false
+#| message: false
+
+TTR[,, c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%
-  mutate(value=ifelse(assay=='precursors_filtered_missing', log2(value), value)) %>%
+  mutate(
+    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value)
+  ) %>%
   # Centre the values for each assay to put them on the same scale
-  group_by(rowname) %>% mutate(value=value-mean(value, na.rm=TRUE)) %>%
+  group_by(rowname) %>%
+  mutate(value = value - mean(value, na.rm = TRUE)) %>%
   # colour by feature (rowname) to make it easier to distinguish the precursor profiles
   ggplot(aes(x = colname, y = value, colour = rowname)) +
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1, size = 5),
-        legend.position='none') +
-  facet_wrap(~ assay) +
-  labs(x='Sample', y='Intensity (log2)')
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5),
+    legend.position = 'none'
+  ) +
+  facet_wrap(~assay) +
+  labs(x = 'Sample', y = 'Intensity (log2)')
 ```
 
-We can go one step further and also facet by condition  so we can see the differences between the conditions more clearly.
+We can go one step further and also facet by condition so we can see the differences between the conditions more clearly.
 
 ```{r}
-TTR[, , c("precursors_filtered_missing", "proteins")] %>%
+#| label: variance-analysis
+TTR[,, c("precursors_filtered_missing", "proteins")] %>%
   longForm() %>%
   as_tibble() %>%
   mutate(
     value = ifelse(assay == 'precursors_filtered_missing', log2(value), value),
     condition = case_when(
       grepl('COVID', colname) ~ 'Covid19',
-      grepl('Ctr',   colname) ~ 'control',
-      grepl('MPX',   colname) ~ 'MPXV'
+      grepl('Ctr', colname) ~ 'control',
+      grepl('MPX', colname) ~ 'MPXV'
     )
   ) %>%
-  group_by(rowname) %>% 
+  group_by(rowname) %>%
   mutate(value = value - mean(value, na.rm = TRUE)) %>%
   ggplot(aes(x = colname, y = value, colour = rowname)) +
   geom_point() +
   geom_line(aes(group = rowname)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
-        legend.position = 'none') +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
+    legend.position = 'none'
+  ) +
   facet_grid(assay ~ condition, scales = 'free_x') +
   labs(x = 'Sample', y = 'Intensity (log2)')
 ```
@@ -228,8 +254,8 @@ TTR[, , c("precursors_filtered_missing", "proteins")] %>%
 - Plotting protein abundances for specific proteins of interest is a useful way to inspect the data before formal statistical testing
 - PCA wiht `prcomp` uses only the complete data matrix.
 - Colouring PCA plots by all potential sources of variation (e.g., group, age group) helps identify which factors drive the observed structure in the data
-- The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object. We can use this to visualise how the precursor-level data was aggregated to protein level for a specific feature, and to verify that the processing pipeline has behaved as expected.
-
+- The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object.
+  We can use this to visualise how the precursor-level data was aggregated to protein level for a specific feature, and to verify that the processing pipeline has behaved as expected.
 :::
 
 ## References {-}
