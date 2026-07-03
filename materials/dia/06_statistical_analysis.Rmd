@@ -63,7 +63,9 @@ Before statistical testing, we need to decide how to handle proteins that are no
 We only want to test proteins which are quantified in at least 3 replicates of each condition.
 We first split the data by group, then count the number of finite (non-missing) values per protein within each group.
 
-We begin by extracting the normalised protein level data `"norm_protiens"` in the QF object.
+We begin by extracting the normalised protein level data `"norm_protiens"` in
+the QF object. This contains `r `nrow(dia_qf[["norm_proteins"]])` proteins common
+across all conditions.
 
 ```{r}
 #| label: setup-contrasts
@@ -93,7 +95,9 @@ tokeep <- control_replicated & mpxv_replicated & cov_replicated
 print(table(tokeep))
 ```
 
-We now add a new set containing only the proteins that pass the replication filter, and link it to the parent set.
+We now add a new set containing only the proteins that pass the replication
+filter, and link it to the parent set. We see we are left with 
+`r table(tokeep)["TRUE"]` proteins to test.
 
 ```{r}
 #| label: extract-results-mpxv-vs-ctrl
@@ -495,7 +499,7 @@ This reduces the number of hits compared to `eBayes`, retaining only those chang
 :::::
 :::
 
-## Save data
+
 
 ```{r}
 #| label: examine-ranking-distribution

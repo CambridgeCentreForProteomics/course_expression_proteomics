@@ -102,8 +102,14 @@ sample_metadata <- read_excel("data/monkeypox_metadata.xlsx")
 print(sample_metadata)
 ```
 
-There are several columns in this file including the `sample_id` which is the name of the sample as well as the group, sex and age group.
-We have also created a column called `runCol` which is a concise, human-readable label for each sample which we add to our `diann_df` to in the next section to use in our analysis.
+There are several columns in this file including the `sample_id` which is the
+name of the sample as well as the group, sex and age group. We have also created
+a column called `runCol` which is a concise, human-readable label for each
+sample which we add to our `diann_df` to in the next section to use in our
+analysis. It is important that this column is named `runCol`, as the 
+`readQFeaturesFromDIANN` function expects this column name when importing 
+the DIA-NN results.
+
 
 {{< include ../_shared/_pipe.md >}}
 
@@ -363,12 +369,8 @@ The `rdata` object contains many columns from the DIA-NN `rowData` beyond FWHM.
 3. Do any metrics appear to differ systematically between groups, or between individual samples?
 :::
 
-## Save data
 
-```{r}
-#| label: filter-by-fdr
-#| include: false
-
+```{r, include= FALSE}
 save(dia_qf, file = here("course_files/dia/preprocessed/lesson02.rda"))
 ```
 
