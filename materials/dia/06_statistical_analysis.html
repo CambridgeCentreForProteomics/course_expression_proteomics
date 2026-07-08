@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Statistical analysis</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../materials/dia/07_visualisations.html" rel="next">
+<link href="../../materials/dia/05_protein_exploration.html" rel="prev">
+<link href="../../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university-of-cambridge-favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-bb373a9d6c60814f0d90357058c9134b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-3.0.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo light-content">
+    <img src="../../site_libs/quarto-contrib/quarto-project/cambiotraining/crit-format/img/university_crest_reversed.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Analysis of expression proteomics data in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/CambridgeCentreForProteomics/course_expression_proteomics"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="fa6-brands:github" style="font-size: 1.25em;" aria-label="Icon github from fa6-brands Iconify.design set." title="Cambridge Centre for Proteomics GitHub"></iconify-icon></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://proteomics.bio.cam.ac.uk/"> 
+<span class="menu-text"><iconify-icon role="img" inline="" icon="mdi:web" style="font-size: 1.25em;" aria-label="Icon web from mdi Iconify.design set." title="CCP Website"></iconify-icon></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    
+    <style>
+    #version-dropdown {
+      list-style: none;
+    }
+    </style>
+    
+
+  <li id="version-dropdown" class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-versions" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="menu-text">Version:</span> <span class="version-badge" aria-hidden="true">Latest</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-versions">
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/index.html">
+          <span class="dropdown-text">Latest</span>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="/course_expression_proteomics/archive/2026.01.20/index.html">
+          <span class="dropdown-text">2026.01.20</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+</nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../materials/dia/01_intro.html">DIA proteomics</a></li><li class="breadcrumb-item"><a href="../../materials/dia/06_statistical_analysis.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Welcome</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data &amp; Setup</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">DIA proteomics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/03_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data cleaning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/04_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Normalisation and aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/05_protein_exploration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/06_statistical_analysis.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/07_visualisations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Visualisation of differential abundance results</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/dia/08_functional_enrichment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Functional enrichment analysis</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">TMT proteomics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/01_intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">The use-case data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/02_import_and_infrastructure.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Import and infrastructure</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/03_data_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Data cleaning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/04_normalisation_aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Data normalisation and data aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/05_protein_exploration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/06_statistical_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Statistical analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/07_biological_interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Biological interpretation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">TMT proteomics: extended materials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/08_maxquant_notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Adapting this workflow to MaxQuant processed data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/09_normalyzer.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Exploring normalisation methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/10_lfq_vs_tmt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Adapting this workflow to label-free proteomics data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../materials/tmt/11_statistical_analysis_all_stages.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Statistical analysis of all cell cycle stages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../versions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Archived Versions</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#differential-abundance-analysis" id="toc-differential-abundance-analysis" class="nav-link active" data-scroll-target="#differential-abundance-analysis"><span class="header-section-number">6.1</span> Differential abundance analysis</a></li>
+  <li><a href="#selecting-a-statistical-test" id="toc-selecting-a-statistical-test" class="nav-link" data-scroll-target="#selecting-a-statistical-test"><span class="header-section-number">6.2</span> Selecting a statistical test</a>
+  <ul class="collapse">
+  <li><a href="#what-does-the-empirical-bayes-part-mean" id="toc-what-does-the-empirical-bayes-part-mean" class="nav-link" data-scroll-target="#what-does-the-empirical-bayes-part-mean"><span class="header-section-number">6.2.1</span> What does the empirical Bayes part mean?</a></li>
+  </ul></li>
+  <li><a href="#handling-missing-values-prior-to-testing" id="toc-handling-missing-values-prior-to-testing" class="nav-link" data-scroll-target="#handling-missing-values-prior-to-testing"><span class="header-section-number">6.3</span> Handling missing values prior to testing</a></li>
+  <li><a href="#defining-the-statistical-model" id="toc-defining-the-statistical-model" class="nav-link" data-scroll-target="#defining-the-statistical-model"><span class="header-section-number">6.4</span> Defining the statistical model</a></li>
+  <li><a href="#running-the-empirical-bayes-moderated-test-using-limma" id="toc-running-the-empirical-bayes-moderated-test-using-limma" class="nav-link" data-scroll-target="#running-the-empirical-bayes-moderated-test-using-limma"><span class="header-section-number">6.5</span> Running the empirical Bayes-moderated test using <code>limma</code></a>
+  <ul class="collapse">
+  <li><a href="#diagnostic-plots-to-verify-suitability-of-our-statistical-model" id="toc-diagnostic-plots-to-verify-suitability-of-our-statistical-model" class="nav-link" data-scroll-target="#diagnostic-plots-to-verify-suitability-of-our-statistical-model"><span class="header-section-number">6.5.1</span> Diagnostic plots to verify suitability of our statistical model</a></li>
+  </ul></li>
+  <li><a href="#f-test-for-overall-significance-across-groups" id="toc-f-test-for-overall-significance-across-groups" class="nav-link" data-scroll-target="#f-test-for-overall-significance-across-groups"><span class="header-section-number">6.6</span> F-test for overall significance across groups</a></li>
+  <li><a href="#pairwise-contrasts" id="toc-pairwise-contrasts" class="nav-link" data-scroll-target="#pairwise-contrasts"><span class="header-section-number">6.7</span> Pairwise contrasts</a>
+  <ul class="collapse">
+  <li><a href="#multiple-hypothesis-testing-and-correction" id="toc-multiple-hypothesis-testing-and-correction" class="nav-link" data-scroll-target="#multiple-hypothesis-testing-and-correction"><span class="header-section-number">6.7.1</span> Multiple hypothesis testing and correction</a></li>
+  </ul></li>
+  <li><a href="#visualising-results-the-volcano-plot" id="toc-visualising-results-the-volcano-plot" class="nav-link" data-scroll-target="#visualising-results-the-volcano-plot"><span class="header-section-number">6.8</span> Visualising results: the volcano plot</a></li>
+  <li><a href="#extracting-results-for-all-contrasts" id="toc-extracting-results-for-all-contrasts" class="nav-link" data-scroll-target="#extracting-results-for-all-contrasts"><span class="header-section-number">6.9</span> Extracting results for all contrasts</a>
+  <ul class="collapse">
+  <li><a href="#inspecting-p-value-distributions-across-contrasts" id="toc-inspecting-p-value-distributions-across-contrasts" class="nav-link" data-scroll-target="#inspecting-p-value-distributions-across-contrasts"><span class="header-section-number">6.9.1</span> Inspecting p-value distributions across contrasts</a></li>
+  <li><a href="#global-multiple-testing-correction-across-contrasts" id="toc-global-multiple-testing-correction-across-contrasts" class="nav-link" data-scroll-target="#global-multiple-testing-correction-across-contrasts"><span class="header-section-number">6.9.2</span> Global multiple testing correction across contrasts</a></li>
+  <li><a href="#volcano-plots-for-all-contrasts" id="toc-volcano-plots-for-all-contrasts" class="nav-link" data-scroll-target="#volcano-plots-for-all-contrasts"><span class="header-section-number">6.9.3</span> Volcano plots for all contrasts</a></li>
+  </ul></li>
+  <li><a href="#save-data" id="toc-save-data" class="nav-link" data-scroll-target="#save-data"><span class="header-section-number">6.10</span> Save data</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../materials/dia/01_intro.html">DIA proteomics</a></li><li class="breadcrumb-item"><a href="../../materials/dia/06_statistical_analysis.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Statistical analysis</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Know how to filter proteins for statistical testing based on quantification across replicates</li>
+<li>Using the <code>limma</code> package (<span class="citation" data-cites="Smyth2004">Smyth (<a href="#ref-Smyth2004" role="doc-biblioref">2004</a>)</span>), design a statistical model with contrasts to test for differentially abundant proteins across multiple conditions</li>
+<li>Understand the F-test for overall significance across groups</li>
+<li>Interpret the results of individual pairwise contrasts and apply global multiple testing correction</li>
+<li>Produce volcano plots to visualise the results of differential abundance analysis</li>
+</ul>
+</div>
+</div>
+<section id="differential-abundance-analysis" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="differential-abundance-analysis"><span class="header-section-number">6.1</span> Differential abundance analysis</h2>
+<p>Having cleaned our data, aggregated from precursor to protein level, log2 transformed and normalised, we are now ready to carry out statistical analysis.</p>
+<p>The aim of this section is to answer the question: <em>“Which proteins show a significant change in abundance between MPXV-infected patients, COVID-19 patients, and healthy controls?”</em>.</p>
+<p>Our null hypothesis is: <strong>(H0)</strong> The mean protein abundance is the same across all three groups.</p>
+<p>Our alternative hypothesis is: <strong>(H1)</strong> The mean protein abundance differs between at least one pair of groups.</p>
+</section>
+<section id="selecting-a-statistical-test" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="selecting-a-statistical-test"><span class="header-section-number">6.2</span> Selecting a statistical test</h2>
+<p>There are a few aspects of our data that we need to consider prior to deciding which statistical test to apply.</p>
+<ul>
+<li>The protein abundances in this data are not normally distributed (i.e., they do not follow a Gaussian distribution). However, they are approximately normal following a log-transformation.</li>
+<li>We assume that the variance is approximately equal across the three groups.</li>
+<li>The samples are independent and not paired — each patient contributes a single sample to one group only.</li>
+</ul>
+<p>The first point relates to a key assumption of <strong>Gaussian linear modelling</strong>, which assumes that the residuals (difference between the observed values and the values predicted by the model) are Gaussian distributed. If this assumption is not met, it is not appropriate to use a Gaussian linear model. For quantitative proteomics data, it is reasonable to assume the residuals will be approximately Gaussian distributed if we first log-transform the abundances.</p>
+<p>Many different R packages can be used to carry out differential abundance analysis on proteomics data. Here we will use <code>limma</code>, a package that is widely used for omics analysis and can be used in single comparisons or multifactorial experiments using an <strong>empirical Bayes-moderated linear model</strong>. A simple example of the empirical Bayes-moderated linear model is provided in <span class="citation" data-cites="Hutchings2023">Hutchings et al. (<a href="#ref-Hutchings2023" role="doc-biblioref">2024</a>)</span>.</p>
+<section id="what-does-the-empirical-bayes-part-mean" class="level3" data-number="6.2.1">
+<h3 data-number="6.2.1" class="anchored" data-anchor-id="what-does-the-empirical-bayes-part-mean"><span class="header-section-number">6.2.1</span> What does the empirical Bayes part mean?</h3>
+<p>When carrying out high throughput omics experiments we not only have a population of samples but also a population of features - here we have several thousand proteins. Proteomics experiments are typically lowly replicated (e.g n &lt; 10), therefore, the per-protein variance estimates are relatively inaccurate. The empirical Bayes method borrows information across features (proteins) and shifts the per-protein variance estimates towards an expected value based on the variance estimates of other proteins with a similar abundance. This improves the accuracy of the variance estimates, thus reducing false negatives for proteins with over-estimated variance and reducing false positives from proteins with under-estimated variance. For more detail about the empirical Bayes methods, see <a href="https://online.stat.psu.edu/stat555/node/40/">here</a>.</p>
+</section>
+</section>
+<section id="handling-missing-values-prior-to-testing" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="handling-missing-values-prior-to-testing"><span class="header-section-number">6.3</span> Handling missing values prior to testing</h2>
+<p>DIA data contains a higher proportion of missing values than TMT data. Before statistical testing, we need to decide how to handle proteins that are not quantified in enough samples within each group to support a reliable estimate of group-level abundance.</p>
+<p>We only want to test proteins which are quantified in at least 3 replicates of each condition. We first split the data by group, then count the number of finite (non-missing) values per protein within each group.</p>
+<p>We begin by extracting the normalised protein level data <code>"norm_protiens"</code> in the QF object.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> <span class="fu">getWithColData</span>(dia_qf, <span class="st">"norm_proteins"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(se)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>class: SummarizedExperiment 
+dim: 368 31 
+metadata(0):
+assays(2): assay aggcounts
+rownames(368): A0A075B6H7;A0A0C4DH90;A0A0C4DH55;P01624 A0A075B6H9 ...
+  Q9Y5J9 Q9Y6R7
+rowData names(22): Channel Decoy ... Lib.PG.Q.Value .n
+colnames(31): COVID_E1 COVID_E10 ... MPX_D5 MPX_D6
+colData names(5): sample_id runCol group sex age.group</code></pre>
+</div>
+</div>
+<p>Now let’s subset the dataset by condition,</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>control <span class="ot">&lt;-</span> se[, se<span class="sc">$</span>group <span class="sc">==</span> <span class="st">"control"</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mpxv <span class="ot">&lt;-</span> se[, se<span class="sc">$</span>group <span class="sc">==</span> <span class="st">"MPXV"</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cov <span class="ot">&lt;-</span> se[, se<span class="sc">$</span>group <span class="sc">==</span> <span class="st">"Covid19"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Finally, we keep only proteins quantified in at least 3 replicates.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>control_replicated <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">assay</span>(control))) <span class="sc">&gt;=</span> <span class="dv">3</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>mpxv_replicated <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">assay</span>(mpxv))) <span class="sc">&gt;=</span> <span class="dv">3</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>cov_replicated <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="fu">assay</span>(cov))) <span class="sc">&gt;=</span> <span class="dv">3</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep proteins common in all conditions</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>tokeep <span class="ot">&lt;-</span> control_replicated <span class="sc">&amp;</span> mpxv_replicated <span class="sc">&amp;</span> cov_replicated</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">table</span>(tokeep))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tokeep
+FALSE  TRUE 
+   26   342 </code></pre>
+</div>
+</div>
+<p>We now add a new set containing only the proteins that pass the replication filter, and link it to the parent set.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dia_qf <span class="ot">&lt;-</span> <span class="fu">addAssay</span>(dia_qf, <span class="at">y =</span> se[tokeep, ], <span class="at">name =</span> <span class="st">"norm_proteins_replicated"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>dia_qf <span class="ot">&lt;-</span> <span class="fu">addAssayLink</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  dia_qf,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"norm_proteins"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">to =</span> <span class="st">"norm_proteins_replicated"</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>dia_qf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An instance of class QFeatures (type: bulk) with 7 sets:
+
+ [1] precursors: SummarizedExperiment with 4692 rows and 31 columns 
+ [2] precursors_no_cont: SummarizedExperiment with 4417 rows and 31 columns 
+ [3] precursors_filtered_missing: SummarizedExperiment with 4137 rows and 31 columns 
+ [4] precursors_filtered_missing_log: SummarizedExperiment with 4137 rows and 31 columns 
+ [5] proteins: SummarizedExperiment with 368 rows and 31 columns 
+ [6] norm_proteins: SummarizedExperiment with 368 rows and 31 columns 
+ [7] norm_proteins_replicated: SummarizedExperiment with 342 rows and 31 columns </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dia_qf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/extract-results-covid-vs-ctrl-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="06_statistical_analysis_files/figure-html/extract-results-covid-vs-ctrl-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="defining-the-statistical-model" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="defining-the-statistical-model"><span class="header-section-number">6.4</span> Defining the statistical model</h2>
+<p>We use <code>model.matrix</code> to define the design matrix for our linear model. Since we have three groups and are interested in all pairwise comparisons, we use a model without an intercept (<code>~0 + group</code>). This means the model estimates the mean abundance for each group directly.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>group <span class="ot">&lt;-</span> <span class="fu">factor</span>(dia_qf<span class="sc">$</span>group, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"control"</span>, <span class="st">"MPXV"</span>, <span class="st">"Covid19"</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>limma_design <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="fu">formula</span>(<span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> group))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename design matrix columns to make them easier to refer to</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(limma_design) <span class="ot">&lt;-</span> <span class="fu">levels</span>(group)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>limma_design</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   control MPXV Covid19
+1        0    0       1
+2        0    0       1
+3        0    0       1
+4        0    0       1
+5        0    0       1
+6        0    0       1
+7        0    0       1
+8        0    0       1
+9        0    0       1
+10       0    0       1
+11       1    0       0
+12       1    0       0
+13       1    0       0
+14       1    0       0
+15       1    0       0
+16       1    0       0
+17       1    0       0
+18       1    0       0
+19       1    0       0
+20       1    0       0
+21       1    0       0
+22       1    0       0
+23       1    0       0
+24       1    0       0
+25       1    0       0
+26       0    1       0
+27       0    1       0
+28       0    1       0
+29       0    1       0
+30       0    1       0
+31       0    1       0
+attr(,"assign")
+[1] 1 1 1
+attr(,"contrasts")
+attr(,"contrasts")$group
+[1] "contr.treatment"</code></pre>
+</div>
+</div>
+<p>We then define the <strong>contrasts</strong> — the specific pairwise comparisons we wish to make. The <code>makeContrasts</code> function creates a contrast matrix specifying how differences between group means should be calculated.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Specify contrasts of interest</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>contrasts_matrix <span class="ot">&lt;-</span> <span class="fu">makeContrasts</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">MPXV_control =</span> MPXV <span class="sc">-</span> control,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Covid19_control =</span> Covid19 <span class="sc">-</span> control,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">MPXV_Covid19 =</span> MPXV <span class="sc">-</span> Covid19,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> limma_design</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Verify</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>contrasts_matrix</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Contrasts
+Levels    MPXV_control Covid19_control MPXV_Covid19
+  control           -1              -1            0
+  MPXV               1               0            1
+  Covid19            0               1           -1</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What is an F-value?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>An F-value is a parametric statistical value used to compare the mean values of <strong>three or more</strong> groups. The F-value is the ratio of the between-group variation (explained variance) and the within-group variance (unexplained variance). The higher the F-value, the more significant the difference between the groups is.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What is a t-value?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A t-value is a parametric statistical value used to compare the mean values of <strong>two</strong> groups. The t-value is the ratio of the difference in means to the standard error of the difference in means. The further away from zero that a t-value lies, the more significant the difference between the groups is.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>How is the p-value obtained?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A p-value may be obtained from a t-value/F-value by comparing the value against a t-value/F-distribution with the appropriate degrees of freedom.</p>
+<ul>
+<li><strong>degrees of freedom</strong> = the number of observations minus the number of independent variables in the model</li>
+<li><strong>p-value</strong> = the probability of achieving the t-value/F-value under the null hypothesis i.e., by chance</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="running-the-empirical-bayes-moderated-test-using-limma" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="running-the-empirical-bayes-moderated-test-using-limma"><span class="header-section-number">6.5</span> Running the empirical Bayes-moderated test using <code>limma</code></h2>
+<p>We fit the linear model to the replicated protein data, apply the contrasts, and then update the model using the <code>eBayes</code> function with <code>trend = TRUE</code> and <code>robust = TRUE</code> to account for the intensity-dependent variance trend typical in quantitative proteomics data.</p>
+<ul>
+<li><code>trend</code> - takes a logical value of <code>TRUE</code> or <code>FALSE</code> to indicate whether an intensity-dependent trend should be allowed for the prior variance (i.e., the population level variance prior to empirical Bayes moderation). This means that when the empirical Bayes moderation is applied the protein variances are not squeezed towards a global mean but rather towards an intensity-dependent trend.</li>
+<li><code>robust</code> - takes a logical value of <code>TRUE</code> or <code>FALSE</code> to indicate whether the parameter estimation of the priors should be robust against outlier sample variances.</li>
+</ul>
+<p>See (<span class="citation" data-cites="Phipson2016">Phipson et al. (<a href="#ref-Phipson2016" role="doc-biblioref">2016</a>)</span> and <span class="citation" data-cites="Smyth2004">Smyth (<a href="#ref-Smyth2004" role="doc-biblioref">2004</a>)</span>) for further details.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">assay</span>(dia_qf[[<span class="st">'norm_proteins_replicated'</span>]])</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>limma_fit <span class="ot">&lt;-</span> <span class="fu">lmFit</span>(data, limma_design)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>limma_fit_contrasts <span class="ot">&lt;-</span> <span class="fu">contrasts.fit</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit =</span> limma_fit,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrasts =</span> contrasts_matrix</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>limma_fit_contrasts <span class="ot">&lt;-</span> <span class="fu">eBayes</span>(limma_fit_contrasts, <span class="at">trend =</span> <span class="cn">TRUE</span>, <span class="at">robust =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="diagnostic-plots-to-verify-suitability-of-our-statistical-model" class="level3" data-number="6.5.1">
+<h3 data-number="6.5.1" class="anchored" data-anchor-id="diagnostic-plots-to-verify-suitability-of-our-statistical-model"><span class="header-section-number">6.5.1</span> Diagnostic plots to verify suitability of our statistical model</h3>
+<p>As with all statistical analysis, it is crucial to do some quality control and to check that the statistical test that has been applied was indeed appropriate for the data. As mentioned above, statistical tests typically come with several assumptions. To check that these assumptions were met and that our model was suitable, we create some diagnostic plots.</p>
+<p>The first plot that we generate is an SA plot to display the residual standard deviation (sigma) versus log abundance for each protein to which our model was fitted. We can use the <code>plotSA</code> function to do this.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotSA</span>(<span class="at">fit =</span> limma_fit_contrasts, <span class="at">cex =</span> <span class="fl">0.5</span>, <span class="at">xlab =</span> <span class="st">"Average log2 abundance"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/examine-log-fold-changes-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="06_statistical_analysis_files/figure-html/examine-log-fold-changes-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>It is recommended that an SA plot be used as a routine diagnostic plot when applying a limma-trend pipeline. From the SA plot we can visualise the intensity-dependent trend that has been incorporated into our linear model. It is important to verify that the trend line fits the data well. If we had not included the <code>trend = TRUE</code> argument in our <code>eBayes</code> function, then we would instead see a straight horizontal line that does not follow the trend of the data. Further, the plot also colours any outliers in red. These are the outliers that are only detected and excluded when using the <code>robust = TRUE</code> argument.</p>
+<p>Next, we plot a histogram of the raw p-values (not adjusted p-values). This can be done by passing our results data into standard <code>ggplot2</code> plotting functions.</p>
+<p>The near-flat distribution across the bottom corresponds to null p-values which are distributed approximately uniformly between 0 and 1. The peak close to 0 contains a combination of our significantly changing proteins (true positives) and proteins with a low p-value by chance (false positives).</p>
+<p>Other examples of how a p-value histogram could look are shown below. Whilst in some experiments a uniform p-value distribution may arise due to an absence of significant alternative hypotheses, other distribution shapes can indicate that something was wrong with the model design or statistical test. For more detail on how to interpret p-value histograms there is a great <a href="http://varianceexplained.org/statistics/interpreting-pvalue-histogram/">blog post</a> by David Robinson, from which the examples below are taken.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="../_shared/figs/phist_shapes.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Examples of p-value histograms."><img src="../_shared/figs/phist_shapes.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" alt="Examples of p-value histograms."></a></p>
+</figure>
+</div>
+<figcaption>Examples of p-value histograms.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="f-test-for-overall-significance-across-groups" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="f-test-for-overall-significance-across-groups"><span class="header-section-number">6.6</span> F-test for overall significance across groups</h2>
+<section id="discussion" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion">Discussion</h4>
+<ul>
+<li>Before running individual pairwise contrasts, why might it be useful to first test for any significant difference across all groups simultaneously?</li>
+<li>What null hypothesis does the F-test test, and how does it differ from a pairwise t-test?</li>
+<li>After running the code below, look at the p-value distribution — what shape would you expect if many proteins are truly differentially abundant, and does this plot match your expectation?</li>
+</ul>
+</section>
+<p>We can first test for an overall significant difference across all groups using an F-test. Setting <code>coef = NULL</code> in <code>topTable</code> returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Format results</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>limma_results_F <span class="ot">&lt;-</span> <span class="fu">topTable</span>(</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit =</span> limma_fit_contrasts,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef =</span> <span class="cn">NULL</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">adjust.method =</span> <span class="st">"BH"</span>, <span class="co"># Method for multiple hypothesis testing</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">number =</span> <span class="cn">Inf</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="co"># Print results for all proteins</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="st">"UniprotID"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(limma_results_F)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  UniprotID MPXV_control Covid19_control MPXV_Covid19  AveExpr        F
+1    P02766   -1.5515210      -1.6313231   0.07980211 12.95369 75.40937
+2    P02652   -1.2644480      -1.4143889   0.14994087 16.42369 35.75869
+3    P02654   -3.4780381      -2.5547982  -0.92323989 14.04151 35.43467
+4    P05452   -0.7366027      -0.8673067   0.13070396 12.81599 35.38853
+5    P02748    1.3808622       1.1927880   0.18807427 14.43917 31.98443
+6    P02647   -0.9664780      -1.0782069   0.11172892 18.06976 26.15018
+       P.Value    adj.P.Val
+1 8.877578e-13 3.036132e-10
+2 7.462286e-09 7.151520e-07
+3 8.245842e-09 7.151520e-07
+4 8.364351e-09 7.151520e-07
+5 2.487367e-08 1.701359e-06
+6 1.955504e-07 1.114637e-05</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check distribution of p-values</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>limma_results_F <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> P.Value)) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Distribution of p-values for F-test"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/volcano-plot-covid-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="06_statistical_analysis_files/figure-html/volcano-plot-covid-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="pairwise-contrasts" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="pairwise-contrasts"><span class="header-section-number">6.7</span> Pairwise contrasts</h2>
+<p>We start by extracting results for a single contrast of particular biological interest: MPXV versus control. We use <code>topTable</code> with <code>coef = "MPXV_control"</code> to get the results for this specific comparison. We also merge in gene name annotations from the <code>rowData</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>limma_results_mpxv_control <span class="ot">&lt;-</span> <span class="fu">topTable</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  limma_fit_contrasts,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef =</span> <span class="st">"MPXV_control"</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">number =</span> <span class="cn">Inf</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sort.by =</span> <span class="st">"p"</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="st">'UniprotID'</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>uniprot_annotations <span class="ot">&lt;-</span> <span class="fu">rowData</span>(dia_qf[[<span class="st">'norm_proteins_replicated'</span>]]) <span class="sc">%&gt;%</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Genes, Protein.Names)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>limma_results_mpxv_control <span class="ot">&lt;-</span> limma_results_mpxv_control <span class="sc">%&gt;%</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">merge</span>(uniprot_annotations, <span class="at">by.x =</span> <span class="st">'UniprotID'</span>, <span class="at">by.y =</span> <span class="st">'row.names'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(P.Value)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>limma_results_mpxv_control <span class="sc">%&gt;%</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(P.Value)) <span class="sc">+</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"P-value distribution for MPXV vs Control contrast"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/plot-gene-expression-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="06_statistical_analysis_files/figure-html/plot-gene-expression-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>How many significant changes in abundance are there?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig =</span> limma_results_mpxv_control<span class="sc">$</span>adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ifelse</span>(limma_results_mpxv_control<span class="sc">$</span>logFC <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="st">'Increased'</span>, <span class="st">'Decreased'</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       
+sig     Decreased Increased
+  FALSE       136       144
+  TRUE         36        26</code></pre>
+</div>
+</div>
+<section id="multiple-hypothesis-testing-and-correction" class="level3" data-number="6.7.1">
+<h3 data-number="6.7.1" class="anchored" data-anchor-id="multiple-hypothesis-testing-and-correction"><span class="header-section-number">6.7.1</span> Multiple hypothesis testing and correction</h3>
+<p>Using the linear model defined above, we have carried out a statistical test for each protein.</p>
+<p>Multiple testing describes the process of separately testing multiple null hypothesis i.e., carrying out many statistical tests at a time, each to test a null hypothesis on different data. Here we have carried out one statistical test per protein. If we were to use the typical p &lt; 0.05 significance threshold for each test, we would expect a 5% chance of incorrectly rejecting the null hypothesis <em>per test</em>. For a typical proteomics dataset with thousands of proteins, we would expect many p-values &lt;= 0.05 by chance.</p>
+<p>If we do not account for the fact that we have carried out multiple hypothesis, we risk including false positives in our data. Many methods exist to correct for multiple hypothesis testing and these mainly fall into two categories:</p>
+<ol type="1">
+<li>Control of the Family-Wise Error Rate (FWER)</li>
+<li>Control of the False Discovery Rate (FDR)</li>
+</ol>
+<p>Above we specified the “BH” method for adjusting p-values in our <code>topTable</code> function call. This is shorthand for the Benjamini-Hochberg procedure, to control the FDR.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The False Discovery Rate
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The False Discovery Rate (FDR) defines the fraction of false discoveries that we are willing to tolerate in our list of differential proteins. For example, an FDR threshold of 0.05 means that approximately 5% of the proteins deemed differentially abundant will be false positives. It is up to you to decide what this threshold should be, but conventionally a value between 0.01 (1% FPs) and 0.1 (10% FPs) is chosen.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="visualising-results-the-volcano-plot" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="visualising-results-the-volcano-plot"><span class="header-section-number">6.8</span> Visualising results: the volcano plot</h2>
+<p>The final step in any statistical analysis is to visualise the results. This is important for ourselves as it allows us to check that the data looks as expected.</p>
+<p>The most common visualisation used to display the results of expression proteomics experiments is a volcano plot. This is a scatterplot that shows statistical significance (p-values) against the magnitude of fold change. Of note, when we plot the statistical significance we use the raw unadjusted p-value (<code>-log10(P.Value)</code>). This is because it is better to plot the statistical test results in their ‘raw’ form and not values derived from them (the adjusted p-value is derived from each p-value using the BH-method of correction). Furthermore, the process of FDR correction can result in some points that previously had distinct p-values having the same adjusted p-value. Finally, different methods of correction will generate different adjusted p-values, making the comparison and interpretation of values more difficult.</p>
+<section id="discussion-1" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion-1">Discussion</h4>
+<ul>
+<li>What information does a volcano plot convey, and what are its limitations?</li>
+<li>Why might some proteins have a large fold change but not be statistically significant?</li>
+<li>Look at the proteins near the significance threshold — what does this tell you about treating <code>adj.P.Val &lt; 0.05</code> as a hard cut-off?</li>
+</ul>
+</section>
+<p>We produce a volcano plot for the MPXV vs Control contrast, labelling the top 30 most significant proteins by gene name.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>data_for_highlighting <span class="ot">&lt;-</span> limma_results_mpxv_control <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(P.Value) <span class="sc">%&gt;%</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">30</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  limma_results_mpxv_control,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    logFC,</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="fu">log10</span>(P.Value),</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">pch =</span> <span class="dv">20</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> data_for_highlighting,</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> Genes),</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="fl">1.5</span>,</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">2</span>,</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">'grey20'</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Log2 Fold Change (MPXV vs Control)"</span>) <span class="sc">+</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"-Log10 P-value"</span>) <span class="sc">+</span></span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">'grey'</span>, <span class="st">'orangered3'</span>)) <span class="sc">+</span></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_alpha_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/heatmap-top-proteins-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="06_statistical_analysis_files/figure-html/heatmap-top-proteins-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="extracting-results-for-all-contrasts" class="level2" data-number="6.9">
+<h2 data-number="6.9" class="anchored" data-anchor-id="extracting-results-for-all-contrasts"><span class="header-section-number">6.9</span> Extracting results for all contrasts</h2>
+<p>Rather than extracting results for each contrast separately, we can loop through all contrasts and bind the results into a single long-format data frame. This format is well-suited for downstream visualisation with <code>ggplot2</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>contrasts <span class="ot">&lt;-</span> <span class="fu">colnames</span>(contrasts_matrix)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>limma_results_all_contrasts_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">'list'</span>, <span class="fu">length</span>(contrasts))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(limma_results_all_contrasts_list) <span class="ot">&lt;-</span> contrasts</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (contrast <span class="cf">in</span> contrasts) {</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  limma_results_all_contrasts_list[[contrast]] <span class="ot">&lt;-</span> <span class="fu">topTable</span>(</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    limma_fit_contrasts,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">coef =</span> contrast,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">number =</span> <span class="cn">Inf</span>,</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">sort.by =</span> <span class="st">"p"</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="st">'UniprotID'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">merge</span>(uniprot_annotations, <span class="at">by.x =</span> <span class="st">'UniprotID'</span>, <span class="at">by.y =</span> <span class="st">'row.names'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">contrast =</span> contrast) <span class="sc">%&gt;%</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(P.Value)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># bind into one data.frame</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>limma_results_all_contrasts <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(limma_results_all_contrasts_list)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="inspecting-p-value-distributions-across-contrasts" class="level3" data-number="6.9.1">
+<h3 data-number="6.9.1" class="anchored" data-anchor-id="inspecting-p-value-distributions-across-contrasts"><span class="header-section-number">6.9.1</span> Inspecting p-value distributions across contrasts</h3>
+<section id="discussion-2" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion-2">Discussion</h4>
+<ul>
+<li>Before interpreting the results in detail, what can you infer just from the shape of the p-value distributions across the three contrasts?</li>
+<li>Which contrast shows the strongest signal, and what does that suggest about the biology?</li>
+</ul>
+</section>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>limma_results_all_contrasts <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(P.Value)) <span class="sc">+</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"P-value"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>contrast)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/compare-regulation-directions-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="06_statistical_analysis_files/figure-html/compare-regulation-directions-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="global-multiple-testing-correction-across-contrasts" class="level3" data-number="6.9.2">
+<h3 data-number="6.9.2" class="anchored" data-anchor-id="global-multiple-testing-correction-across-contrasts"><span class="header-section-number">6.9.2</span> Global multiple testing correction across contrasts</h3>
+<section id="discussion-3" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion-3">Discussion</h4>
+<ul>
+<li>Why do we need to adjust p-values when testing thousands of proteins across multiple contrasts?</li>
+<li>What is the difference between adjusting each contrast separately versus adjusting globally across all contrasts and proteins?</li>
+<li>Which approach is more conservative, and in what circumstances might that matter?</li>
+</ul>
+</section>
+<p>When testing thousands of proteins across multiple contrasts, p-values must be adjusted for multiple testing. The standard Benjamini-Hochberg method was designed for independent tests, but our contrasts share data and are positively correlated. Fortunately, BH remains valid under this kind of positive dependence (formally called Positive Regression Dependency on a Subset, PRDS), so applying BH globally across all contrasts is statistically justified and more rigorous than correcting each contrast separately.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>limma_results_all_contrasts <span class="ot">&lt;-</span> limma_results_all_contrasts <span class="sc">%&gt;%</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">adj.P.Val =</span> <span class="fu">p.adjust</span>(P.Value, <span class="at">method =</span> <span class="st">'BH'</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>How many significant changes in abundance are there in each contrast?</p>
+<section id="discussion-4" class="level4 callout-discussion">
+<h4 class="anchored" data-anchor-id="discussion-4">Discussion</h4>
+<ul>
+<li>Looking at the counts of significantly increased and decreased proteins across the three contrasts, what does this tell you about the differences between the conditions?</li>
+<li>Are you surprised by any of these numbers? What biological explanations might account for what you see?</li>
+</ul>
+</section>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig =</span> limma_results_all_contrasts<span class="sc">$</span>adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ifelse</span>(limma_results_all_contrasts<span class="sc">$</span>logFC <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="st">'Increased'</span>, <span class="st">'Decreased'</span>),</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  limma_results_all_contrasts<span class="sc">$</span>contrast</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>, ,  = Covid19_control
+
+       
+sig     Decreased Increased
+  FALSE       111       162
+  TRUE         38        31
+
+, ,  = MPXV_control
+
+       
+sig     Decreased Increased
+  FALSE       136       147
+  TRUE         36        23
+
+, ,  = MPXV_Covid19
+
+       
+sig     Decreased Increased
+  FALSE       178       156
+  TRUE          7         1</code></pre>
+</div>
+</div>
+</section>
+<section id="volcano-plots-for-all-contrasts" class="level3" data-number="6.9.3">
+<h3 data-number="6.9.3" class="anchored" data-anchor-id="volcano-plots-for-all-contrasts"><span class="header-section-number">6.9.3</span> Volcano plots for all contrasts</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>data_for_highlighting_all_contrasts <span class="ot">&lt;-</span> limma_results_all_contrasts <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(P.Value) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(contrast) <span class="sc">%&gt;%</span> <span class="co"># group by contrast to get top 30 for each contrast</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(P.Value, <span class="at">n =</span> <span class="dv">30</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  limma_results_all_contrasts,</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    logFC,</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="fu">log10</span>(P.Value),</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">pch =</span> <span class="dv">20</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> data_for_highlighting_all_contrasts,</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> Genes),</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="fl">1.5</span>,</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">2</span>,</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">'grey20'</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Log2 Fold Change"</span>) <span class="sc">+</span></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"-Log10 P-value"</span>) <span class="sc">+</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">'grey'</span>, <span class="st">'orangered3'</span>)) <span class="sc">+</span></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_alpha_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>contrast) <span class="co"># facet by contrast to get separate volcano plots for each contrast</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06_statistical_analysis_files/figure-html/create-ranking-for-go-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="06_statistical_analysis_files/figure-html/create-ranking-for-go-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-exercise no-icon callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Exercise</span>Exercise 1 - Challenge: Using treat to test against a fold-change threshold
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<div class="callout-exercise">
+<p><font style="font-variant: small-caps">Level:</font> <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><br></p>
+<p>The <code>eBayes</code> function tests the null hypothesis that a protein’s log fold change is exactly zero. In practice, we are often only interested in changes that exceed a minimum biologically meaningful fold change. The <code>treat</code> function from <code>limma</code> instead tests the null hypothesis that the absolute log fold change is <em>less than</em> a specified threshold <code>fc</code>, providing a statistically rigorous alternative to post-hoc fold-change filtering.</p>
+<ol type="1">
+<li>Replace the <code>eBayes</code> call with <code>treat(fc=1.2, trend = TRUE, robust = TRUE)</code> and extract results for all contrasts using <code>topTreat</code> in place of <code>topTable</code>.</li>
+<li>Apply global Benjamini-Hochberg correction to the p-values as before.</li>
+<li>How many proteins are significant (<code>adj.P.Val &lt; 0.05</code>) in each contrast compared to the <code>eBayes</code> results? Why is the number lower?</li>
+</ol>
+<div class="callout callout-style-default callout-answer no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Answer</span>Answer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="callout-answer" data-collapse="true">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>limma_fit_treat <span class="ot">&lt;-</span> <span class="fu">treat</span>(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  limma_fit_contrasts,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fc =</span> <span class="fl">1.2</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">trend =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust =</span> <span class="cn">TRUE</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>limma_results_treat_list <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(contrasts_matrix),</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(contrast) {</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">topTreat</span>(limma_fit_treat, <span class="at">coef =</span> contrast, <span class="at">n =</span> <span class="cn">Inf</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rownames_to_column</span>(<span class="st">"UniprotID"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">contrast =</span> contrast)</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>limma_results_treat_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(limma_results_treat_list) <span class="sc">%&gt;%</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">adj.P.Val =</span> <span class="fu">p.adjust</span>(P.Value, <span class="at">method =</span> <span class="st">'BH'</span>))</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig =</span> limma_results_treat_all<span class="sc">$</span>adj.P.Val <span class="sc">&lt;</span> <span class="fl">0.05</span>,</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  limma_results_treat_all<span class="sc">$</span>contrast</span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       
+sig     Covid19_control MPXV_control MPXV_Covid19
+  FALSE             317          322          341
+  TRUE               25           20            1</code></pre>
+</div>
+</div>
+<p><code>treat</code> tests a stricter null hypothesis — that the fold change is smaller than <code>fc = 1.2</code> (i.e.&nbsp;less than 1.2-fold) — rather than simply that it is zero. A protein must therefore show both statistical significance <em>and</em> a fold change exceeding the threshold to be called significant. This reduces the number of hits compared to <code>eBayes</code>, retaining only those changes that are both statistically and practically meaningful.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="save-data" class="level2" data-number="6.10">
+<h2 data-number="6.10" class="anchored" data-anchor-id="save-data"><span class="header-section-number">6.10</span> Save data</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Points
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Before statistical testing, proteins should be filtered to those quantified in a minimum number of replicates per group to ensure reliable group-level abundance estimates</li>
+<li>When comparing more than two groups, a no-intercept design matrix (<code>~0 + group</code>) combined with contrasts provides a flexible way to specify all pairwise comparisons of interest</li>
+<li>The F-test (<code>coef = NULL</code> in <code>topTable</code>) tests for any significant difference across all groups simultaneously, before examining specific pairwise contrasts</li>
+<li>When testing multiple contrasts simultaneously, p-values should be adjusted globally across all proteins and contrasts to avoid inflated false positive rates; Benjamini-Hochberg correction is valid under the positive correlation structure typical of multi-contrast proteomics experiments</li>
+<li>Volcano plots are a useful summary of differential abundance results, but it is important to interpret them as one representation of a continuous statistical landscape rather than a binary significant/not-significant classification</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Hutchings2023" class="csl-entry" role="listitem">
+Hutchings, Charlotte, Charlotte S. Dawson, Thomas Krueger, Kathryn S. Lilley, and Lisa M. Breckels. 2024. <span>“A Bioconductor Workflow for Processing, Evaluating, and Interpreting Expression Proteomics Data.”</span> <em>F1000Research</em> 12 (September): 1402. <a href="https://doi.org/10.12688/f1000research.139116.2">https://doi.org/10.12688/f1000research.139116.2</a>.
+</div>
+<div id="ref-Phipson2016" class="csl-entry" role="listitem">
+Phipson, Belinda, Stanley Lee, Ian J. Majewski, Warren S. Alexander, and Gordon K. Smyth. 2016. <span>“Robust Hyperparameter Estimation Protects Against Hypervariable Genes and Improves Power to Detect Differential Expression.”</span> <em>The Annals of Applied Statistics</em> 10 (2). <a href="https://doi.org/10.1214/16-aoas920">https://doi.org/10.1214/16-aoas920</a>.
+</div>
+<div id="ref-Smyth2004" class="csl-entry" role="listitem">
+Smyth, Gordon K. 2004. <span>“Linear Models and Empirical Bayes Methods for Assessing Differential Expression in Microarray Experiments.”</span> <em>Statistical Applications in Genetics and Molecular Biology</em> 3 (1): 1–25. <a href="https://doi.org/10.2202/1544-6115.1027">https://doi.org/10.2202/1544-6115.1027</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../materials/dia/05_protein_exploration.html" class="pagination-link" aria-label="Exploration and visualisation of protein data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Exploration and visualisation of protein data</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../materials/dia/07_visualisations.html" class="pagination-link" aria-label="Visualisation of differential abundance results">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Visualisation of differential abundance results</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> <img src="https://creativecommons.org/images/deed/cc_icon_black_x2.png" class="img-fluid" width="25"> Bioinformatics Training Facility</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
