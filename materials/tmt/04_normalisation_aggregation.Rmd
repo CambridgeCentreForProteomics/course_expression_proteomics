@@ -14,6 +14,14 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-tmt-processed-data
 #| include: false
 
@@ -27,8 +35,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
-load(here("course_files/tmt/preprocessed/lesson03.rda"), verbose = TRUE)
+
+load("preprocessed/lesson03.rda", verbose = TRUE)
 ```
 
 Let's start by recapping which stage we have reached in the processing of our quantitative proteomics data.
@@ -41,7 +49,7 @@ In the previous two lessons we have so far learnt,
 In this next lesson we will continue processing the PSM level data, aggregate our data to protein-level intensities, explore log transformation, and finally normalise the protein-level data ready for downstream statistical testing.
 
 <!-- ```{r, echo = FALSE, fig.align = "center", out.width = "90%"} -->
-<!-- knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE) -->
+<!-- knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.006.png"), error = FALSE) -->
 <!-- ``` -->
 
 ## Feature aggregation
@@ -52,7 +60,7 @@ In this next lesson we will continue processing the PSM level data, aggregate ou
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.006.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.006.png"), error = FALSE)
 ```
 
 Let's recap our data,
@@ -210,7 +218,7 @@ cc_qf
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.008.png"), error = FALSE)
 ```
 
 {{< include ../_shared/_normalisation_intro.md >}}
@@ -340,7 +348,7 @@ Please refer to the [Using NormalyzerDE to explore normalisation methods](./09_n
 #| label: create-final-dataset-tmt
 #| include: false
 
-save(cc_qf, file = here("course_files/tmt/preprocessed/lesson04.rda"))
+save(cc_qf, file = "preprocessed/lesson04.rda")
 ```
 
 ::: {.callout-tip}

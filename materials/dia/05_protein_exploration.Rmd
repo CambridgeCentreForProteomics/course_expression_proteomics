@@ -15,10 +15,17 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/dia"))
+```
+
+```{r}
 #| label: load-processed-data
 #| include: false
 
-library("here")
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -30,7 +37,7 @@ library("ggrepel")
 library("ggbeeswarm")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 Having cleaned, aggregated, and normalised our data, we are now ready to explore the protein-level data before carrying out formal statistical testing.

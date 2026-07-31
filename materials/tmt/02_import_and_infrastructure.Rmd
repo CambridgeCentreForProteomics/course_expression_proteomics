@@ -14,12 +14,20 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-tmt-data
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.001.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.001.png"), error = FALSE)
 ```
 
 ## The data structure
@@ -62,11 +70,9 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 ```
 
-Set your working directory to `Course_Materials` where you will find all the relevant data and R code files for this course.
-This can be achieved using the `setwd` function or by going to the menu Session -> Set Working Directory -> Choose Directory, in RStudio.
+Your working directory has already been set to the `course_files/tmt` folder, where you will find all the relevant data and R code files for this course.
 Type `list.files` into your R console to check you can see the materials.
 
 ## Importing data into R
@@ -305,7 +311,7 @@ colData(cc_qf[["psms_raw"]])
 #| label: show-filter-options
 #| include: false
 
-save(cc_qf, file = here("course_files/tmt/preprocessed/lesson02.rda"))
+save(cc_qf, file = "preprocessed/lesson02.rda")
 ```
 
 ::: {.callout-exercise}

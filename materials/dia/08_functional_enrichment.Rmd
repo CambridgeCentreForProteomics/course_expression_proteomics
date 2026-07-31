@@ -14,10 +14,17 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/dia"))
+```
+
+```{r}
 #| label: load-annotation-data
 #| include: false
 
-library("here")
 library("QFeatures")
 library("ggplot2")
 library("clusterProfiler")
@@ -29,7 +36,7 @@ library("GOSemSim")
 library("pheatmap")
 library("dplyr")
 
-load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
+load("preprocessed/lesson06.rda", verbose = TRUE)
 ```
 
 ## Biological interpretation of differentially abundant proteins

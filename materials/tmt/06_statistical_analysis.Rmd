@@ -18,12 +18,20 @@ editor:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: prepare-limma-design-tmt
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.010.png"), error = FALSE)
 ```
 
 ```{r}
@@ -40,9 +48,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 
-load(here("course_files/tmt/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential expression analysis
@@ -207,7 +214,7 @@ plotSA(fit = final_model, cex = 0.5, xlab = "Average log2 abundance")
 #| fig-align: "center"
 #| out-width: "100%"
 
-knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+knitr::include_graphics(here::here("materials/_shared/figs/phist_shapes.png"), error = FALSE)
 ```
 
 ```{r}
@@ -281,7 +288,7 @@ head(limma_results)
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.011.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.011.png"), error = FALSE)
 ```
 
 {{< include ../_shared/_volcano_plot_intro.md >}}
@@ -493,7 +500,7 @@ A more in-depth overview of `pheatmap` and how to customise these plots further 
 save(
   limma_results,
   all_proteins,
-  file = here("course_files/tmt/preprocessed/lesson06.rda")
+  file = "preprocessed/lesson06.rda"
 )
 ```
 

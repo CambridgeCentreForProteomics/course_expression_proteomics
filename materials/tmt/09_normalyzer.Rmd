@@ -15,12 +15,20 @@ editor:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-tmt-for-normalyzer
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.008.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.008.png"), error = FALSE)
 ```
 
 ::: callout-note
@@ -43,9 +51,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 
-load(here("course_files/tmt/preprocessed/lesson03.rda"), verbose = TRUE)
+load("preprocessed/lesson03.rda", verbose = TRUE)
 ```
 
 ## Using NormalyzerDE
@@ -144,7 +151,7 @@ We expect samples from the same condition to have intensities that lie in the sa
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/density_plots_example.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/density_plots_example.png"), error = FALSE)
 ```
 
 @fig-density shows a screenshot of the PDF report output from running the `normalyzer` pipeline.

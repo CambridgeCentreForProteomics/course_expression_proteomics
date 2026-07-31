@@ -15,12 +15,20 @@ editor:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-all-stages-data
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.010.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.010.png"), error = FALSE)
 ```
 
 ::: callout-note
@@ -43,9 +51,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 
-load(here("course_files/tmt/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential expression analysis

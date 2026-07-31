@@ -15,10 +15,17 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/dia"))
+```
+
+```{r}
 #| label: aggregate-precursor-to-protein
 #| include: false
 
-library("here")
 library("QFeatures")
 library("naniar")
 library("tidyr")
@@ -26,7 +33,7 @@ library("dplyr")
 library("ggplot2")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson03.rda"), verbose = TRUE)
+load("preprocessed/lesson03.rda", verbose = TRUE)
 ```
 
 Having filtered our DIA-NN data to retain only high-confidence identifications and removed precursors with excessive missing values, we are now ready to continue processing.
@@ -249,7 +256,7 @@ pre_norm + post_norm
 #| label: verify-normalization
 #| include: false
 
-save(dia_qf, file = here("course_files/dia/preprocessed/lesson04.rda"))
+save(dia_qf, file = "preprocessed/lesson04.rda")
 ```
 
 ::: {.callout-tip}

@@ -16,6 +16,14 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+setwd(here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-tmt-for-exploration
 #| include: false
 
@@ -29,9 +37,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 
-load(here("course_files/tmt/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 Before we carry out statistical analysis to determine which of our proteins show significantly differential abundance across conditions (cell cycle stages), we first want to do some exploration of the protein level data.
@@ -43,7 +50,7 @@ This includes determining some information that may be required for reporting an
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.009.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.009.png"), error = FALSE)
 ```
 
 ## Adding assay links
