@@ -22,7 +22,7 @@ editor:
 #| include: false
 #| purl: false
 
-setwd(here::here("course_files/tmt"))
+knitr::opts_knit$set(root.dir = here::here("course_files/tmt"))
 ```
 
 ```{r}

@@ -19,7 +19,7 @@ editor_options:
 #| include: false
 #| purl: false
 
-setwd(here::here("course_files/dia"))
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 ```
 
 ```{r}

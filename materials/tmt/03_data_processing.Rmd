@@ -18,7 +18,7 @@ bibliography: ../course_refs.bib
 #| include: false
 #| purl: false
 
-setwd(here::here("course_files/tmt"))
+knitr::opts_knit$set(root.dir = here::here("course_files/tmt"))
 ```
 
 ```{r}
@@ -431,7 +431,7 @@ In this way, the FDR can be thought of as the proportion of false positives abov
 #| out-width: "50%"
 #| fig-cap: "An illustration of the local FDR calculation used to assign each PSM an FDR."
 
-knitr::include_graphics(here::here("materials/tmt/figs/local_fdr.png"))
+knitr::include_graphics(here::here("materials/tmt/figs/local_fdr.png"), error = FALSE)
 ```
 
 In the parameters for our identification search using Proteome Discoverer we specified a PSM level FDR threshold.
