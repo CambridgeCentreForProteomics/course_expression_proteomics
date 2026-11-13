@@ -517,6 +517,65 @@ ggplot(
 ```
 
 ::: {.callout-exercise}
+#### Challenge: Fold-change thresholds on a volcano plot
+
+{{< level 2 >}}
+
+A common way to call a protein differentially abundant is to require both a significant adjusted p-value and a fold change of at least 2 (a log2 fold change of +1 or -1).
+
+Using `limma_results_all_contrasts`, plot a volcano plot for the `MPXV_Covid19` contrast only, with vertical dashed lines at a log2 fold change of -1 and +1.
+
+1. How many proteins have `adj.P.Val < 0.05` and lie outside the two lines?
+2. Are there significant proteins that lie inside the lines?
+   Are there proteins outside the lines that are not significant?
+3. The x-axis shows a single estimate of the fold change for each protein, with no indication of its uncertainty.
+   How confident can we be in the size of the fold change for a protein just outside a line, compared with one far outside it?
+
+<details><summary>Hint</summary>Filter with `filter(contrast == "MPXV_Covid19")` and add `geom_vline(xintercept = c(-1, 1), linetype = "dashed")` to the volcano plot code above.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: volcano-fold-change-thresholds
+limma_results_mpxv_covid <- limma_results_all_contrasts %>%
+  filter(contrast == "MPXV_Covid19")
+
+ggplot(
+  limma_results_mpxv_covid,
+  aes(
+    logFC,
+    -log10(P.Value),
+    colour = adj.P.Val < 0.05,
+    alpha = adj.P.Val < 0.05
+  )
+) +
+  geom_point(pch = 20, size = 3) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+  theme_classic() +
+  xlab("Log2 Fold Change (MPXV vs Covid19)") +
+  ylab("-Log10 P-value") +
+  scale_colour_manual(values = c('grey', 'orangered3')) +
+  scale_alpha_manual(values = c(0.2, 1)) +
+  theme(legend.position = "none")
+
+table(
+  significant = limma_results_mpxv_covid$adj.P.Val < 0.05,
+  outside_lines = abs(limma_results_mpxv_covid$logFC) > 1
+)
+```
+
+The table gives the number of proteins in each combination of significance and fold-change threshold.
+The two criteria measure different things: the adjusted p-value reflects how well the difference is supported by the data given the variability and the number of replicates, whereas the fold-change threshold reflects only the size of the estimated difference.
+Proteins can therefore be significant with a small fold change, or have a large fold change without being significant.
+
+The fold change is a point estimate and the plot shows no error on it.
+A protein just outside a line may have an estimate that is within error of the threshold, so whether it truly exceeds a 2-fold change is uncertain.
+A protein far outside the line is more likely to exceed it, but a large estimate is not by itself evidence of a reliable one.
+The p-value is the only measure of uncertainty on the plot, and it tests whether the fold change differs from zero, not whether it exceeds 2-fold.
+Testing against a fold-change threshold directly is the aim of the next exercise.
+:::::
+:::
+
+::: {.callout-exercise}
 #### Challenge: Using `treat` to test against a fold-change threshold
 
 {{< level 2 >}}
