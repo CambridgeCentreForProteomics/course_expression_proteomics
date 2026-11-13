@@ -80,6 +80,76 @@ go_down <- enrichGO(
 )
 ```
 
+::: {.callout-exercise}
+#### Challenge: Which proteins were tested?
+
+{{< level 2 >}}
+
+`enrichGO` ran without telling us how many of our proteins it was able to use.
+The `GeneRatio` and `BgRatio` columns of the results record the number of proteins that were tested: the denominator of `GeneRatio` is the size of the protein list and the denominator of `BgRatio` is the size of the background.
+
+1. Convert `go_down` to a data frame and compare the denominators of `GeneRatio` and `BgRatio` with the number of proteins in `sig_down` and in the full set of tested proteins.
+2. The `bitr` function translates between ID types and reports the proportion of IDs that it fails to map.
+   Use it to translate the UniProt IDs of the tested proteins to Entrez IDs.
+   Which proteins fail to map?
+   What do their IDs have in common?
+3. How many of the significantly decreased proteins are affected?
+   How might losing these proteins change the enrichment results, and what could we do about it?
+
+<details><summary>Hint</summary>`bitr(limma_results_covid_control$UniprotID, fromType = "UNIPROT", toType = "ENTREZID", OrgDb = org.Hs.eg.db)` returns the IDs that mapped in its `UNIPROT` column.
+Use `%in%` to find the tested proteins that are missing from it.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: go-enrichment-tested-proteins
+head(as.data.frame(go_down)[, c("ONTOLOGY", "Description", "GeneRatio", "BgRatio")])
+
+length(sig_down)
+nrow(limma_results_covid_control)
+```
+
+The significantly decreased list has 38 proteins and we tested 342, but the denominators in the results are 33 and 174.
+Proteins that cannot be translated to a gene with GO annotation cannot contribute to either the protein list or the background, and `enrichGO` drops them without a message.
+
+```{r}
+#| label: go-enrichment-unmapped-proteins
+mapped_ids <- bitr(
+  limma_results_covid_control$UniprotID,
+  fromType = "UNIPROT",
+  toType = "ENTREZID",
+  OrgDb = org.Hs.eg.db
+)
+
+unmapped <- limma_results_covid_control %>%
+  filter(!UniprotID %in% mapped_ids$UNIPROT)
+
+# IDs that list several UniProt accessions
+table(multiple_accessions = grepl(";", unmapped$UniprotID))
+
+# Examples of single accessions that fail to map
+unmapped %>%
+  filter(!grepl(";", UniprotID)) %>%
+  dplyr::select(UniprotID, Genes) %>%
+  head(10)
+
+# Significantly decreased proteins that fail to map
+unmapped %>%
+  filter(UniprotID %in% sig_down) %>%
+  dplyr::select(UniprotID, Genes, logFC, adj.P.Val)
+```
+
+`bitr` warns that 48.25% of the IDs fail to map, which is 165 of the 342 tested proteins.
+All 95 IDs that list several UniProt accessions separated by `;` fail, because the whole string is not an accession in the annotation database.
+Of the 70 single accessions that fail, 66 have gene names beginning with `IG`, which are immunoglobulin chains.
+Four of the 38 significantly decreased proteins fail to map, each with several accessions in its ID.
+
+The enrichment is therefore tested on the proteins that could be mapped, not on everything we quantified.
+Any GO term that the lost proteins would have supported cannot be detected, and the background excludes them, so the p-values describe the mappable proteins only.
+Options include mapping each accession within a multiple-accession ID separately, which requires deciding how to credit the protein, or using annotations keyed directly to UniProt accessions.
+Whichever we choose, we should report how many proteins were lost.
+:::::
+:::
+
 ### Visualising significant GO terms
 
 ::: {.callout-discussion}

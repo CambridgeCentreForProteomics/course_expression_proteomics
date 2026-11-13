@@ -41,6 +41,31 @@ library("dplyr")
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Challenge: Which proteins were tested?
+##
+## enrichGO ran without telling us how many of our proteins it was able to use.
+## The GeneRatio and BgRatio columns of the results record the number of proteins
+## that were tested: the denominator of GeneRatio is the size of the protein list
+## and the denominator of BgRatio is the size of the background.
+##
+## 1. Convert go_down to a data frame and compare the denominators of GeneRatio
+##    and BgRatio with the number of proteins in sig_down and in the full set of
+##    tested proteins.
+## 2. The bitr function translates between ID types and reports the proportion of
+##    IDs that it fails to map. Use it to translate the UniProt IDs of the tested
+##    proteins to Entrez IDs. Which proteins fail to map? What do their IDs have
+##    in common?
+## 3. How many of the significantly decreased proteins are affected? How might
+##    losing these proteins change the enrichment results, and what could we do
+##    about it?
+##
+## Hint: bitr(limma_results_covid_control$UniprotID, fromType = "UNIPROT",
+## toType = "ENTREZID", OrgDb = org.Hs.eg.db) returns the IDs that mapped in its
+## UNIPROT column. Use %in% to find the tested proteins that are missing from it.
+## ---------------------------------------------------------------------------------------------------------
+
+
+## ---------------------------------------------------------------------------------------------------------
 ## Visualising significant GO terms
 ## ---------------------------------------------------------------------------------------------------------
 
