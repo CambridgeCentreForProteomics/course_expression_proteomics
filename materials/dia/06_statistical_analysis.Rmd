@@ -147,7 +147,7 @@ We fit the linear model to the replicated protein data using `lmFit`.
 This estimates the mean abundance of each group for every protein.
 
 ```{r}
-#| label: volcano-plot-mpxv
+#| label: fit-limma-model
 data <- assay(dia_qf[['norm_proteins_replicated']])
 
 limma_fit <- lmFit(data, limma_design)
@@ -217,7 +217,7 @@ knitr::include_graphics(here::here("materials/_shared/figs/phist_shapes.png"), e
 Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.
 
 ```{r}
-#| label: volcano-plot-covid
+#| label: f-test-results
 ## Format results
 limma_results_F <- topTable(
   fit = limma_fit_F,
@@ -273,7 +273,7 @@ We define the **contrasts** for all three comparisons.
 {{< include ../_shared/_callout_t_p_value.md >}}
 
 ```{r}
-#| label: multiple-testing-correction
+#| label: pairwise-contrasts-matrix
 ## Specify contrasts of interest
 contrasts_matrix <- makeContrasts(
   MPXV_control = MPXV - control,
