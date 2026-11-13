@@ -266,7 +266,7 @@ precursors_missing$nNAcols %>%
   as_tibble() %>%
   merge(data.frame(colData(dia_qf)), by.x = "name", by.y = "runCol") %>%
   ggplot(aes(x = name, y = pNA, group = group, fill = group)) +
-  geom_bar(stat = "identity") +
+  geom_col() +
   labs(x = "Sample", y = "Proportion missing values") +
   coord_flip() +
   scale_fill_brewer(palette = "Dark2") +

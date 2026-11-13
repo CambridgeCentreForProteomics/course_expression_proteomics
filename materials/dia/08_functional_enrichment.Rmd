@@ -67,6 +67,8 @@ go_down <- enrichGO(
   keyType = "UNIPROT", # protein ID encoding
   pvalueCutoff = 0.05,
   ont = "ALL", # can be CC, MF, BP, or ALL
+  minGSSize = 10, # smallest GO term (number of annotated proteins) to test
+  maxGSSize = 500, # largest GO term to test
   readable = TRUE
 )
 ```

@@ -279,7 +279,7 @@ data.frame(
 ) %>%
   merge(data.frame(colData(dia_qf)), by.x = "sample", by.y = "runCol") %>%
   ggplot(aes(x = sample, y = n_precursors, fill = group)) +
-  geom_bar(stat = "identity") +
+  geom_col() +
   labs(x = "Sample", y = "Number of precursors") +
   coord_flip() +
   theme_classic()
