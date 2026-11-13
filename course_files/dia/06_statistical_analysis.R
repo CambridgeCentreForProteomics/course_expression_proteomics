@@ -61,16 +61,21 @@ print(table(tokeep))
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Specifying contrasts
+## Fitting the linear model
 ## ---------------------------------------------------------------------------------------------------------
 
+
+
+## ---------------------------------------------------------------------------------------------------------
+## F-test for overall significance across groups
+## ---------------------------------------------------------------------------------------------------------
+
+## The F-test is applied to two contrasts: MPXV - control and Covid19 - control.
 
 ## Verify the contrasts matrix
 
 
-## ---------------------------------------------------------------------------------------------------------
-## Running the empirical Bayes-moderated test using limma
-## ---------------------------------------------------------------------------------------------------------
+## Apply the contrasts and moderate with eBayes (trend = TRUE, robust = TRUE)
 
 
 
@@ -83,11 +88,23 @@ print(table(tokeep))
 
 
 
+## coef = NULL returns the F-statistic for overall significance across all groups.
+
+
+## Challenge: Interpreting the F-test p-value distribution
+
+
 ## ---------------------------------------------------------------------------------------------------------
-## F-test for overall significance across groups
+## Pairwise contrasts: specifying contrasts and refitting
 ## ---------------------------------------------------------------------------------------------------------
 
-## coef = NULL returns the F-statistic for overall significance across all groups.
+## Define all three pairwise contrasts
+
+## Verify the contrasts matrix
+
+
+## Apply the contrasts and moderate with eBayes (trend = TRUE, robust = TRUE)
+
 
 
 ## ---------------------------------------------------------------------------------------------------------
