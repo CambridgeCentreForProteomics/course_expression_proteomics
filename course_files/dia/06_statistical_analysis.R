@@ -88,6 +88,24 @@ print(table(tokeep))
 
 
 
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Recognising a poorly behaved SA plot
+##
+## The SA plots shown in the lesson were drawn from the same protein-level data
+## as our model: our analysis, the same data after the lowest 10% of values
+## were removed and imputed with MinDet, and the same data after 10% of values
+## were removed at random and replaced by zero. There is nothing to run for this
+## exercise.
+##
+## 1. How does the trend line in each of the other two plots differ from the
+##    trend line in ours?
+## 2. Where do the red outlier proteins sit in each plot, and what do they tell
+##    us about those proteins?
+## 3. If you saw a plot like the second or third for your own data, what would
+##    you check first?
+## ---------------------------------------------------------------------------------------------------------
+
+
 ## coef = NULL returns the F-statistic for overall significance across all groups.
 
 
@@ -159,6 +177,30 @@ print(table(tokeep))
 # extract data for highlighting
 
 # plot
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Fold-change thresholds on a volcano plot
+##
+## A common way to call a protein differentially abundant is to require both a
+## significant adjusted p-value and a fold change of at least 2 (a log2 fold
+## change of +1 or -1).
+##
+## Using limma_results_all_contrasts, plot a volcano plot for the MPXV_Covid19
+## contrast only, with vertical dashed lines at a log2 fold change of -1 and +1.
+##
+## 1. How many proteins have adj.P.Val < 0.05 and lie outside the two lines?
+## 2. Are there significant proteins that lie inside the lines? Are there
+##    proteins outside the lines that are not significant?
+## 3. The x-axis shows a single estimate of the fold change for each protein,
+##    with no indication of its uncertainty. How confident can we be in the size
+##    of the fold change for a protein just outside a line, compared with one far
+##    outside it?
+##
+## Hint: Filter with filter(contrast == "MPXV_Covid19") and add
+## geom_vline(xintercept = c(-1, 1), linetype = "dashed") to the volcano plot
+## code above.
+## ---------------------------------------------------------------------------------------------------------
 
 
 ## ---------------------------------------------------------------------------------------------------------

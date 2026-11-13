@@ -212,6 +212,44 @@ plotSA(fit = limma_fit_F, cex = 0.5, xlab = "Average log2 abundance")
 knitr::include_graphics(here::here("materials/_shared/figs/phist_shapes.png"), error = FALSE)
 ```
 
+::: {.callout-exercise}
+#### Challenge: Recognising a poorly behaved SA plot
+
+{{< level 2 >}}
+
+The SA plots below were drawn from the same protein-level data as our model.
+The left panel is our analysis.
+In the other two panels, values were removed or replaced before the model was refitted with the same `eBayes(trend = TRUE, robust = TRUE)` settings.
+
+```{r}
+#| label: sa-plot-examples
+#| echo: false
+#| fig-cap: "SA plots for our analysis (left), after the lowest 10% of values were removed and imputed with `MinDet` (middle) and after 10% of values were removed at random and replaced by zero (right)."
+#| fig-align: "center"
+#| out-width: "100%"
+
+knitr::include_graphics(here::here("materials/_shared/figs/sa_plot_examples.png"), error = FALSE)
+```
+
+1. How does the trend line in each of the other two panels differ from the trend line in ours?
+2. Where do the red outlier proteins sit in each panel, and what do they tell us about those proteins?
+3. If you saw a plot like the middle or right panel for your own data, what would you check first?
+
+::::: {.callout-answer collapse="true"}
+Our trend line is close to flat, and the proteins scatter evenly around it across the whole abundance range.
+
+In the middle panel the trend line falls steeply at the lowest abundances, and the red outliers sit at the very left edge with a residual standard deviation much smaller than the other proteins.
+`MinDet` replaces the missing values in each sample with a single low value, so the imputed values in a protein are almost identical to each other and its variance is artificially small.
+
+In the right panel the whole cloud moves up to a residual standard deviation of around 2, and the proteins extend down to much lower average abundances than in the other panels.
+A zero on the log2 scale is far below any measured abundance, so each imputed zero adds a large artificial variance to its protein.
+The red outliers are proteins whose variance is far below the trend.
+
+In both cases the variance of many proteins reflects the imputation rather than the measurements.
+We would check how many values were imputed, whether they are concentrated in a few samples or proteins, and whether the imputed values are plausible for the abundance range of the data.
+:::::
+:::
+
 ### F-test results
 
 Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.
