@@ -30,7 +30,6 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 ```
 
 The processing and analysis of label-free quantitative proteomics data to discover differentially abundant proteins follows the same overall workflow presented in this course for our TMT use-case.

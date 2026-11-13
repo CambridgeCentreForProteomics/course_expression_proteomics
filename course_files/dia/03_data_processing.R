@@ -60,6 +60,18 @@ joined_rdata_names <- rowDataNames(dia_qf)[["precursors"]]
 setdiff(sample_level_rdata_names, joined_rdata_names)
 
 
+## Challenge: Comparing rowData before and after joining
+## (inspection only; run before the per-sample sets are removed)
+
+## 1. Rows and columns of the first per-sample set and of "precursors"
+
+
+
+## 2. Which of the four Q-value columns we filtered on remain in "precursors"?
+
+
+
+
 ## ---------------------------------------------------------------------------------------------------------
 ## Removing individual sample-level assays
 ## ---------------------------------------------------------------------------------------------------------

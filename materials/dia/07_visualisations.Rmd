@@ -9,17 +9,23 @@ editor_options:
 #### Learning Objectives
 
 - Know how to produce heatmaps of protein abundance data using `pheatmap`, including with correlation-based clustering
-- Understand how to define and use a helper function to repeatedly plot heatmaps for different protein subsets
+- Understand how each argument of `pheatmap` changes a heatmap, and how to plot and interpret a heatmap of any subset of proteins
 - Be able to produce a scatter plot comparing log fold changes across two contrasts to identify proteins with shared or specific responses
 :::
+
+```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
 
 ```{r}
 #| label: load-analysis-results
 #| include: false
 
-library("here")
 library("QFeatures")
-library("matrixStats")
 library("tidyr")
 library("dplyr")
 library("tibble")
@@ -28,7 +34,7 @@ library("ggrepel")
 library("pheatmap")
 library("RColorBrewer")
 
-load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
+load("preprocessed/lesson06.rda", verbose = TRUE)
 ```
 
 Having performed differential abundance analysis, we now want to visualise the results in ways that complement the volcano plots produced in the previous lesson.
@@ -47,23 +53,17 @@ In this lesson we produce heatmaps to display protein abundance patterns across 
 
 A heatmap provides a two-dimensional view of protein abundances across all samples simultaneously, and is commonly used alongside hierarchical clustering to reveal groups of proteins and samples with similar abundance patterns.
 
-### All replicated proteins
+### Building a heatmap
 
-We start by plotting a heatmap of all proteins that were retained after the replication filter in the statistical analysis.
-We rename the sample columns using the `runCol` column from the `colData` and add a column annotation bar to indicate group membership.
+We build a heatmap of all proteins that were retained after the replication filter in the statistical analysis, adding one feature at a time.
 
-The default Euclidean distance metric used for hierarchical clustering in `pheatmap` can be sensitive to the absolute scale of values.
-An alternative is to use 1 minus the Pearson correlation as a distance metric, which focuses on the shape of abundance profiles rather than their absolute values.
+#### The abundance matrix
 
-We could use `clustering_distance_rows = "correlation"` within `pheatmap`, but this does not handle missing values.
-Instead, we calculate the correlation-based distance manually using `cor` with `use = "pairwise.complete.obs"` to handle missing values appropriately.
-We also use Ward's minimum variance method (`clustering_method = 'ward.D2'`) for the hierarchical clustering, which tends to produce more compact, evenly-sized clusters than the default complete linkage.
-Using `scale = 'row'` standardises each row to mean=0 and sd=1 (Z-score), which allows us to focus on relative abundance patterns across samples for each protein.
+We extract the quantification matrix and rename the sample columns using the `runCol` column from the `colData`.
+We also prepare a data frame of sample annotations that records the group of each sample.
 
 ```{r}
-#| label: create-comprehensive-heatmap
-#| fig-height: 5
-#| fig-width: 8
+#| label: heatmap-abundance-matrix
 
 quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
 
@@ -77,6 +77,101 @@ sample_annotations <- colData(dia_qf) %>%
   select(group)
 
 head(sample_annotations)
+```
+
+#### Plotting the matrix
+
+We first plot the matrix as it is, with the clustering switched off.
+Each row is a protein, each column is a sample, and the colour shows the abundance.
+Grey cells are missing values.
+The rows and columns are in the order of the matrix.
+
+```{r}
+#| label: heatmap-unclustered
+#| fig-height: 4
+#| fig-width: 8
+
+pheatmap(
+  quant_mtx,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  show_rownames = FALSE
+)
+```
+
+The colours mostly reflect how abundant each protein is, so differences between samples are hard to see.
+
+#### Scaling each row
+
+Using `scale = 'row'` standardises each row to mean=0 and sd=1 (Z-score).
+This allows us to focus on the relative abundance of each protein across samples rather than on its absolute abundance.
+
+```{r}
+#| label: heatmap-row-scaled
+#| fig-height: 4
+#| fig-width: 8
+
+pheatmap(
+  quant_mtx,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  show_rownames = FALSE,
+  scale = 'row' # standardise each row to mean=0 and sd=1 (Z-score)
+)
+```
+
+#### Annotating the samples
+
+We add a column annotation bar to indicate the group of each sample.
+
+```{r}
+#| label: heatmap-annotated
+#| fig-height: 4
+#| fig-width: 8
+
+pheatmap(
+  quant_mtx,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  show_rownames = FALSE,
+  scale = 'row',
+  annotation_col = sample_annotations,
+  annotation_names_col = FALSE # hide annotation title
+)
+```
+
+#### Clustering rows and columns
+
+Hierarchical clustering orders the proteins and the samples so that those with similar abundance patterns are next to each other.
+`pheatmap` clusters both rows and columns by default, using Euclidean distance and complete linkage.
+
+```{r}
+#| label: heatmap-default-clustering
+#| fig-height: 4
+#| fig-width: 8
+
+pheatmap(
+  quant_mtx,
+  show_rownames = FALSE,
+  scale = 'row',
+  annotation_col = sample_annotations,
+  annotation_names_col = FALSE
+)
+```
+
+#### Correlation-based distance and Ward linkage
+
+Euclidean distance can be sensitive to the absolute scale of values.
+An alternative is to use 1 minus the Pearson correlation as a distance metric, which focuses on the shape of abundance profiles rather than their absolute values.
+
+We could use `clustering_distance_rows = "correlation"` within `pheatmap`, but this does not handle missing values.
+Instead, we calculate the correlation-based distance manually using `cor` with `use = "pairwise.complete.obs"` to handle missing values appropriately.
+We also use Ward's minimum variance method (`clustering_method = 'ward.D2'`) for the hierarchical clustering, which tends to produce more compact, evenly-sized clusters than the default complete linkage.
+
+```{r}
+#| label: heatmap-correlation-ward
+#| fig-height: 4
+#| fig-width: 8
 
 # Calculate correlation-based distance manually, handling NAs with pairwise complete obs
 dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
@@ -84,14 +179,35 @@ dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
 
 pheatmap(
   quant_mtx,
-  scale = 'row', # standardise each row to mean=0 and sd=1 (Z-score)
+  show_rownames = FALSE,
+  scale = 'row',
+  annotation_col = sample_annotations,
+  annotation_names_col = FALSE,
+  clustering_method = 'ward.D2', # Use Ward's method for hierarchical clustering
+  clustering_distance_rows = dist_rows,
+  clustering_distance_cols = dist_cols
+)
+```
+
+#### Colours and layout
+
+Finally, we use a diverging colour palette, which suits Z-scores centred on zero, and adjust the size of the dendrograms and cells.
+
+```{r}
+#| label: heatmap-final
+#| fig-height: 5
+#| fig-width: 8
+
+pheatmap(
+  quant_mtx,
+  scale = 'row',
   show_rownames = FALSE,
   annotation_col = sample_annotations,
-  clustering_method = 'ward.D2', # Use Ward's method for hierarchical clustering
+  clustering_method = 'ward.D2',
   clustering_distance_rows = dist_rows,
   clustering_distance_cols = dist_cols,
   color = colorRampPalette(brewer.pal(n = 7, name = "RdBu"))(100), # Use a diverging color palette
-  annotation_names_col = FALSE, # Hide annotation title
+  annotation_names_col = FALSE,
   treeheight_row = 100, # default is 50 — increase to give row dendrogram more space
   treeheight_col = 100, # default is 50 — increase to give col dendrogram more space
   cellwidth = 10, # fix cell width in points
@@ -99,82 +215,33 @@ pheatmap(
 )
 ```
 
-Since we will be making multiple heatmaps below with different subsets of proteins, it is useful to define a helper function rather than repeating the same code each time.
-This keeps each subsequent heatmap call concise and ensures all plots are produced in the same way.
-
-The function below takes a vector of UniProt IDs, extracts the corresponding rows from the quantification matrix, applies the correlation-based distance metrics, and calls `pheatmap` with consistent formatting.
-
-```{r}
-#| label: volcano-plot-customised
-plot_heatmap_for_uids <- function(uids) {
-  quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]][uids, ])
-  colnames(quant_mtx) <- dia_qf$runCol
-
-  # Use concatenation of UniprotID and Gene name as row label
-  rownames(quant_mtx) <- sprintf(
-    '%s (%s)',
-    rowData(dia_qf[["norm_proteins_replicated"]][uids, ])$Genes,
-    rownames(quant_mtx)
-  )
-  # Calculate correlation-based distance manually, handling NAs with pairwise complete obs
-  dist_cols <- as.dist(1 - cor(quant_mtx, use = "pairwise.complete.obs"))
-  dist_rows <- as.dist(1 - cor(t(quant_mtx), use = "pairwise.complete.obs"))
-
-  pheatmap(
-    quant_mtx,
-    scale = 'row',
-    clustering_method = 'ward.D2',
-    annotation_names_col = FALSE,
-    color = colorRampPalette(brewer.pal(n = 7, name = "RdBu"))(100),
-    annotation_col = sample_annotations,
-    clustering_distance_rows = dist_rows,
-    clustering_distance_cols = dist_cols,
-    fontsize = 8
-  )
-}
-```
-
-### Heatmap for the most variable proteins
-
-Plotting all proteins can make it difficult to see structure.
-A common approach is to restrict the heatmap to the most variable proteins, which are more likely to reveal biologically meaningful patterns.
-
-```{r}
-#| label: density-plot-fold-changes
-#| fig-width: 20
-#| fig-height: 10
-
-var <- rowVars(assay(dia_qf[["norm_proteins_replicated"]]), na.rm = TRUE)
-
-most_variable <- sort(var, decreasing = TRUE)[1:50] %>% names()
-
-plot_heatmap_for_uids(most_variable)
-```
-
 ::: {.callout-exercise}
-#### Challenge: Heatmaps of significant proteins
+#### Challenge: Heatmaps of protein subsets
 
 {{< level 2 >}}
 
-We have already defined the `plot_heatmap_for_uids` helper function and have F-test and pairwise contrast results available.
-Use these to produce heatmaps for:
+Plotting every protein can make it difficult to see structure.
+Choose a subset of the replicated proteins and plot a heatmap of it, using the code above as a template.
+You could use, for example:
 
-1. Proteins with a significant overall difference across groups according to the F-test (`adj.P.Val < 0.05`)
-2. Proteins significant (`adj.P.Val < 0.05`) in at least one pairwise contrast
+- Proteins with a significant overall difference across groups according to the F-test (`adj.P.Val < 0.05`)
+- Proteins significant (`adj.P.Val < 0.05`) in at least one pairwise contrast
+- Proteins significant in one contrast only
 
-For each heatmap, consider:
+For your heatmap, consider:
 
 - How do the proteins and samples cluster?
 - Do the sample groups separate cleanly?
-- How does restricting to significant proteins change the heatmap compared to the most variable proteins plotted above?
+- How does the choice of subset change what the heatmap can show?
 
-<details><summary>Hint</summary>Filter `limma_results_F` and `limma_results_all_contrasts` to get the UniProt IDs of significant proteins, then pass these to `plot_heatmap_for_uids`.</details>
+<details><summary>Hint</summary>The row names of `quant_mtx` are UniProt IDs, so you can select rows with a vector of IDs taken from `limma_results_F` or `limma_results_all_contrasts`.
+Calculate the row and column distances again for the subset before passing them to `pheatmap`.</details>
 
 ::::: {.callout-answer collapse="true"}
-### Heatmap of proteins significant by F-test
+This example uses the proteins with a significant overall difference across groups according to the F-test.
 
 ```{r}
-#| label: ma-plot-mpxv-covid
+#| label: heatmap-f-test-proteins
 #| fig-height: 10
 #| fig-width: 10
 
@@ -182,23 +249,36 @@ sig_prot_F <- limma_results_F %>%
   filter(adj.P.Val < 0.05) %>%
   pull(UniprotID)
 
-plot_heatmap_for_uids(sig_prot_F)
+subset_mtx <- quant_mtx[sig_prot_F, ]
+
+# Use concatenation of gene name and UniprotID as row label
+rownames(subset_mtx) <- sprintf(
+  '%s (%s)',
+  rowData(dia_qf[["norm_proteins_replicated"]])[sig_prot_F, "Genes"],
+  sig_prot_F
+)
+
+dist_cols_subset <- as.dist(1 - cor(subset_mtx, use = "pairwise.complete.obs"))
+dist_rows_subset <- as.dist(1 - cor(t(subset_mtx), use = "pairwise.complete.obs"))
+
+pheatmap(
+  subset_mtx,
+  scale = 'row',
+  annotation_col = sample_annotations,
+  annotation_names_col = FALSE,
+  clustering_method = 'ward.D2',
+  clustering_distance_rows = dist_rows_subset,
+  clustering_distance_cols = dist_cols_subset,
+  color = colorRampPalette(brewer.pal(n = 7, name = "RdBu"))(100),
+  fontsize = 8
+)
 ```
 
-### Heatmap of proteins significant in any pairwise contrast
+The control samples cluster together and apart from most of the infected samples, while the MPXV and COVID-19 samples are less clearly separated from each other.
 
-```{r}
-#| label: ma-plot-mpxv-ctrl
-#| fig-height: 10
-#| fig-width: 10
-
-sig_prot_contrasts <- limma_results_all_contrasts %>%
-  filter(adj.P.Val < 0.05) %>%
-  pull(UniprotID) %>%
-  unique()
-
-plot_heatmap_for_uids(sig_prot_contrasts)
-```
+The proteins were selected because they differ between the groups, so the groups separate more clearly than they would for a random set of proteins.
+A heatmap of the significant proteins therefore illustrates the result of the test rather than providing independent evidence for it.
+A heatmap of all proteins shows the dominant structure in the whole data set, including patterns unrelated to the groups.
 :::::
 :::
 
@@ -228,6 +308,16 @@ compare_limma_results %>%
     y = "Log Fold Change (COVID-19 vs Control)"
   )
 ```
+
+::: {.callout-discussion}
+#### Discussion
+
+The plot shows one point per protein and nothing else.
+
+- What other information would help us interpret it?
+- Which of that information do we already have in `compare_limma_results` or in the earlier analysis, and which would we need to calculate?
+- How could each addition be shown: a colour, a point size, a label, a reference line?
+:::
 
 We'd like to highlight the significance status of each protein across the two contrasts.
 We can create a `sig` column that categorises each protein by its significance status across the two contrasts, distinguishing proteins significant in both, in only one, or in neither.
@@ -320,10 +410,11 @@ print(p2)
 ::: {.callout-tip}
 #### Key Points
 
-- Heatmaps are a useful way to visualise protein abundance patterns across all samples simultaneously; restricting to significant or highly variable proteins makes them easier to interpret
+- Heatmaps are a useful way to visualise protein abundance patterns across all samples simultaneously; restricting to a subset of proteins makes them easier to interpret
 - The default Euclidean distance metric in `pheatmap` can be replaced with a correlation-based distance to focus clustering on the shape of abundance profiles; this requires computing the distance matrix manually when missing values are present
 - Ward's minimum variance linkage (`clustering_method = 'ward.D2'`) tends to produce more compact, evenly-sized clusters than the default complete linkage
-- Defining a helper function for repeated plotting tasks (such as heatmaps for different protein subsets) reduces code duplication and makes the analysis easier to extend
+- Building a heatmap one argument at a time (row scaling, sample annotation, clustering, colours) shows what each contributes
+- The choice of protein subset determines what a heatmap can show; a heatmap of proteins selected for differing between groups will separate those groups by construction
 - Scatter plots of log fold changes from two contrasts can reveal proteins with shared or condition-specific responses; reshaping results to wide format with `pivot_wider` is a convenient way to align values from different contrasts for comparison
 :::
 

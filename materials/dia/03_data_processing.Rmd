@@ -16,17 +16,24 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
+
+```{r}
 #| label: load-dia-data
 #| include: false
 
-library("here")
 library("QFeatures")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson02.rda"), verbose = TRUE)
+load("preprocessed/lesson02.rda", verbose = TRUE)
 ```
 
 Now that we have our precursor-level data stored in a `QFeatures` object, the next step is to carry out data cleaning --- filtering to retain only high-confidence identifications and removing precursors with excessive missing values across samples.
@@ -122,6 +129,52 @@ joined_rdata_names <- rowDataNames(dia_qf)[["precursors"]]
 # Columns present in sample-level sets but dropped from the combined set
 setdiff(sample_level_rdata_names, joined_rdata_names)
 ```
+
+::: {.callout-exercise}
+#### Challenge: Comparing `rowData` before and after joining
+
+{{< level 2 >}}
+
+Compare the `rowData` of the first per-sample set with the `rowData` of the `"precursors"` set.
+This code only inspects the object, so it does not change `dia_qf`.
+Run it before the per-sample sets are removed in the next section.
+
+1. How do the numbers of rows and columns differ between the two sets?
+2. We filtered on `Q.Value`, `PG.Q.Value`, `Lib.Q.Value` and `Lib.PG.Q.Value`. Which of these four columns are still present in `"precursors"`?
+
+Based on your results:
+
+- Why does `"precursors"` have a different number of rows from a single per-sample set?
+- Why are some of the four Q-value columns kept and others dropped?
+- What does this mean for the order in which we filter and join?
+
+<details><summary>Hint</summary>`rowData()` returns a `DataFrame` for a single set, so `dim()` gives its rows and columns.
+`rowDataNames(dia_qf)[["precursors"]]` lists the column names of the combined set, and `%in%` tests whether a name is in that list.</details>
+
+::::: {.callout-answer collapse="true"}
+**Task 1**
+
+```{r}
+#| label: compare-rowdata-dims
+dim(rowData(dia_qf[[1]]))
+dim(rowData(dia_qf[["precursors"]]))
+```
+
+**Task 2**
+
+```{r}
+#| label: compare-rowdata-qvalues
+filter_cols <- c("Q.Value", "PG.Q.Value", "Lib.Q.Value", "Lib.PG.Q.Value")
+filter_cols %in% rowDataNames(dia_qf)[["precursors"]]
+```
+
+The `"precursors"` set contains every precursor detected in at least one sample, so it has more rows than any single per-sample set.
+It has fewer columns because `joinAssays` keeps a `rowData` column only if every set has it and its values agree for the precursors the sets share.
+`Q.Value` and `PG.Q.Value` take different values in different runs, so they are dropped.
+`Lib.Q.Value` and `Lib.PG.Q.Value` have the same value in every run for a given precursor, so they are kept.
+Filters on run-level Q-values can therefore only be applied to the per-sample sets, before joining.
+:::::
+:::
 
 ## Removing individual sample-level assays
 
@@ -266,7 +319,7 @@ precursors_missing$nNAcols %>%
   as_tibble() %>%
   merge(data.frame(colData(dia_qf)), by.x = "name", by.y = "runCol") %>%
   ggplot(aes(x = name, y = pNA, group = group, fill = group)) +
-  geom_bar(stat = "identity") +
+  geom_col() +
   labs(x = "Sample", y = "Proportion missing values") +
   coord_flip() +
   scale_fill_brewer(palette = "Dark2") +
@@ -317,7 +370,7 @@ dia_qf <- dia_qf %>%
 #| label: create-final-dataset
 #| include: false
 
-save(dia_qf, file = here("course_files/dia/preprocessed/lesson03.rda"))
+save(dia_qf, file = "preprocessed/lesson03.rda")
 ```
 
 ::: {.callout-tip}

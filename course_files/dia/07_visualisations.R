@@ -8,7 +8,6 @@
 ## ---------------------------------------------------------------------------------------------------------
 
 library("QFeatures")
-library("matrixStats")
 library("tidyr")
 library("dplyr")
 library("tibble")
@@ -22,48 +21,52 @@ library("pheatmap")
 ## ---------------------------------------------------------------------------------------------------------
 
 ## ---------------------------------------------------------------------------------------------------------
-## Heatmap of all replicated proteins
+## Building a heatmap of all replicated proteins
 ## ---------------------------------------------------------------------------------------------------------
 
-## Extract quantification matrix and rename columns with sample shortnames.
-## We use correlation-based distance (1 - Pearson r) with pairwise complete
-## observations to handle missing values, and Ward's linkage for clustering.
+## Extract the quantification matrix and rename columns with sample shortnames.
+## Prepare a data frame of sample annotations recording the group of each sample.
 
 
-## Correlation-based distances (handles NAs via pairwise.complete.obs)
+## Plot the matrix with clustering switched off
+
+
+## Scale each row (Z-score)
+
+
+## Annotate the samples by group
+
+
+## Cluster rows and columns with the pheatmap defaults
+
+
+## Correlation-based distance (1 - Pearson r, pairwise complete observations
+## to handle missing values) and Ward's linkage
+
+
+## Diverging colour palette and layout
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Helper function for repeated heatmaps
-## ---------------------------------------------------------------------------------------------------------
-
-## Rather than repeating the same code for each protein subset, we define a
-## function that takes a vector of UniProt IDs and plots the heatmap.
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Heatmap for the 50 most variable proteins
-## ---------------------------------------------------------------------------------------------------------
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Challenge: Heatmaps of significant proteins
+## Challenge: Heatmaps of protein subsets
 ##
-## Use plot_heatmap_for_uids (defined above) and the F-test and pairwise
-## contrast results to produce heatmaps for:
+## Choose a subset of the replicated proteins and plot a heatmap of it, using
+## the code above as a template. For example:
 ##
-## 1. Proteins with a significant overall difference across groups according
-##    to the F-test (adj.P.Val < 0.05)
-## 2. Proteins significant (adj.P.Val < 0.05) in at least one pairwise contrast
+## - Proteins with a significant overall difference across groups according
+##   to the F-test (adj.P.Val < 0.05)
+## - Proteins significant (adj.P.Val < 0.05) in at least one pairwise contrast
+## - Proteins significant in one contrast only
 ##
-## For each heatmap consider:
+## For your heatmap consider:
 ## - How do the proteins and samples cluster?
 ## - Do the sample groups separate cleanly?
-## - How does restricting to significant proteins change the heatmap compared
-##   to the most variable proteins plotted above?
+## - How does the choice of subset change what the heatmap can show?
 ##
-## Hint: Filter limma_results_F and limma_results_all_contrasts to get UniProt
-## IDs of significant proteins, then pass these to plot_heatmap_for_uids.
+## Hint: The row names of quant_mtx are UniProt IDs, so you can select rows with
+## a vector of IDs taken from limma_results_F or limma_results_all_contrasts.
+## Calculate the row and column distances again for the subset before passing
+## them to pheatmap.
 ## ---------------------------------------------------------------------------------------------------------
 
 
@@ -79,6 +82,14 @@ library("pheatmap")
 
 
 ## Initial scatter plot of logFC values across two contrasts
+
+
+## Discussion: the plot shows one point per protein and nothing else.
+## - What other information would help us interpret it?
+## - Which of that information do we already have in compare_limma_results or in
+##   the earlier analysis, and which would we need to calculate?
+## - How could each addition be shown: a colour, a point size, a label, a
+##   reference line?
 
 
 ## Categorise each protein by significance status across the two contrasts
