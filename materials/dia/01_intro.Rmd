@@ -35,33 +35,44 @@ DIA workflows designed for comprehensive coverage can quantify proteins across a
 ## DIA-NN: the identification and quantification software
 
 The raw DIA mass spectrometry data was processed using [DIA-NN](https://github.com/vdemichev/DiaNN), a freely available neural-network-based software tool for DIA data analysis.
-DIA-NN performs spectral library searching and quantification, outputting a report file (in `.parquet` format) containing precursor- and protein-level identifications and quantities for each sample.DIA-NN can use spectral libraries provided in the input or create in-silico spectral libraries from all theoretical peptides present in protein sequences in the provided FASTA file.
+DIA-NN performs spectral library searching and quantification, outputting a report file (in `.parquet` format) containing precursor- and protein-level identifications and quantities for each sample.
+DIA-NN can use spectral libraries provided in the input or create in-silico spectral libraries from all theoretical peptides present in protein sequences in the provided FASTA file.
 In both cases, DIA-NN can be instructed to use the raw data from an experiment to refine expected retention times and ion mobility information present in the empirical spectral library provided or the in-silico generated library.
 
-Since precursors are identified in quantitative proteomics experiments by comparing the mass spectra acquired during an experiment and an expected spectra in a spectral library, statistical control of false matches between these acquried and expected values is critical.
+Since precursors are identified in quantitative proteomics experiments by comparing the mass spectra acquired during an experiment and an expected spectra in a spectral library, statistical control of false matches between these acquired and expected values is critical.
 This is done by estimating a "false discovery rate".
 FDR is reported as q-values which are computed per sample and per experimental dataset at the precursor as well as the protein group levels.
 Applying a q-value filter of ≤ 0.01 indicates that amongst all precursors or protein groups that will be retained after filtering at this threshold of 0.01, 1% are expected to be incorrect/false identifications.
 In large quantitative proteomics experiments, FDR is usually controlled at both the sample and dataset level.
-DIA-NN reports contain the following q-value columns :
 
-- **Q.Value** --- for run-level precursor FDR control This tells you how confident DIA-NN is that a specific precursor was correctly identified in a particular LC-MS sample injection (a "run").
+::: {.callout-note}
+#### DIA-NN q-value columns
 
-- **PG.Q.Value** --- run-level protein group FDR This tells you how confident DIA-NN is that a protein group was correctly identified in a particular run.
+DIA-NN reports contain the following q-value columns.
 
--**Global.Q.Value** --- experiment-level precursor confidence / FDR.
-This described the confidence DIA-NN has that a precursor was correctly identified across the whole experiment (all files that were processed together in DIA-NN), rather than in just one run.
+**Run-level FDR**
 
--**Global.PQ.Value** --- experiment-level precursor FDR This represents the confidence DIA-NN has that a protein group was correctly identified across the whole experiment.
+- **Q.Value** --- run-level precursor FDR.
+  How confident DIA-NN is that a specific precursor was correctly identified in a particular LC-MS sample injection (a "run").
+- **PG.Q.Value** --- run-level protein group FDR.
+  How confident DIA-NN is that a protein group was correctly identified in a particular run.
 
-When DIA-NN creates a spectral library, whether an in-silico theoretical library, or a refined empirical library from the raw data to be able to apply the "match between run (MBR)" setting that improves data completeness, DIA-NN outputs an FDR score for how confident it is that the precursor, protein or protein group was correctly assigned in the library.These FDR scores are output as columns called "Lib.Q.Value"and "Lib.PG.Q.Value".
-A value of ≤ 0.01 in this case indicates that if filtering at a threshold of Lib.Q.value ≤ 0.01 or Lib.PG.Q.Value ≤ 0.01, 1% of the library entries are expected to be incorrect at the precursor and protein group levels, respectively.
+**Experiment-level FDR**
 
+- **Global.Q.Value** --- experiment-level precursor FDR.
+  How confident DIA-NN is that a precursor was correctly identified across the whole experiment (all files that were processed together in DIA-NN), rather than in just one run.
+- **Global.PG.Q.Value** --- experiment-level protein group FDR.
+  How confident DIA-NN is that a protein group was correctly identified across the whole experiment.
+
+**Library-level FDR**
+
+When DIA-NN creates a spectral library, whether an in-silico theoretical library, or a refined empirical library from the raw data to be able to apply the "match between run (MBR)" setting that improves data completeness, DIA-NN outputs an FDR score for how confident it is that the precursor, protein or protein group was correctly assigned in the library.
+A value of ≤ 0.01 means that if filtering at a threshold of `Lib.Q.Value` ≤ 0.01 or `Lib.PG.Q.Value` ≤ 0.01, 1% of the library entries are expected to be incorrect at the precursor and protein group levels, respectively.
 These filters are especially important when MBR is switched on for DIA-NN data processing.
 
-- **Lib.Q.Value** --- library level precursor FDR.
-
+- **Lib.Q.Value** --- library-level precursor FDR.
 - **Lib.PG.Q.Value** --- library-level protein group FDR.
+:::
 
 We will use these values to filter our data to high-confidence identifications.
 
