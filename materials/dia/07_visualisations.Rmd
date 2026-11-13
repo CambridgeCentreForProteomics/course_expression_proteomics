@@ -14,10 +14,17 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
+
+```{r}
 #| label: load-analysis-results
 #| include: false
 
-library("here")
 library("QFeatures")
 library("matrixStats")
 library("tidyr")
@@ -28,7 +35,7 @@ library("ggrepel")
 library("pheatmap")
 library("RColorBrewer")
 
-load(here("course_files/dia/preprocessed/lesson06.rda"), verbose = TRUE)
+load("preprocessed/lesson06.rda", verbose = TRUE)
 ```
 
 Having performed differential abundance analysis, we now want to visualise the results in ways that complement the volcano plots produced in the previous lesson.

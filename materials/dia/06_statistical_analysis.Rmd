@@ -16,10 +16,17 @@ editor_options:
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
+
+```{r}
 #| label: prepare-limma-design
 #| include: false
 
-library("here")
 library("QFeatures")
 library("limma")
 library("tidyr")
@@ -29,7 +36,7 @@ library("ggplot2")
 library("ggrepel")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential abundance analysis
@@ -193,7 +200,7 @@ plotSA(fit = limma_fit_contrasts, cex = 0.5, xlab = "Average log2 abundance")
 #| fig-align: "center"
 #| out-width: "100%"
 
-knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+knitr::include_graphics(here::here("materials/_shared/figs/phist_shapes.png"), error = FALSE)
 ```
 
 ## F-test for overall significance across groups
@@ -505,7 +512,7 @@ save(
   dia_qf,
   limma_results_F,
   limma_results_all_contrasts,
-  file = here("course_files/dia/preprocessed/lesson06.rda")
+  file = "preprocessed/lesson06.rda"
 )
 ```
 
