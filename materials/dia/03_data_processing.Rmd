@@ -130,6 +130,52 @@ joined_rdata_names <- rowDataNames(dia_qf)[["precursors"]]
 setdiff(sample_level_rdata_names, joined_rdata_names)
 ```
 
+::: {.callout-exercise}
+#### Challenge: Comparing `rowData` before and after joining
+
+{{< level 2 >}}
+
+Compare the `rowData` of the first per-sample set with the `rowData` of the `"precursors"` set.
+This code only inspects the object, so it does not change `dia_qf`.
+Run it before the per-sample sets are removed in the next section.
+
+1. How do the numbers of rows and columns differ between the two sets?
+2. We filtered on `Q.Value`, `PG.Q.Value`, `Lib.Q.Value` and `Lib.PG.Q.Value`. Which of these four columns are still present in `"precursors"`?
+
+Based on your results:
+
+- Why does `"precursors"` have a different number of rows from a single per-sample set?
+- Why are some of the four Q-value columns kept and others dropped?
+- What does this mean for the order in which we filter and join?
+
+<details><summary>Hint</summary>`rowData()` returns a `DataFrame` for a single set, so `dim()` gives its rows and columns.
+`rowDataNames(dia_qf)[["precursors"]]` lists the column names of the combined set, and `%in%` tests whether a name is in that list.</details>
+
+::::: {.callout-answer collapse="true"}
+**Task 1**
+
+```{r}
+#| label: compare-rowdata-dims
+dim(rowData(dia_qf[[1]]))
+dim(rowData(dia_qf[["precursors"]]))
+```
+
+**Task 2**
+
+```{r}
+#| label: compare-rowdata-qvalues
+filter_cols <- c("Q.Value", "PG.Q.Value", "Lib.Q.Value", "Lib.PG.Q.Value")
+filter_cols %in% rowDataNames(dia_qf)[["precursors"]]
+```
+
+The `"precursors"` set contains every precursor detected in at least one sample, so it has more rows than any single per-sample set.
+It has fewer columns because `joinAssays` keeps a `rowData` column only if every set has it and its values agree for the precursors the sets share.
+`Q.Value` and `PG.Q.Value` take different values in different runs, so they are dropped.
+`Lib.Q.Value` and `Lib.PG.Q.Value` have the same value in every run for a given precursor, so they are kept.
+Filters on run-level Q-values can therefore only be applied to the per-sample sets, before joining.
+:::::
+:::
+
 ## Removing individual sample-level assays
 
 Now that the per-sample data has been joined into the `"precursors"` set, we no longer need to keep the individual per-sample `SummarizedExperiment` objects.
