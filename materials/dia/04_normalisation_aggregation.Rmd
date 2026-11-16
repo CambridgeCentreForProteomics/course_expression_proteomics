@@ -86,6 +86,9 @@ For DIA data with missing values, we use the `robustSummary` method (@Sticker202
 This modelling-based approach can handle missing values without imputation, as it only considers finite data.
 The only requirement is that a precursor must be quantified in at least two samples.
 
+We aggregate on the `Protein.Group` column, which holds the protein group DIA-NN inferred for each precursor.
+`Protein.Ids` lists every protein a precursor matches before inference, so aggregating on it would split one inferred group across several features that carry the same `Genes` and `Protein.Names` annotation, since those columns describe the protein group.
+
 ```{r}
 #| label: qfeatures-aggregate-precursors-to-proteins
 #| message: false
@@ -93,7 +96,7 @@ The only requirement is that a precursor must be quantified in at least two samp
 dia_qf <- aggregateFeatures(
   dia_qf,
   i = "precursors_filtered_missing_log",
-  fcol = "Protein.Ids",
+  fcol = "Protein.Group",
   name = "proteins",
   fun = MsCoreUtils::robustSummary,
   maxit = 10000
