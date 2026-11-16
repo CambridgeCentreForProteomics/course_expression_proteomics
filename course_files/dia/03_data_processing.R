@@ -23,7 +23,7 @@ library("patchwork")
 ## Filtering by Q-value
 ## ---------------------------------------------------------------------------------------------------------
 
-## DIA-NN Q-value columns represent the local FDR for each identification.
+## Filtering on DIA-NN Q-values at <= 0.01 controls the FDR at 1% among the identifications retained.
 ## We apply a 1% FDR threshold (Q-value <= 0.01) to all four columns.
 ## Omitting the i argument applies the filter to all per-sample sets simultaneously.
 

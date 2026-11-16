@@ -316,7 +316,7 @@ To find out which groups differ and in which direction, we extract the moderated
 
 {{< include ../_shared/_callout_t_p_value.md >}}
 
-We start by extracting results for a single contrast of particular biological interest: MPXV versus control.
+We start by extracting results for a single contrast, MPXV versus control.
 We use `topTable` with `coef = "MPXV_control"` to get the results for this specific comparison.
 We also merge in gene name annotations from the `rowData`.
 
@@ -475,6 +475,9 @@ Fortunately, BH remains valid under this kind of positive dependence (formally c
 limma_results_all_contrasts <- limma_results_all_contrasts %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
 ```
+
+This overwrites the `adj.P.Val` column, which `topTable` had adjusted within each contrast, with values adjusted across all contrasts together.
+The number of significant MPXV vs control proteins below can therefore differ from the number in the MPXV vs control table above.
 
 How many significant changes in abundance are there in each contrast?
 

@@ -44,7 +44,7 @@ load("preprocessed/lesson06.rda", verbose = TRUE)
 Having identified proteins with significantly different abundances between groups, we now aim to understand the biological processes and pathways these proteins are associated with.
 We use **Gene Ontology (GO) over-representation analysis (ORA)**, which tests whether a selected list of proteins (e.g., those significantly decreased in COVID-19 vs Control) is enriched for particular GO terms relative to a background set of all quantified proteins.
 
-We focus our analysis on the COVID-19 vs Control contrast, as this is the comparison of primary biological interest.
+We use the COVID-19 vs Control contrast as the example; the same steps apply to either of the other two contrasts.
 
 ```{r}
 #| label: prepare-gene-list

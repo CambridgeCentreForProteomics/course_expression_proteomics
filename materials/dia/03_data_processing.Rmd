@@ -52,18 +52,14 @@ Before reading on, consider the following:
 - What impact could this filtering have on the downstream analysis and results?
 :::
 
-DIA-NN assigns a Q-value to each precursor and protein group identification, representing the local false discovery rate (FDR) at that score threshold --- i.e., the expected proportion of identifications at that level that are incorrect.
-Filtering by Q-value ensures we retain only high-confidence identifications before proceeding to downstream analysis.
+DIA-NN assigns a Q-value to each precursor and protein group identification.
+Keeping the identifications with a Q-value at or below a threshold controls the false discovery rate (FDR) among everything retained: at 0.01, we expect 1% of the retained identifications to be incorrect.
+The Q-value columns are described in the DIA-NN Q-value callout in lesson 01.
 
-DIA-NN outputs several Q-value columns:
-
-- **Q.Value** --- run-level precursor Q-value (FDR within a single run)
-- **PG.Q.Value** --- run-level protein group Q-value
-- **Lib.Q.Value** --- library-level precursor Q-value (based on the spectral library used in matching)
-- **Lib.PG.Q.Value** --- library-level protein group Q-value
-
-Since our data was processed with match-between-runs (MBR) enabled, we additionally filter on the library-level Q-values (`Lib.Q.Value` and `Lib.PG.Q.Value`).
-When MBR is used, DIA-NN rescores identifications across runs using an empirical library built in a first pass; the library-level Q-values reflect the confidence of those cross-run matches and are therefore the most stringent and appropriate filter for MBR data.
+Our data was processed with match-between-runs (MBR) enabled.
+DIA-NN then makes two passes over the data: the first builds an empirical spectral library from the runs, and the second reanalyses every run against that library.
+The library-level Q-values (`Lib.Q.Value`, `Lib.PG.Q.Value`) are the global Q-values from the first pass, calculated against the full library.
+They carry the experiment-wide confidence that `Global.Q.Value` and `Global.PG.Q.Value` carry in an analysis without MBR, so we filter on them together with the run-level Q-values (`Q.Value`, `PG.Q.Value`).
 We apply a standard 1% FDR threshold (Q-value ≤ 0.01) to all four columns.
 
 {{< include ../_shared/_filterFeatures.md >}}
@@ -232,7 +228,7 @@ We now remove precursors with a contaminant match from our data.
 {{< include ../_shared/_copy_assay_rationale.md >}}
 
 We create a copy of the `"precursors"` set called `"precursors_no_cont"`.
-After filtering, this set will contain only precursors do not originate from contaminants.
+After filtering, this set will contain only precursors that do not originate from contaminants.
 We use `plot` to visualise the assay structure before and after adding the link.
 
 ```{r}
@@ -250,8 +246,8 @@ plot(dia_qf)
 ```
 
 We then use `filterFeatures` to retain only precursors whose `Protein.Ids` field contains no `Cont_` entry.
-We specifying the `i` argument to apply the filter only to the `"precursors_no_cont"` set.
-This retains the original `"precursors"` assay with all precursors for reference, while the new set contains only those precursors that pass the missing value threshold.
+We specify the `i` argument to apply the filter only to the `"precursors_no_cont"` set.
+This retains the original `"precursors"` assay with all precursors for reference, while the new set contains only precursors from non-contaminant proteins.
 
 ```{r}
 #| label: examine-aggregation-sums
@@ -376,8 +372,8 @@ save(dia_qf, file = "preprocessed/lesson03.rda")
 ::: {.callout-tip}
 #### Key Points
 
-- DIA-NN Q-value columns (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`, `Lib.PG.Q.Value`) represent the local FDR for each identification; filtering at ≤ 0.01 retains only identifications at 1% FDR
-- When match-between-runs is enabled, library-level Q-values (`Lib.Q.Value`, `Lib.PG.Q.Value`) are the most appropriate filter as they reflect the confidence of cross-run matches
+- Filtering DIA-NN Q-value columns (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`, `Lib.PG.Q.Value`) at ≤ 0.01 controls the FDR at 1% among the identifications retained
+- When match-between-runs is enabled, the library-level Q-values (`Lib.Q.Value`, `Lib.PG.Q.Value`) apply to the empirical library DIA-NN builds in its first pass, and we filter on them alongside the run-level Q-values
 - `filterFeatures` applies row-level filters based on `rowData` variables, and can be applied to the whole `QFeatures` object or to specific sets
 - Contaminant proteins (e.g., keratins, trypsin, BSA) should be removed before downstream analysis; including a curated contaminant database in the search and filtering on a `Cont_` prefix in `Protein.Ids` is a straightforward way to do this
 - `joinAssays` combines per-sample `SummarizedExperiment` objects into a single combined set, with missing values (`NA`) where a precursor was not detected in a given sample

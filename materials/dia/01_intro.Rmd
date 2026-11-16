@@ -68,7 +68,9 @@ DIA-NN reports contain the following q-value columns.
 
 When DIA-NN creates a spectral library, whether an in-silico theoretical library, or a refined empirical library from the raw data to be able to apply the "match between run (MBR)" setting that improves data completeness, DIA-NN outputs an FDR score for how confident it is that the precursor, protein or protein group was correctly assigned in the library.
 A value of ≤ 0.01 means that if filtering at a threshold of `Lib.Q.Value` ≤ 0.01 or `Lib.PG.Q.Value` ≤ 0.01, 1% of the library entries are expected to be incorrect at the precursor and protein group levels, respectively.
-These filters are especially important when MBR is switched on for DIA-NN data processing.
+With MBR, DIA-NN makes two passes over the data: the first builds an empirical library from the runs and the second reanalyses every run against it.
+The library-level Q-values are then the global Q-values from the first pass, calculated against the full library.
+Without MBR, filter on the run-level and experiment-level Q-values; with MBR, filter on the run-level and library-level Q-values.
 
 - **Lib.Q.Value** --- library-level precursor FDR.
 - **Lib.PG.Q.Value** --- library-level protein group FDR.

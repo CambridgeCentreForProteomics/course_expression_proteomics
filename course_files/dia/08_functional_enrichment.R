@@ -28,7 +28,7 @@ library("dplyr")
 ## Subset results to the contrast of interest
 ## ---------------------------------------------------------------------------------------------------------
 
-## We focus on COVID-19 vs Control as the comparison of primary biological interest.
+## We use COVID-19 vs Control as the example; the same steps apply to the other contrasts.
 
 
 

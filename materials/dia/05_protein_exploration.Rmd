@@ -259,7 +259,7 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
 #### Key Points
 
 - Plotting protein abundances for specific proteins of interest is a useful way to inspect the data before formal statistical testing
-- PCA wiht `prcomp` uses only the complete data matrix.
+- PCA with `prcomp` uses only the complete data matrix.
 - Colouring PCA plots by all potential sources of variation (e.g., group, age group) helps identify which factors drive the observed structure in the data
 - The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object.
   We can use this to visualise how the precursor-level data was aggregated to protein level for a specific feature, and to verify that the processing pipeline has behaved as expected.
