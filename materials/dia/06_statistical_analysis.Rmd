@@ -68,37 +68,29 @@ DIA data contains a higher proportion of missing values than TMT data.
 Before statistical testing, we need to decide how to handle proteins that are not quantified in enough samples within each group to support a reliable estimate of group-level abundance.
 
 We only want to test proteins which are quantified in at least 3 replicates of each condition.
-We first split the data by group, then count the number of finite (non-missing) values per protein within each group.
 
-We begin by extracting the normalised protein level data `"norm_proteins"` in
-the QF object. This contains `r nrow(dia_qf[["norm_proteins"]])` proteins common
-across all conditions.
+We begin by extracting the normalised protein level data `"norm_proteins"` from
+the QFeatures object. This contains all `r nrow(dia_qf[["norm_proteins"]])`
+proteins, before any filtering on replication.
 
 ```{r}
-#| label: setup-contrasts
+#| label: extract-norm-proteins
 se <- getWithColData(dia_qf, "norm_proteins")
 print(se)
 ```
 
-Now let's subset the dataset by condition,
+For each group in turn, we count the number of non-missing values per protein and keep only proteins quantified in at least 3 samples of every group.
+Looping over the groups means the same code works for any number of groups.
 
 ```{r}
-#| label: fit-linear-model
-control <- se[, se$group == "control"]
-mpxv <- se[, se$group == "MPXV"]
-cov <- se[, se$group == "Covid19"]
-```
+#| label: filter-replicated-proteins
+tokeep <- rep(TRUE, nrow(se))
 
-Finally, we keep only proteins quantified in at least 3 replicates.
+for (g in unique(se$group)) {
+  n_quantified <- rowSums(!is.na(assay(se[, se$group == g])))
+  tokeep <- tokeep & n_quantified >= 3
+}
 
-```{r}
-#| label: fit-contrasts
-control_replicated <- rowSums(!is.na(assay(control))) >= 3
-mpxv_replicated <- rowSums(!is.na(assay(mpxv))) >= 3
-cov_replicated <- rowSums(!is.na(assay(cov))) >= 3
-
-# Keep proteins common in all conditions
-tokeep <- control_replicated & mpxv_replicated & cov_replicated
 print(table(tokeep))
 ```
 
@@ -107,7 +99,7 @@ filter, and link it to the parent set. We see we are left with
 `r table(tokeep)["TRUE"]` proteins to test.
 
 ```{r}
-#| label: extract-results-mpxv-vs-ctrl
+#| label: add-replicated-set
 dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "norm_proteins_replicated")
 
 dia_qf <- addAssayLink(
@@ -120,7 +112,7 @@ dia_qf
 ```
 
 ```{r}
-#| label: extract-results-covid-vs-ctrl
+#| label: plot-qfeatures-sets
 #| fig-height: 8
 
 plot(dia_qf)
@@ -133,7 +125,7 @@ Since we have three groups and are interested in all pairwise comparisons, we us
 This means the model estimates the mean abundance for each group directly.
 
 ```{r}
-#| label: examine-top-results
+#| label: define-design-matrix
 group <- factor(dia_qf$group, levels = c("control", "MPXV", "Covid19"))
 
 limma_design <- model.matrix(formula(~ 0 + group))
@@ -157,28 +149,24 @@ data <- assay(dia_qf[['norm_proteins_replicated']])
 limma_fit <- lmFit(data, limma_design)
 ```
 
-## F-test for overall significance across groups
+## Defining contrasts and moderating the variances
 
-{{< include ../_shared/_callout_f_value.md >}}
-
-We first ask whether a protein differs between *any* of the three groups, using an F-test.
-In `limma`, the F-test is applied to a set of contrasts and tests whether all of them are zero at the same time.
-Two contrasts, MPXV versus control and Covid19 versus control, are enough to describe any difference between the three groups, because the difference between MPXV and Covid19 is the difference between these two.
-The `makeContrasts` function creates a contrast matrix specifying how differences between group means should be calculated.
-
-For proteins quantified in every sample, the F-test does not depend on which two contrasts are used.
-For proteins with missing values, the F-statistics differ slightly between choices of contrasts.
+A **contrast** is a comparison between group means that we want to test.
+We are interested in all three pairwise comparisons between the groups.
+The `makeContrasts` function creates a contrast matrix specifying how each difference between group means is calculated.
 
 ```{r}
-#| label: f-test-contrasts
-f_contrasts_matrix <- makeContrasts(
+#| label: pairwise-contrasts-matrix
+## Specify contrasts of interest
+contrasts_matrix <- makeContrasts(
   MPXV_control = MPXV - control,
   Covid19_control = Covid19 - control,
+  MPXV_Covid19 = MPXV - Covid19,
   levels = limma_design
 )
 
 ## Verify
-f_contrasts_matrix
+contrasts_matrix
 ```
 
 We apply the contrasts to the fitted model and update it using the `eBayes` function with `trend = TRUE` and `robust = TRUE` to account for the intensity-dependent variance trend typical in quantitative proteomics data.
@@ -186,22 +174,24 @@ We apply the contrasts to the fitted model and update it using the `eBayes` func
 {{< include ../_shared/_trend_robust_args.md >}}
 
 ```{r}
-#| label: f-test-ebayes
-limma_fit_F <- contrasts.fit(
+#| label: pairwise-contrasts-ebayes
+limma_fit_contrasts <- contrasts.fit(
   fit = limma_fit,
-  contrasts = f_contrasts_matrix
+  contrasts = contrasts_matrix
 )
 
-limma_fit_F <- eBayes(limma_fit_F, trend = TRUE, robust = TRUE)
+limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
 ```
+
+All of the results in this lesson, the F-test and each pairwise comparison, are extracted from this one fit using `topTable`.
 
 ### Diagnostic plots to verify suitability of our statistical model
 
 {{< include ../_shared/_diagnostic_plots1.md >}}
 
 ```{r}
-#| label: examine-log-fold-changes
-plotSA(fit = limma_fit_F, cex = 0.5, xlab = "Average log2 abundance")
+#| label: plot-sa
+plotSA(fit = limma_fit_contrasts, cex = 0.5, xlab = "Average log2 abundance")
 ```
 
 {{< include ../_shared/_diagnostic_plots2.md >}}
@@ -254,7 +244,20 @@ We would check how many values were imputed, whether they are concentrated in a 
 :::::
 :::
 
-### F-test results
+## F-test for overall significance across groups
+
+{{< include ../_shared/_callout_f_value.md >}}
+
+We first ask whether a protein differs between *any* of the three groups, using an F-test.
+In `limma`, the F-test tests whether all of the contrasts in the fit are zero at the same time.
+The MPXV versus Covid19 contrast is the difference between the other two, so it adds no information to the F-test, which is based on the two independent comparisons among three groups.
+
+::: {.callout-tip}
+#### Experiments with two groups
+
+With two groups there is only one contrast, and the F-test is the same as the moderated t-test for that contrast (the F-statistic is the square of the t-statistic).
+In that case this step can be skipped and the analysis can go straight to the pairwise results below.
+:::
 
 Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.
 
@@ -262,7 +265,7 @@ Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, wh
 #| label: f-test-results
 ## Format results
 limma_results_F <- topTable(
-  fit = limma_fit_F,
+  fit = limma_fit_contrasts,
   coef = NULL,
   adjust.method = "BH", # Method for multiple hypothesis testing
   number = Inf
@@ -309,39 +312,9 @@ To find out, we test the individual pairwise comparisons using t-tests on the co
 ## Pairwise contrasts
 
 The F-test identifies proteins that differ somewhere across the groups.
-To find out which groups differ and in which direction, we test each pairwise comparison.
-We define the **contrasts** for all three comparisons.
+To find out which groups differ and in which direction, we extract the moderated t-test results for each pairwise contrast from the same fit.
 
 {{< include ../_shared/_callout_t_p_value.md >}}
-
-```{r}
-#| label: pairwise-contrasts-matrix
-## Specify contrasts of interest
-contrasts_matrix <- makeContrasts(
-  MPXV_control = MPXV - control,
-  Covid19_control = Covid19 - control,
-  MPXV_Covid19 = MPXV - Covid19,
-  levels = limma_design
-)
-
-## Verify
-contrasts_matrix
-```
-
-We apply these contrasts to the fitted model and moderate the results with `eBayes`, using the same `trend` and `robust` arguments as before.
-The model is refitted here only because the F-test above was run on a fit with two contrasts, whereas we want results for all three comparisons.
-In practice, you would define all the contrasts you need once, fit once, and obtain both the F-test (`coef = NULL`) and the pairwise results (`coef = <contrast name>`) from that single fit.
-With missing values present, the F-statistics from that single fit would differ slightly from those above for the proteins affected.
-
-```{r}
-#| label: pairwise-contrasts-ebayes
-limma_fit_contrasts <- contrasts.fit(
-  fit = limma_fit,
-  contrasts = contrasts_matrix
-)
-
-limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
-```
 
 We start by extracting results for a single contrast of particular biological interest: MPXV versus control.
 We use `topTable` with `coef = "MPXV_control"` to get the results for this specific comparison.

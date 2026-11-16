@@ -33,17 +33,15 @@ library("patchwork")
 se <- getWithColData(dia_qf, "norm_proteins")
 print(se)
 
-## Subset by condition
-control <- se[, se$group == "control"]
-mpxv    <- se[, se$group == "MPXV"]
-cov     <- se[, se$group == "Covid19"]
+## Keep only proteins quantified in >= 3 samples of every group.
+## Looping over the groups means the same code works for any number of groups.
+tokeep <- rep(TRUE, nrow(se))
 
-## Keep only proteins quantified in >= 3 replicates per condition
-control_replicated <- rowSums(!is.na(assay(control))) >= 3
-mpxv_replicated    <- rowSums(!is.na(assay(mpxv))) >= 3
-cov_replicated     <- rowSums(!is.na(assay(cov))) >= 3
+for (g in unique(se$group)) {
+  n_quantified <- rowSums(!is.na(assay(se[, se$group == g])))
+  tokeep <- tokeep & n_quantified >= 3
+}
 
-tokeep <- control_replicated & mpxv_replicated & cov_replicated
 print(table(tokeep))
 
 ## Add new set with only the replicated proteins
@@ -67,10 +65,11 @@ print(table(tokeep))
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## F-test for overall significance across groups
+## Defining contrasts and moderating the variances
 ## ---------------------------------------------------------------------------------------------------------
 
-## The F-test is applied to two contrasts: MPXV - control and Covid19 - control.
+## Define all three pairwise contrasts. The F-test and every pairwise result
+## are extracted from this one fit with topTable.
 
 ## Verify the contrasts matrix
 
@@ -106,23 +105,17 @@ print(table(tokeep))
 ## ---------------------------------------------------------------------------------------------------------
 
 
+## ---------------------------------------------------------------------------------------------------------
+## F-test for overall significance across groups
+## ---------------------------------------------------------------------------------------------------------
+
+## With two groups there is only one contrast and the F-test equals the
+## moderated t-test (F = t^2), so this step can be skipped.
+
 ## coef = NULL returns the F-statistic for overall significance across all groups.
 
 
 ## Challenge: Interpreting the F-test p-value distribution
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Pairwise contrasts: specifying contrasts and refitting
-## ---------------------------------------------------------------------------------------------------------
-
-## Define all three pairwise contrasts
-
-## Verify the contrasts matrix
-
-
-## Apply the contrasts and moderate with eBayes (trend = TRUE, robust = TRUE)
-
 
 
 ## ---------------------------------------------------------------------------------------------------------
