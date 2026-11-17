@@ -152,7 +152,8 @@ Of the `r sum(!grepl(";", unmapped$UniprotID))` single accessions that fail, `r 
 
 The enrichment is therefore tested on the proteins that could be mapped, not on everything we quantified.
 Any GO term that the lost proteins would have supported cannot be detected, and the background excludes them, so the p-values describe the mappable proteins only.
-Options include mapping each accession within a multiple-accession ID separately, which requires deciding how to credit the protein, or using annotations keyed directly to UniProt accessions.
+Most of the proteins that fail have a gene name in the `Genes` column, so one option is to map by gene symbol instead, which the next exercise tries.
+Another is to use GO annotations keyed directly to UniProt accessions, which avoids the mapping step altogether.
 Whichever we choose, we should report how many proteins were lost.
 :::::
 :::
@@ -165,6 +166,88 @@ A term can only be enriched relative to that background, so terms describing pla
 Abundant proteins are also more likely to be quantified well enough to reach significance, so a term made up of abundant proteins can appear enriched for that reason alone.
 :::
 
+::: {.callout-exercise}
+#### Challenge: Mapping by gene symbol
+
+{{< level 2 >}}
+
+Most of the proteins that failed to map in the previous exercise have a gene name in the `Genes` column, and `enrichGO` accepts gene symbols with `keyType = "SYMBOL"`.
+
+1. Make a gene symbol for each tested protein by taking the first entry in `Genes`, and drop the proteins with no gene name.
+2. Rerun the enrichment for the significantly decreased proteins with `keyType = "SYMBOL"`, using the symbols of all tested proteins as the universe.
+3. Compare the new result with `go_down`: the sizes of the protein list and the background, the number of significant terms, and the top terms.
+   Which proteins were added, and why did the results change the way they did?
+
+<details><summary>Hint</summary>`sub(";.*", "", Genes)` keeps the text before the first `;`.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: go-enrichment-by-symbol
+symbol_results <- limma_results_covid_control %>%
+  mutate(symbol = sub(";.*", "", Genes)) %>%
+  filter(symbol != "")
+
+sig_down_symbols <- symbol_results %>%
+  filter(adj.P.Val < 0.05, logFC < 0) %>%
+  pull(symbol)
+
+go_down_symbol <- enrichGO(
+  gene = sig_down_symbols,
+  universe = symbol_results$symbol,
+  OrgDb = org.Hs.eg.db,
+  keyType = "SYMBOL",
+  pvalueCutoff = 0.05,
+  ont = "BP",
+  minGSSize = 10,
+  maxGSSize = 500
+)
+
+# Sizes of the protein list and background, and number of significant terms
+get_denominator <- function(ratio) as.numeric(sub(".*/", "", ratio[1]))
+
+data.frame(
+  key = c("UNIPROT", "SYMBOL"),
+  list = c(
+    get_denominator(go_down@result$GeneRatio),
+    get_denominator(go_down_symbol@result$GeneRatio)
+  ),
+  background = c(
+    get_denominator(go_down@result$BgRatio),
+    get_denominator(go_down_symbol@result$BgRatio)
+  ),
+  significant_terms = c(
+    nrow(as.data.frame(go_down)),
+    nrow(as.data.frame(go_down_symbol))
+  )
+)
+
+# Proteins that are only included when mapping by gene symbol
+added <- symbol_results %>%
+  filter(!UniprotID %in% mapped_ids$UNIPROT)
+
+table(immunoglobulin = grepl("^IG", added$symbol))
+sum(added$UniprotID %in% sig_down)
+
+# Terms that are significant only when mapping by gene symbol
+as.data.frame(go_down_symbol) %>%
+  filter(!ID %in% as.data.frame(go_down)$ID) %>%
+  dplyr::select(Description, GeneRatio, BgRatio, p.adjust) %>%
+  head(10)
+```
+
+Mapping by gene symbol adds `r nrow(added)` proteins, `r sum(grepl("^IG", added$symbol))` of which are immunoglobulin chains, but the list of decreased proteins gains only `r sum(added$UniprotID %in% sig_down)`.
+The background grows from `r get_denominator(go_down@result$BgRatio)` to `r get_denominator(go_down_symbol@result$BgRatio)`, and the number of significant terms goes from `r nrow(as.data.frame(go_down))` to `r nrow(as.data.frame(go_down_symbol))`.
+The top term is `r as.data.frame(go_down_symbol)$Description[1]` in both.
+
+The new background is closer to what we actually tested, since the immunoglobulins were quantified and could have been significant.
+But they nearly all join the background and not the list, so any term that immunoglobulins are not annotated with now makes up a larger share of the list than of the background.
+Most of the newly significant terms are broad ones such as metabolic or developmental processes, and what they mainly tell us is that the decreased proteins are not immunoglobulins.
+
+Neither result is simply the right one: the background defines what "enriched" means.
+Whichever we use, we should report the background, check whether one class of proteins dominates it, and, if that class is not of interest, exclude it from both the list and the background deliberately and say so.
+:::::
+:::
+
 ### Visualising significant GO terms
 
 ::: {.callout-discussion}
@@ -172,6 +255,12 @@ Abundant proteins are also more likely to be quantified well enough to reach sig
 
 - Looking at the GO enrichment results, why do we see so many similar or overlapping terms?
 - What property of the Gene Ontology leads to this redundancy, and how might we address it?
+:::
+
+::: {.callout-answer collapse="true"}
+GO is a hierarchy, and a protein annotated with a term is also annotated with all of that term's parents.
+The same few proteins therefore make a specific term and its broader parent terms significant together, and the significant terms share most of their proteins.
+We can merge terms by semantic similarity (`simplify`, in the next section), limit the sizes of the terms tested with `minGSSize` and `maxGSSize`, or look at which proteins the terms share (the treeplot below).
 :::
 
 We produce a dotplot of the significant GO terms.

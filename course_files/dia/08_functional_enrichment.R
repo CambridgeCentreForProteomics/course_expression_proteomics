@@ -66,6 +66,25 @@ library("dplyr")
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Challenge: Mapping by gene symbol
+##
+## Most of the proteins that failed to map in the previous exercise have a gene
+## name in the Genes column, and enrichGO accepts gene symbols with
+## keyType = "SYMBOL".
+##
+## 1. Make a gene symbol for each tested protein by taking the first entry in
+##    Genes, and drop the proteins with no gene name.
+## 2. Rerun the enrichment for the significantly decreased proteins with
+##    keyType = "SYMBOL", using the symbols of all tested proteins as the universe.
+## 3. Compare the new result with go_down: the sizes of the protein list and the
+##    background, the number of significant terms, and the top terms. Which
+##    proteins were added, and why did the results change the way they did?
+##
+## Hint: sub(";.*", "", Genes) keeps the text before the first ";".
+## ---------------------------------------------------------------------------------------------------------
+
+
+## ---------------------------------------------------------------------------------------------------------
 ## Visualising significant GO terms
 ## ---------------------------------------------------------------------------------------------------------
 

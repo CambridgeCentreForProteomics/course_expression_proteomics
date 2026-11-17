@@ -53,6 +53,21 @@ Before reading on, consider the following:
 - What impact could this filtering have on the downstream analysis and results?
 :::
 
+::: {.callout-answer collapse="true"}
+DIA-NN reports identifications made with a range of confidence.
+Without a filter, incorrect identifications enter the quantification, and proteins that are not in the sample can appear in the results.
+
+A run-level Q-value describes the confidence in an identification within a single run.
+A library-level Q-value describes the confidence across the whole experiment, calculated in the first pass of match-between-runs.
+
+A threshold of 0.01 is the usual choice.
+A stricter threshold removes more false identifications, but also more true ones.
+
+The run-level filters are applied separately in each run, so a precursor that passes in some runs and fails in others becomes a missing value in the runs where it fails.
+The library-level Q-values are the same in every run, so those filters remove a precursor from all runs at once.
+Filtering therefore adds missing values as well as removing precursors.
+:::
+
 DIA-NN assigns a Q-value to each precursor and protein group identification.
 Keeping the identifications with a Q-value at or below a threshold controls the false discovery rate (FDR) among everything retained: at 0.01, we expect 1% of the retained identifications to be incorrect.
 The Q-value columns are described in the DIA-NN Q-value callout in lesson 01.

@@ -51,6 +51,15 @@ In this lesson we produce heatmaps to display protein abundance patterns across 
   What are the trade-offs of each approach?
 :::
 
+::: {.callout-answer collapse="true"}
+We look for groups of proteins with similar abundance profiles across the samples, and for whether the samples cluster by group.
+Outlier samples and batch structure also show up in a heatmap.
+
+- **All quantified proteins** give an unbiased view of the dominant structure in the data, including technical effects, but make a large and noisy plot.
+- **Significant proteins** show the result of the test, but separate the groups by construction, as the exercise later in this lesson shows.
+- **The most variable proteins** are chosen without using the group labels, but the most variable proteins can be the noisiest ones, or be driven by one or two extreme samples.
+:::
+
 A heatmap provides a two-dimensional view of protein abundances across all samples simultaneously, and is commonly used alongside hierarchical clustering to reveal groups of proteins and samples with similar abundance patterns.
 
 ### Building a heatmap
@@ -319,6 +328,13 @@ The plot shows one point per protein and nothing else.
 - How could each addition be shown: a colour, a point size, a label, a reference line?
 :::
 
+::: {.callout-answer collapse="true"}
+- **Already in `compare_limma_results`:** whether each protein is significant in each contrast (the `adj.P.Val_` columns), shown as a colour; gene names, shown as labels on selected proteins.
+- **In `limma_results_all_contrasts` but dropped by `select`:** average abundance (`AveExpr`), shown as point size.
+- **Needing no data:** reference lines at zero on both axes and along y = x, marking "no change" and "the same change in both infections".
+- **Needing to be calculated:** the uncertainty on each fold change (`topTable(..., confint = TRUE)`), shown as error bars; an overall trend line.
+:::
+
 We'd like to highlight the significance status of each protein across the two contrasts.
 We can create a `sig` column that categorises each protein by its significance status across the two contrasts, distinguishing proteins significant in both, in only one, or in neither.
 
@@ -405,6 +421,33 @@ print(p2)
 - The plot includes a linear regression line.
   Is a standard linear model (Ordinary Least Squares; OLS) appropriate here, given that both axes represent quantities measured with error?
   What would be a better alternative?
+:::
+
+::: {.callout-answer collapse="true"}
+```{r}
+#| label: scatter-discussion-values
+#| include: false
+lfc_cor <- cor(
+  compare_limma_results$logFC_MPXV_control,
+  compare_limma_results$logFC_Covid19_control
+)
+slope_y_on_x <- coef(lm(logFC_Covid19_control ~ logFC_MPXV_control, data = compare_limma_results))[2]
+slope_x_on_y <- coef(lm(logFC_MPXV_control ~ logFC_Covid19_control, data = compare_limma_results))[2]
+```
+
+The x axis is a protein's change in MPXV and the y axis its change in COVID-19.
+Points near the diagonal respond in the same way to both infections, points near one axis respond to one infection only, and points in the top-left or bottom-right quadrants change in opposite directions.
+
+The most interesting proteins are those significant in both contrasts (a shared response), those significant in one contrast with a fold change near zero in the other, and any that change in opposite directions.
+
+The correlation between the two sets of fold changes is `r round(lfc_cor, 2)`, but this overstates how much of the response is shared.
+Both contrasts are relative to the same control group, so any error in a protein's control mean moves both fold changes in the same direction and pushes the points towards the diagonal, even without shared biology.
+
+Ordinary least squares assumes that the x values have no error.
+When x does have error, the fitted slope is pulled towards zero, and regressing in the two directions gives different lines.
+Here, regressing COVID-19 on MPXV gives a slope of `r round(slope_y_on_x, 2)`, while regressing MPXV on COVID-19 gives a line with slope `r round(1 / slope_x_on_y, 2)` on the same axes.
+A fit that treats both axes in the same way, such as the first principal component of the two fold-change columns, avoids this.
+Alternatively, drop the line and report the correlation, with the caveat above.
 :::
 
 ::: {.callout-tip}

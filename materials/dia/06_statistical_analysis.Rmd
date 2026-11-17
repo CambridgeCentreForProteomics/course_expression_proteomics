@@ -370,10 +370,23 @@ table(
 - Look at the proteins near the significance threshold --- what does this tell you about treating `adj.P.Val < 0.05` as a hard cut-off?
 :::
 
+::: {.callout-answer collapse="true"}
+Each point shows a protein's estimated change (x axis) against the strength of evidence for that change (y axis).
+The plot does not show the protein's abundance, how many samples it was quantified in, or the uncertainty on its fold change.
+The y axis shows the raw p-value, while the colour uses the adjusted p-value.
+
+A large fold change can fail to reach significance when the protein varies a lot between samples, is quantified in few samples, or sits at low abundance where the variance trend is high.
+In MPXV vs control, `r sum(abs(limma_results_mpxv_control$logFC) > 1 & limma_results_mpxv_control$adj.P.Val >= 0.05)` proteins have a fold change greater than 2 but are not significant.
+
+`r sum(limma_results_mpxv_control$adj.P.Val > 0.03 & limma_results_mpxv_control$adj.P.Val < 0.08)` proteins have adjusted p-values between 0.03 and 0.08.
+The evidence for a protein at 0.04 is hardly different from the evidence for one at 0.06.
+The cut-off is a convenience for reporting, and ranking proteins or reading the evidence as continuous describes the result better.
+:::
+
 We produce a volcano plot for the MPXV vs Control contrast, labelling the top 30 most significant proteins by gene name.
 
 ```{r}
-#| label: heatmap-top-proteins
+#| label: volcano-mpxv-control
 data_for_highlighting <- limma_results_mpxv_control %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -446,6 +459,27 @@ limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 - Which contrast shows the strongest signal, and what does that suggest about the biology?
 :::
 
+::: {.callout-answer collapse="true"}
+```{r}
+#| label: pvalue-discussion-values
+#| include: false
+pct_p05 <- limma_results_all_contrasts %>%
+  group_by(contrast) %>%
+  summarise(pct = round(100 * mean(P.Value < 0.05))) %>%
+  tibble::deframe()
+
+n_group <- table(dia_qf$group)
+```
+
+If no protein changed, the histograms would be flat, with about 5% of p-values below 0.05.
+COVID-19 vs control and MPXV vs control both have a large peak near zero, with `r pct_p05["Covid19_control"]`% and `r pct_p05["MPXV_control"]`% of p-values below 0.05, so many proteins differ between infected patients and controls.
+MPXV vs COVID-19 is close to flat (`r pct_p05["MPXV_Covid19"]`% below 0.05), so few proteins differ between the two infections.
+
+COVID-19 vs control shows the strongest signal, and the two infections appear to share much of their effect on the plasma proteome.
+Group size matters too: there are `r n_group["control"]` control, `r n_group["Covid19"]` COVID-19 and `r n_group["MPXV"]` MPXV samples.
+The contrasts involving MPXV have less power, and MPXV vs COVID-19 compares the two smallest groups, so its flat histogram partly reflects power.
+:::
+
 ```{r}
 #| label: compare-regulation-directions
 limma_results_all_contrasts %>%
@@ -461,12 +495,38 @@ limma_results_all_contrasts %>%
 ::: {.callout-discussion}
 #### Discussion
 
-- Why do we need to adjust p-values when testing thousands of proteins across multiple contrasts?
+- Why do we need to adjust p-values when testing hundreds of proteins across multiple contrasts?
 - What is the difference between adjusting each contrast separately versus adjusting globally across all contrasts and proteins?
 - Which approach is more conservative, and in what circumstances might that matter?
 :::
 
-When testing thousands of proteins across multiple contrasts, p-values must be adjusted for multiple testing.
+::: {.callout-answer collapse="true"}
+We run `r nrow(limma_results_all_contrasts)` tests (`r length(unique(limma_results_all_contrasts$UniprotID))` proteins in each of `r length(contrasts)` contrasts).
+If no protein changed, a threshold of p < 0.05 would still give about `r round(0.05 * nrow(limma_results_all_contrasts))` false positives.
+
+Adjusting each contrast separately controls the false discovery rate within each contrast's list of proteins.
+Adjusting globally controls it across the combined list from all contrasts.
+
+Neither approach is always the more conservative.
+The `adj.P.Val` column from `topTable` is still adjusted within each contrast, so we can compare the two directly:
+
+```{r}
+#| label: compare-adjustment-scope
+limma_results_all_contrasts %>%
+  mutate(adj_global = p.adjust(P.Value, method = "BH")) %>%
+  group_by(contrast) %>%
+  summarise(
+    sig_per_contrast = sum(adj.P.Val < 0.05),
+    sig_global = sum(adj_global < 0.05)
+  )
+```
+
+The Benjamini-Hochberg threshold depends on how many small p-values are in the pool being adjusted.
+A contrast with few small p-values, pooled with two that have many, gets a more lenient threshold than it would on its own.
+This matters when one contrast has little signal, since its hits under global adjustment rely on the signal in the other contrasts, and when a contrast is later reported on its own.
+:::
+
+When testing hundreds of proteins across multiple contrasts, p-values must be adjusted for multiple testing.
 The standard Benjamini-Hochberg method was designed for independent tests, but our contrasts share data and are positively correlated.
 BH remains valid under positive dependence between tests, which is the kind expected between contrasts that share a control group, so we apply it once across all contrasts.
 
@@ -487,6 +547,26 @@ How many significant changes in abundance are there in each contrast?
 - Looking at the counts of significantly increased and decreased proteins across the three contrasts, what does this tell you about the differences between the conditions?
 - Are you surprised by any of these numbers?
   What biological explanations might account for what you see?
+:::
+
+::: {.callout-answer collapse="true"}
+```{r}
+#| label: count-discussion-values
+#| include: false
+sig_counts <- limma_results_all_contrasts %>%
+  filter(adj.P.Val < 0.05) %>%
+  group_by(contrast) %>%
+  summarise(n = n(), up = sum(logFC > 0), down = sum(logFC < 0)) %>%
+  tibble::column_to_rownames("contrast")
+```
+
+COVID-19 vs control has `r sig_counts["Covid19_control", "n"]` significant proteins (`r sig_counts["Covid19_control", "up"]` increased, `r sig_counts["Covid19_control", "down"]` decreased) and MPXV vs control has `r sig_counts["MPXV_control", "n"]` (`r sig_counts["MPXV_control", "up"]` increased, `r sig_counts["MPXV_control", "down"]` decreased).
+MPXV vs COVID-19 has `r sum(limma_results_all_contrasts$contrast == "MPXV_Covid19" & limma_results_all_contrasts$adj.P.Val < 0.05)`.
+Both infections change the plasma proteome relative to controls, in both directions, while the two infections barely differ from each other.
+
+Part of the difference between the COVID-19 and MPXV counts is power, since there are only `r sum(dia_qf$group == "MPXV")` MPXV samples.
+A response common to infection, such as changes in proteins secreted into plasma during inflammation, would produce this pattern.
+The scatter plot of fold changes in the next lesson shows whether the same proteins change in both infections.
 :::
 
 ```{r}

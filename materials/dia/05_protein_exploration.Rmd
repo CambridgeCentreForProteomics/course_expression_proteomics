@@ -107,6 +107,16 @@ long_form_protein %>%
 - What impact might this have on the PCA result and its biological interpretation?
 :::
 
+::: {.callout-answer collapse="true"}
+`prcomp` needs a complete matrix: it cannot place a sample along a component using a protein it has no value for.
+
+We keep `r nrow(filterNA(dia_qf[["proteins"]]))` of the `r nrow(dia_qf[["proteins"]])` proteins.
+Lesson 03 showed that values are more often missing at low intensity, so the proteins we keep are mostly the abundant, consistently detected ones.
+
+The PCA therefore describes those proteins.
+A protein detected mainly in one group cannot contribute, however strongly it differs between groups.
+:::
+
 Since PCA requires a complete data matrix, we first remove proteins with any missing values using `filterNA`.
 We then extract the protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
 
@@ -152,6 +162,37 @@ print(p + aes(x = PC3, y = PC4))
   Is this what you expected based on the experimental design?
 - Are there any samples that look like outliers or behave differently?
   What might explain this?
+:::
+
+::: {.callout-answer collapse="true"}
+```{r}
+#| label: pca-discussion-values
+#| include: false
+pca_df <- data.frame(
+  protein_pca$x[, 1:4],
+  colData(dia_qf)[rownames(protein_pca$x), c("group", "age.group")]
+)
+
+pc1_var <- round(100 * summary(protein_pca)$importance["Proportion of Variance", "PC1"])
+pc1_group_r2 <- summary(lm(PC1 ~ group, data = pca_df))$r.squared
+max_age_r2 <- max(sapply(paste0("PC", 1:4), function(pc) {
+  summary(lm(pca_df[[pc]] ~ pca_df$age.group))$r.squared
+}))
+pc2_extreme <- rownames(pca_df)[c(which.max(pca_df$PC2), which.min(pca_df$PC2))]
+pc1_overlap <- rownames(pca_df)[
+  pca_df$group != "control" & pca_df$PC1 <= max(pca_df$PC1[pca_df$group == "control"])
+]
+```
+
+PC1 (`r pc1_var`% of the variance) largely separates the controls from the infected patients: only `r length(pc1_overlap)` of the `r sum(pca_df$group != "control")` infected samples `r ifelse(length(pc1_overlap) == 1, "lies", "lie")` within the range of the controls.
+Group explains `r round(100 * pc1_group_r2)`% of the variance along PC1.
+The MPXV and COVID-19 samples overlap on PC1 and PC2, so the two infections are more like each other than like the controls.
+Age group explains at most `r round(100 * max_age_r2)`% of the variance on any of the first four components.
+
+`r pc2_extreme[1]` and `r pc2_extreme[2]` sit far out on PC2, in opposite directions.
+PC2 is not related to group or age, so it is driven by something particular to these samples.
+To decide whether that matters, we would check them in the plot of precursors per sample in lesson 02, and look at which proteins have the largest loadings on PC2 (`protein_pca$rotation`).
+We keep all samples, as explained in lesson 03.
 :::
 
 ## The `subsetByFeature` function
