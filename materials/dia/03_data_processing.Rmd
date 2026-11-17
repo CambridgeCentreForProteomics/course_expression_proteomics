@@ -28,6 +28,7 @@ knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 #| include: false
 
 library("QFeatures")
+library("naniar")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
@@ -320,6 +321,118 @@ precursors_missing$nNAcols %>%
 :::::
 :::
 
+### Patterns of missingness across samples
+
+The plots above show *how many* values are missing per precursor and per sample, but not *which* samples share missing values.
+An upset plot shows this.
+Each sample is a set, and each bar counts the precursors missing in exactly that combination of samples.
+
+```{r}
+#| label: plot-missingness-upset
+#| fig-height: 10
+#| fig-width: 10
+#| warning: false
+
+missing_data <- dia_qf[["precursors_no_cont"]] %>% assay() %>% data.frame()
+
+# Passing the column names to sets keeps the samples in the order of the
+# assay columns. Without it, samples are ordered by their number of missing
+# values and keep.order has no effect.
+naniar::gg_miss_upset(
+  missing_data,
+  sets = paste0(colnames(missing_data), "_NA"),
+  keep.order = TRUE,
+  nintersects = 50
+)
+```
+
+When a few intersections dominate the plot, they tell us something about the data.
+If the dominant combinations are the samples of one group, those precursors are likely low in abundance in that group, or absent from it.
+If a single sample appears in many intersections, that sample may have a technical problem, such as lower loading or poorer chromatography.
+In this dataset, the largest intersection is 83 precursors missing only in COVID_E5, which is the sample with the most missing values overall.
+The next largest are precursors missing in one other sample, or detected in only one sample; the second kind are removed by the filter in the next section.
+None of these is large compared with the 1,854 precursors that have at least one missing value, so no single pattern dominates.
+
+### Why precursors go missing
+
+A precursor is missing from a run when DIA-NN did not detect it in that run.
+Low-intensity precursors are missed more often, because their signal is closer to the background.
+There is no fixed intensity below which detection fails, though.
+Precursors are also missed at high intensity, for example when their elution profile cannot be separated from that of another precursor, and often for reasons that are not easy to predict.
+
+::: {.callout-exercise}
+#### Challenge: Missing values and intensity
+
+{{< level 2 >}}
+
+For each precursor in the `"precursors_no_cont"` set, calculate the proportion of samples in which it is missing and the mean of its log2 intensity over the samples in which it was detected.
+Plot one against the other.
+
+- How does the proportion of missing values change with intensity?
+- Are high-intensity precursors ever missing?
+
+<details><summary>Hint</summary>Extract the matrix with `assay()`.
+`rowMeans(is.na(x))` gives the proportion missing per row, and
+`rowMeans(log2(x), na.rm = TRUE)` the mean of the observed log2
+values.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: plot-missingness-intensity
+#| fig-height: 4
+#| fig-width: 5
+precursor_intensities <- assay(dia_qf[["precursors_no_cont"]])
+
+precursor_detection <- data.frame(
+  mean_log2 = rowMeans(log2(precursor_intensities), na.rm = TRUE),
+  prop_missing = rowMeans(is.na(precursor_intensities))
+)
+
+ggplot(precursor_detection, aes(x = mean_log2, y = prop_missing)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "loess", formula = y ~ x) +
+  labs(
+    x = "Mean log2 intensity (detected samples)",
+    y = "Proportion of samples missing"
+  ) +
+  theme_classic()
+```
+
+The proportion of missing values falls steadily as intensity rises, with no single intensity at which it drops to zero.
+Some high-intensity precursors are still missing from a few samples.
+
+The intensities on the x-axis are only those of the samples in which a precursor was detected.
+For a precursor that is often missing, these are its higher values, so its mean is an overestimate of its true average intensity, and the low end of the curve is steeper than the plot suggests.
+:::::
+:::
+
+A useful way to describe this is the probability that a precursor is detected, as a function of its true intensity.
+If this probability did not depend on intensity, values would go missing at random and could be ignored without losing information.
+If every precursor below a certain intensity were missed and every one above it detected, the missing values would simply be a hard cut-off at that intensity.
+Real data lies between these two extremes: the probability of detection rises steadily with intensity, without a sharp threshold [@Li2023].
+The `limpa` package describes missingness in this way and estimates the curve from the data with `limpa::dpc()` [@Li2025].
+
+Two things follow for the analysis:
+
+- A missing value carries some information: the precursor was probably at low intensity in that run.
+- A single missing value cannot tell us whether a precursor was present below detection or absent from the sample.
+
+### How we handle missing values
+
+In this course we do not replace missing values.
+Filling them in with a substitute value and then analysing the data as if every value had been measured treats guesses as measurements, which distorts the variance estimates that the statistical tests depend on.
+We will see an example of this in the statistical analysis lesson.
+
+Instead, we handle missing values in three steps:
+
+1. Remove precursors detected in too few samples to be quantified reliably (next section).
+2. Summarise each protein from the precursors detected in each sample, using `robustSummary`, which works on the observed values only (next lesson).
+3. Before testing, keep only proteins quantified in at least three samples of every group (statistical analysis lesson).
+
+A consequence of step 3 is that a protein detected in one group and absent from another is never tested, even though that pattern can be the most interesting one in an experiment.
+Proteins like these need a method that uses the missing values themselves as information.
+`limpa` [@Li2025] is one such method: it uses the detection curve to estimate an abundance and a standard error for every protein in every sample (`limpa::dpcQuant()`), and carries that uncertainty into a `limma` analysis (`limpa::dpcDE()`).
+
 ## Filtering sparse precursors
 
 Precursors that are missing across the majority of samples provide little useful quantitative information and may introduce noise into downstream analyses.
@@ -391,6 +504,8 @@ save(dia_qf, file = "preprocessed/lesson03.rda")
 - `joinAssays` combines per-sample `SummarizedExperiment` objects into a single combined set, with missing values (`NA`) where a precursor was not detected in a given sample
 - `nNA` provides a convenient summary of missing values per feature (row) and per sample (column)
 - DIA data typically has a relatively high proportion of missing values, as proteins must be detected independently in each sample
+- The probability that a precursor is detected rises steadily with its intensity, with no fixed detection limit, so a missing value suggests low intensity but does not show that the precursor was absent
+- We do not replace missing values; we filter sparse precursors, summarise proteins from observed precursors, and test only proteins quantified in enough samples of every group
 - `filterNA` removes precursors that are missing above a specified proportion of samples, with the threshold chosen based on the experimental context
 :::
 

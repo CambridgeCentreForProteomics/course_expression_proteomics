@@ -8,6 +8,7 @@
 ## ---------------------------------------------------------------------------------------------------------
 
 library("QFeatures")
+library("naniar")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
@@ -120,9 +121,65 @@ setdiff(sample_level_rdata_names, joined_rdata_names)
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Patterns of missingness across samples
+## ---------------------------------------------------------------------------------------------------------
+
+## An upset plot shows which combinations of samples share missing values.
+## Each sample is a set; each bar counts the precursors missing in exactly
+## that combination of samples. Use naniar::gg_miss_upset on the assay of the
+## "precursors_no_cont" set, converted to a data frame.
+
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Missing values and intensity
+##
+## For each precursor in the "precursors_no_cont" set, calculate the
+## proportion of samples in which it is missing and the mean of its log2
+## intensity over the samples in which it was detected. Plot one against the
+## other.
+##
+## - How does the proportion of missing values change with intensity?
+## - Are high-intensity precursors ever missing?
+##
+## Hint: Extract the matrix with assay(). rowMeans(is.na(x)) gives the
+## proportion missing per row, and rowMeans(log2(x), na.rm = TRUE) the mean of
+## the observed log2 values.
+## ---------------------------------------------------------------------------------------------------------
+
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## How we handle missing values
+## ---------------------------------------------------------------------------------------------------------
+
+## We do not replace missing values. Instead:
+## 1. Remove precursors detected in too few samples (next section).
+## 2. Summarise proteins from the detected precursors with robustSummary
+##    (next lesson).
+## 3. Before testing, keep only proteins quantified in at least three samples
+##    of every group (statistical analysis lesson).
+
+
+## ---------------------------------------------------------------------------------------------------------
 ## Filtering sparse precursors
 ## ---------------------------------------------------------------------------------------------------------
 
 ## pNA = 0.75 means a precursor must be observed in at least 25% of samples
 ## (approximately 8 of 31 samples).
+
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Removing a sample
+## ---------------------------------------------------------------------------------------------------------
+
+## All 31 samples are kept. To remove one (e.g. after a failed injection),
+## subset the QFeatures object by column, which removes it from every set:
+##
+##   dia_qf <- dia_qf[, dia_qf$runCol != "Ctr_A1"]
+##
+## Ctr_A1 is only an example; do not run this.
 
