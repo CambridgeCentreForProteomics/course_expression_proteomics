@@ -64,7 +64,7 @@ There are a few aspects of our data that we need to consider prior to deciding w
 
 ## Handling missing values prior to testing
 
-DIA data contains a higher proportion of missing values than TMT data.
+Label-free DIA data has many missing values at the protein level.
 Before statistical testing, we need to decide how to handle proteins that are not quantified in enough samples within each group to support a reliable estimate of group-level abundance.
 
 We only want to test proteins which are quantified in at least 3 replicates of each condition.
@@ -468,7 +468,7 @@ limma_results_all_contrasts %>%
 
 When testing thousands of proteins across multiple contrasts, p-values must be adjusted for multiple testing.
 The standard Benjamini-Hochberg method was designed for independent tests, but our contrasts share data and are positively correlated.
-Fortunately, BH remains valid under this kind of positive dependence (formally called Positive Regression Dependency on a Subset, PRDS), so applying BH globally across all contrasts is statistically justified and more rigorous than correcting each contrast separately.
+BH remains valid under positive dependence between tests, which is the kind expected between contrasts that share a control group, so we apply it once across all contrasts.
 
 ```{r}
 #| label: get-down-regulated-proteins
@@ -617,14 +617,18 @@ limma_fit_treat <- treat(
   robust = TRUE
 )
 
-limma_results_treat_list <- lapply(
-  colnames(contrasts_matrix),
-  function(contrast) {
-    topTreat(limma_fit_treat, coef = contrast, n = Inf) %>%
-      rownames_to_column("UniprotID") %>%
-      mutate(contrast = contrast)
-  }
-)
+limma_results_treat_list <- vector('list', length(contrasts))
+names(limma_results_treat_list) <- contrasts
+
+for (contrast in contrasts) {
+  limma_results_treat_list[[contrast]] <- topTreat(
+    limma_fit_treat,
+    coef = contrast,
+    n = Inf
+  ) %>%
+    rownames_to_column("UniprotID") %>%
+    mutate(contrast = contrast)
+}
 
 limma_results_treat_all <- bind_rows(limma_results_treat_list) %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))

@@ -64,7 +64,7 @@ The key columns we will use in our analysis are:
 - **`Precursor.Id`**: a unique identifier for each precursor --- typically the modified peptide sequence and charge state (e.g. `"PEPTM[ox]IDEQ..2"`)
 - **`Protein.Group`**: the canonical protein group identifier used for aggregation to protein level.
   Proteins that cannot be distinguished from each other based on proteotypic peptides detected in the data are grouped together under one Protein Group.
-- **`Protein.Ids`**: the UniProt accession(s) of the protein(s) to which the precursor is assigned
+- **`Protein.Ids`**: every UniProt accession the precursor matches, before protein inference
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
 - **`Run`**: the identifier for the sample run --- one value per LC-MS sample injection
 - **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
@@ -101,13 +101,10 @@ sample_metadata <- read_excel("data/monkeypox_metadata.xlsx")
 print(sample_metadata)
 ```
 
-There are several columns in this file including the `sample_id` which is the
-name of the sample as well as the group, sex and age group. We have also created
-a column called `runCol` which is a concise, human-readable label for each
-sample which we add to our `diann_df` to in the next section to use in our
-analysis. It is important that this column is named `runCol`, as the 
-`readQFeaturesFromDIANN` function expects this column name when importing 
-the DIA-NN results.
+The file holds the `sample_id`, which is the name of each sample, together with its group, sex and age group.
+The `runCol` column holds a concise, human-readable label for each sample.
+`readQFeaturesFromDIANN` matches each run in the DIA-NN report to a row of the metadata through a column that must be called `runCol`.
+In the next section we add the same `runCol` values to `diann_df`, so that the two can be matched.
 
 
 {{< include ../_shared/_pipe.md >}}
@@ -137,6 +134,15 @@ diann_df[, "Run"] %>%
   head(2)
 ```
 
+`merge` keeps only runs whose name appears in both tables, so a run whose name we failed to clean would be dropped without a message.
+This check stops with an error instead.
+
+```{r}
+#| label: check-run-names-match
+# Every run in the report must have a row in the metadata
+stopifnot(all(unique(diann_df$Run) %in% sample_metadata$sample_id))
+```
+
 In the following code chunk we add a new column called `runCol` to the `diann_df` data.
 This column will serve as a link between the metadata and the `diann_df` proteomics data as well as being useful for visualisation and annotating our data at a later stage in the analysis.
 
@@ -150,21 +156,13 @@ diann_df <- diann_df %>%
   )
 ```
 
-If we look at the column dimensions and names of the `diann_df` we now see the `runCol` column has been added.
+Each run name in `diann_df` now has its short `runCol` label alongside it.
 
 ```{r}
-#| label: check-column-data-types
-dim(diann_df)
-```
-
-```{r}
-#| label: access-column-names
-names(diann_df)
-```
-
-```{r}
-#| label: access-row-names
-head(diann_df)
+#| label: show-run-labels
+diann_df %>%
+  distinct(Run, runCol) %>%
+  head()
 ```
 
 ## Reading into a `QFeatures` object

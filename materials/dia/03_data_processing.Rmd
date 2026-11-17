@@ -210,8 +210,6 @@ The entries in this contaminant database are named with a `Cont_` prefix, which 
 
 We can inspect the `rowData` to check the contaminants can be identified as expected.
 
-It's important to note that because DIA-NN uses a normalisation based on total sample intensity under the assumption that the same amount of peptides were injected in each sample, precursors mapping to contaminants included in the FASTA database are excluded from quantification.
-
 ```{r}
 #| label: summarise-to-protein-level
 # Extract the rowData
@@ -220,8 +218,6 @@ rd <- rowData(dia_qf[['precursors']]) %>%
 
 table(grepl('Cont_', rd$Protein.Ids))
 ```
-
-## Filtering contaminants
 
 We now remove precursors with a contaminant match from our data.
 
@@ -324,14 +320,14 @@ precursors_missing$nNAcols %>%
 :::::
 :::
 
+## Filtering sparse precursors
+
 Precursors that are missing across the majority of samples provide little useful quantitative information and may introduce noise into downstream analyses.
 We filter out precursors with excessive missing values using the `filterNA` function, where the `pNA` argument specifies the maximum proportion of missing values allowed per precursor.
 
 The choice of threshold involves a trade-off: stricter thresholds (lower `pNA`) remove more precursors and produce a cleaner but smaller dataset; more permissive thresholds retain more precursors but include those with very sparse quantification, which are more likely to be inaccurately quantified.
 Here we use `pNA = 0.75`, meaning a precursor must be observed in at least 25% of samples --- with 31 samples, this corresponds to a minimum of approximately 8 observations.
 Further filtering will be applied at the protein level in the statistical analysis, where we will require proteins to be quantified in at least 3 replicates per group before testing.
-
-## Filtering sparse precursors
 
 We create a copy called `"precursors_filtered_missing"` --- after filtering, this set will contain only precursors that meet the missing value threshold.
 
@@ -359,8 +355,24 @@ Now we perform the missing value filtering on the new assay, again specifying th
 #| label: verify-filter-results
 dia_qf <- dia_qf %>%
   filterNA(pNA = 0.75, i = "precursors_filtered_missing")
+
+nrow(dia_qf[["precursors_no_cont"]])
+nrow(dia_qf[["precursors_filtered_missing"]])
 ```
 
+The filter retains `r nrow(dia_qf[["precursors_filtered_missing"]])` of the `r nrow(dia_qf[["precursors_no_cont"]])` non-contaminant precursors.
+
+## Removing a sample
+
+We keep all 31 samples, because none stood out in the checks in the previous lesson.
+If a sample did need to be removed, for example after a failed injection, we would subset the `QFeatures` object by column, which removes the sample from every set at once.
+Here `Ctr_A1` is only an example, and the chunk is not run.
+
+```{r}
+#| label: drop-sample-example
+#| eval: false
+dia_qf <- dia_qf[, dia_qf$runCol != "Ctr_A1"]
+```
 
 ```{r}
 #| label: create-final-dataset

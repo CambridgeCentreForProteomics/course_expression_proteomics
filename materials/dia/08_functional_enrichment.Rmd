@@ -59,7 +59,7 @@ limma_results_covid_control <- limma_results_all_contrasts %>%
 <!-- TS: I wouldn't ever use `clusterProfiler` in my own work to perform GO term ORA as I'd want to use the GO annotations direct to the UniprotIDs. Also, where mapping is required, I'd want to have control/insight in the mapping of my protein IDs to gene IDs and the GO annotations. I would also want to explore whether there's a relationship between abundance and probability of being significant as this is likely to be an artifact that needs to be accounted for using, e.g `goseq` package. However, `clusterProfiler` is a popular package and is easy to use. -->
 
 We use the `enrichGO` function from the `clusterProfiler` package to perform GO ORA on the proteins with significantly decreased abundance in COVID-19 patients relative to controls (adjusted p-value < 0.05 and negative log fold change).
-We test all three GO ontologies simultaneously (`ont = "ALL"`).
+We test the Biological Process ontology (`ont = "BP"`), which describes the processes our proteins take part in.
 
 ```{r}
 #| label: run-go-enrichment
@@ -73,7 +73,7 @@ go_down <- enrichGO(
   OrgDb = org.Hs.eg.db, # database to query
   keyType = "UNIPROT", # protein ID encoding
   pvalueCutoff = 0.05,
-  ont = "ALL", # can be CC, MF, BP, or ALL
+  ont = "BP", # can be CC, MF, BP, or ALL
   minGSSize = 10, # smallest GO term (number of annotated proteins) to test
   maxGSSize = 500, # largest GO term to test
   readable = TRUE
@@ -102,13 +102,20 @@ Use `%in%` to find the tested proteins that are missing from it.</details>
 ::::: {.callout-answer collapse="true"}
 ```{r}
 #| label: go-enrichment-tested-proteins
-head(as.data.frame(go_down)[, c("ONTOLOGY", "Description", "GeneRatio", "BgRatio")])
+head(as.data.frame(go_down)[, c("Description", "GeneRatio", "BgRatio")])
 
 length(sig_down)
 nrow(limma_results_covid_control)
 ```
 
-The significantly decreased list has 38 proteins and we tested 342, but the denominators in the results are 33 and 174.
+```{r}
+#| label: go-enrichment-denominators
+#| include: false
+n_sig_used <- as.numeric(sub(".*/", "", go_down@result$GeneRatio[1]))
+n_bg_used <- as.numeric(sub(".*/", "", go_down@result$BgRatio[1]))
+```
+
+The significantly decreased list has `r length(sig_down)` proteins and we tested `r nrow(limma_results_covid_control)`, but the denominators in the results are `r n_sig_used` and `r n_bg_used`.
 Proteins that cannot be translated to a gene with GO annotation cannot contribute to either the protein list or the background, and `enrichGO` drops them without a message.
 
 ```{r}
@@ -138,16 +145,24 @@ unmapped %>%
   dplyr::select(UniprotID, Genes, logFC, adj.P.Val)
 ```
 
-`bitr` warns that 48.25% of the IDs fail to map, which is 165 of the 342 tested proteins.
-All 95 IDs that list several UniProt accessions separated by `;` fail, because the whole string is not an accession in the annotation database.
-Of the 70 single accessions that fail, 66 have gene names beginning with `IG`, which are immunoglobulin chains.
-Four of the 38 significantly decreased proteins fail to map, each with several accessions in its ID.
+`bitr` warns that some IDs fail to map: `r nrow(unmapped)` of the `r nrow(limma_results_covid_control)` tested proteins.
+All `r sum(grepl(";", unmapped$UniprotID))` IDs that list several UniProt accessions separated by `;` fail, because the whole string is not an accession in the annotation database.
+Of the `r sum(!grepl(";", unmapped$UniprotID))` single accessions that fail, `r sum(!grepl(";", unmapped$UniprotID) & grepl("^IG", unmapped$Genes))` have gene names beginning with `IG`, which are immunoglobulin chains.
+`r sum(unmapped$UniprotID %in% sig_down)` of the `r length(sig_down)` significantly decreased proteins fail to map.
 
 The enrichment is therefore tested on the proteins that could be mapped, not on everything we quantified.
 Any GO term that the lost proteins would have supported cannot be detected, and the background excludes them, so the p-values describe the mappable proteins only.
 Options include mapping each accession within a multiple-accession ID separately, which requires deciding how to credit the protein, or using annotations keyed directly to UniProt accessions.
 Whichever we choose, we should report how many proteins were lost.
 :::::
+:::
+
+::: {.callout-note}
+#### What over-representation analysis can show here
+
+The background is the `r n_bg_used` mappable proteins we tested, all from plasma.
+A term can only be enriched relative to that background, so terms describing plasma proteins in general will not stand out, and the small number of proteins limits how many terms can reach significance.
+Abundant proteins are also more likely to be quantified well enough to reach significance, so a term made up of abundant proteins can appear enriched for that reason alone.
 :::
 
 ### Visualising significant GO terms
@@ -159,7 +174,7 @@ Whichever we choose, we should report how many proteins were lost.
 - What property of the Gene Ontology leads to this redundancy, and how might we address it?
 :::
 
-We produce a dotplot of the significant GO terms, faceted by ontology (Biological Process, Molecular Function, Cellular Component).
+We produce a dotplot of the significant GO terms.
 The size of each dot represents the number of proteins annotated with that term, and the colour indicates the adjusted p-value.
 
 ```{r}
@@ -170,17 +185,16 @@ dotplot(
   font.size = 10,
   showCategory = Inf,
   label_format = 100,
-  split = "ONTOLOGY",
   color = "p.adjust"
-) +
-  facet_grid(ONTOLOGY ~ ., scales = 'free_y', space = 'free_y')
+)
 ```
 
 ### Reducing GO term redundancy using semantic similarity
 
 GO terms are arranged in a hierarchy, meaning many significant terms will be related to one another.
 This leads to a long list of redundant results.
-The `GOSemSim` package can be used to compute pairwise semantic similarity between terms, and the `simplify` function from `clusterProfiler` can then remove highly similar terms, keeping only the most significant representative from each cluster.
+The `simplify` function from `clusterProfiler` computes the semantic similarity between the terms in an enrichment result and removes highly similar terms, keeping only the most significant representative from each cluster.
+Separately, `pairwise_termsim` from `enrichplot` stores the pairwise similarities between terms in the enrichment result, using GO data built by `godata` from the `GOSemSim` package; the treeplot below is drawn from this object.
 
 ```{r}
 #| label: plot-go-enrichment
@@ -206,10 +220,8 @@ dotplot(
   font.size = 10,
   showCategory = Inf,
   label_format = 100,
-  split = "ONTOLOGY",
   color = "p.adjust"
-) +
-  facet_grid(ONTOLOGY ~ ., scales = 'free_y', space = 'free_y')
+)
 ```
 
 ### Visualising relationships between GO terms with a treeplot

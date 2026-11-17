@@ -211,7 +211,7 @@ pheatmap(
   treeheight_row = 100, # default is 50 — increase to give row dendrogram more space
   treeheight_col = 100, # default is 50 — increase to give col dendrogram more space
   cellwidth = 10, # fix cell width in points
-  cellheight = 0.25
+  cellheight = 0.25 # tuned to the number of proteins in the heatmap
 )
 ```
 

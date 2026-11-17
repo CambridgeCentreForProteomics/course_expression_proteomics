@@ -28,7 +28,7 @@ Samples were run individually (label-free) on the mass spectrometer using a Data
 ## Data-Independent Acquisition (DIA)
 
 Unlike Data-Dependent Acquisition (DDA), where the mass spectrometer selects individual precursor ions for fragmentation based on their intensity, DIA acquires fragment ion data for all precursors within defined m/z windows systematically and without selection bias.
-DIA data can exhibit more missing values between runs than TMT-labelled DDA data, since proteins must be detected independently in each sample rather than being quantified as part of a multiplexed pool.
+Because each sample is run separately, a protein has to be detected in every run to be quantified there, so missing values between runs are common.
 However, label-free DIA acquisition offers more complete and robust quantification than label-free DDA workflows while also enabling the quantification of tens of thousands (or more) samples as it does not involve multiplexing samples.
 DIA workflows designed for comprehensive coverage can quantify proteins across a much larger range of protein abundances than DDA workflows, which is particularly valuable for the detection and quantification of low abundance proteins.
 

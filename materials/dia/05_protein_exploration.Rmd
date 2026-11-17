@@ -72,8 +72,8 @@ We can then filter to a set of proteins of interest and plot abundance values pe
 proteins_of_interest <- c(
   'P02766', # TTR
   'P18428', # LBP
-  'P13796'
-) # LCP1
+  'P13796' # LCP1
+)
 
 long_form_protein %>%
   # filter to the proteins of interest
@@ -121,21 +121,14 @@ protein_pca <- dia_qf[["norm_proteins"]] %>%
 summary(protein_pca)
 ```
 
+The PCA uses the `r nrow(filterNA(dia_qf[["norm_proteins"]]))` proteins with no missing values, out of `r nrow(dia_qf[["norm_proteins"]])` in total.
+
 We plot a scree plot to inspect how much variance each PC explains.
 
 ```{r}
 #| label: create-violins
 fviz_screeplot(protein_pca)
 ```
-
-::: {.callout-discussion}
-#### Discussion
-
-- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples?
-  Is this what you expected based on the experimental design?
-- Are there any samples that look like outliers or behave differently?
-  What might explain this?
-:::
 
 We then plot the samples in PCA space, colouring by group and using shape to indicate age group.
 
@@ -151,6 +144,15 @@ p <- protein_pca$x %>%
 print(p)
 print(p + aes(x = PC3, y = PC4))
 ```
+
+::: {.callout-discussion}
+#### Discussion
+
+- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples?
+  Is this what you expected based on the experimental design?
+- Are there any samples that look like outliers or behave differently?
+  What might explain this?
+:::
 
 ## The `subsetByFeature` function
 
@@ -231,15 +233,10 @@ We can go one step further and also facet by condition so we can see the differe
 ```{r}
 #| label: variance-analysis
 TTR[,, c("precursors_filtered_missing", "proteins")] %>%
-  longForm() %>%
+  longForm(colvars = "group") %>%
   as_tibble() %>%
   mutate(
-    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value),
-    condition = case_when(
-      grepl('COVID', colname) ~ 'Covid19',
-      grepl('Ctr', colname) ~ 'control',
-      grepl('MPX', colname) ~ 'MPXV'
-    )
+    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value)
   ) %>%
   group_by(rowname) %>%
   mutate(value = value - mean(value, na.rm = TRUE)) %>%
@@ -251,7 +248,7 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
     legend.position = 'none'
   ) +
-  facet_grid(assay ~ condition, scales = 'free_x') +
+  facet_grid(assay ~ group, scales = 'free_x') +
   labs(x = 'Sample', y = 'Intensity (log2)')
 ```
 
