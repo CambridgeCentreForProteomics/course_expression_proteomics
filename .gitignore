@@ -45,3 +45,6 @@ figure/
 *.html
 # site_libs
 *.rmarkdown
+
+# Results table written by the DIA statistical analysis lesson
+course_files/dia/limma_results_all_contrasts.csv
