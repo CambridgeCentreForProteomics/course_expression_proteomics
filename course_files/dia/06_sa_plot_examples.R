@@ -4,7 +4,7 @@
 #
 # SA plots for the baseline analysis and two examples of poor preprocessing.
 #
-# Each scenario starts from the normalised protein-level data in
+# Each scenario starts from the protein-level data in
 # preprocessed/lesson04.rda, applies one manipulation, refits the limma model
 # and draws plotSA. Scenario 0 is the analysis from lesson 06. Scenarios 1 and 2
 # replace missing or low values with imputed values that are not measurements.
@@ -56,9 +56,9 @@ fit_limma <- function(x) {
 
 # --- Scenarios ----------------------------------------------------------------
 
-# Median-normalised log2 protein abundances in proteins quantified in at least
+# Log2 protein abundances in proteins quantified in at least
 # 3 samples of every group
-base <- replicated(assay(dia_qf[["norm_proteins"]]))
+base <- replicated(assay(dia_qf[["proteins"]]))
 
 scenarios <- list()
 

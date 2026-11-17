@@ -1,5 +1,5 @@
 ## ================================================
-## Lesson 04: Normalisation and aggregation
+## Lesson 04: Log transformation and aggregation
 ## ================================================
 
 
@@ -83,19 +83,3 @@ library("patchwork")
 ## and pass to naniar::gg_miss_upset. Use nintersects to limit the number
 ## of intersections shown.
 ## ---------------------------------------------------------------------------------------------------------
-
-
-
-
-## ---------------------------------------------------------------------------------------------------------
-## Normalisation
-## ---------------------------------------------------------------------------------------------------------
-
-## diff.median shifts each sample's intensity distribution so that all sample
-## medians match the grand median across all samples.
-
-
-
-## Visualise the effect of normalisation with density plots
-
-longForm(dia_qf[,,'proteins'], colvars = 'group')

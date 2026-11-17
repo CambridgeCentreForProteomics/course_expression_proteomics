@@ -40,7 +40,7 @@ library("patchwork")
 load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
-Having cleaned, aggregated, and normalised our data, we are now ready to explore the protein-level data before carrying out formal statistical testing.
+Having cleaned our data and aggregated it to protein level, we are now ready to explore the protein-level data before carrying out formal statistical testing.
 This includes visualising the abundance of specific proteins of interest, assessing overall sample structure using PCA, and tracing individual proteins across data levels to verify the processing pipeline has behaved as expected.
 
 ## Plotting quantification values for proteins of interest
@@ -53,7 +53,7 @@ We first convert the protein-level data to long format using `longForm`, extract
 ```{r}
 #| label: examine-sample-distributions
 long_form_protein <- longForm(
-  dia_qf[,, "norm_proteins"],
+  dia_qf[,, "proteins"],
   colvars = c('runCol', 'group'),
   rowvars = c('Genes', 'Protein.Names')
 ) %>%
@@ -108,11 +108,11 @@ long_form_protein %>%
 :::
 
 Since PCA requires a complete data matrix, we first remove proteins with any missing values using `filterNA`.
-We then extract the normalised protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
+We then extract the protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
 
 ```{r}
 #| label: create-boxplots
-protein_pca <- dia_qf[["norm_proteins"]] %>%
+protein_pca <- dia_qf[["proteins"]] %>%
   filterNA() %>%
   assay() %>%
   t() %>%
@@ -121,7 +121,7 @@ protein_pca <- dia_qf[["norm_proteins"]] %>%
 summary(protein_pca)
 ```
 
-The PCA uses the `r nrow(filterNA(dia_qf[["norm_proteins"]]))` proteins with no missing values, out of `r nrow(dia_qf[["norm_proteins"]])` in total.
+The PCA uses the `r nrow(filterNA(dia_qf[["proteins"]]))` proteins with no missing values, out of `r nrow(dia_qf[["proteins"]])` in total.
 
 We plot a scree plot to inspect how much variance each PC explains.
 

@@ -41,7 +41,7 @@ load("preprocessed/lesson04.rda", verbose = TRUE)
 
 ## Differential abundance analysis
 
-Having cleaned our data, aggregated from precursor to protein level, log2 transformed and normalised, we are now ready to carry out statistical analysis.
+Having cleaned our data, log2 transformed it and aggregated from precursor to protein level, we are now ready to carry out statistical analysis.
 
 The aim of this section is to answer the question: *"Which proteins show a significant change in abundance between MPXV-infected patients, COVID-19 patients, and healthy controls?"*.
 
@@ -69,13 +69,13 @@ Before statistical testing, we need to decide how to handle proteins that are no
 
 We only want to test proteins which are quantified in at least 3 replicates of each condition.
 
-We begin by extracting the normalised protein level data `"norm_proteins"` from
-the QFeatures object. This contains all `r nrow(dia_qf[["norm_proteins"]])`
+We begin by extracting the protein-level data `"proteins"` from
+the QFeatures object. This contains all `r nrow(dia_qf[["proteins"]])`
 proteins, before any filtering on replication.
 
 ```{r}
 #| label: extract-norm-proteins
-se <- getWithColData(dia_qf, "norm_proteins")
+se <- getWithColData(dia_qf, "proteins")
 print(se)
 ```
 
@@ -100,12 +100,12 @@ filter, and link it to the parent set. We see we are left with
 
 ```{r}
 #| label: add-replicated-set
-dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "norm_proteins_replicated")
+dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "proteins_replicated")
 
 dia_qf <- addAssayLink(
   dia_qf,
-  from = "norm_proteins",
-  to = "norm_proteins_replicated"
+  from = "proteins",
+  to = "proteins_replicated"
 )
 
 dia_qf
@@ -144,7 +144,7 @@ This estimates the mean abundance of each group for every protein.
 
 ```{r}
 #| label: fit-limma-model
-data <- assay(dia_qf[['norm_proteins_replicated']])
+data <- assay(dia_qf[['proteins_replicated']])
 
 limma_fit <- lmFit(data, limma_design)
 ```
@@ -331,7 +331,7 @@ limma_results_mpxv_control <- topTable(
   data.frame() %>%
   rownames_to_column('UniprotID')
 
-uniprot_annotations <- rowData(dia_qf[['norm_proteins_replicated']]) %>%
+uniprot_annotations <- rowData(dia_qf[['proteins_replicated']]) %>%
   data.frame() %>%
   select(Genes, Protein.Names)
 

@@ -65,7 +65,7 @@ We also prepare a data frame of sample annotations that records the group of eac
 ```{r}
 #| label: heatmap-abundance-matrix
 
-quant_mtx <- assay(dia_qf[["norm_proteins_replicated"]])
+quant_mtx <- assay(dia_qf[["proteins_replicated"]])
 
 # Rename the samples with their runCol
 colnames(quant_mtx) <- dia_qf$runCol
@@ -254,7 +254,7 @@ subset_mtx <- quant_mtx[sig_prot_F, ]
 # Use concatenation of gene name and UniprotID as row label
 rownames(subset_mtx) <- sprintf(
   '%s (%s)',
-  rowData(dia_qf[["norm_proteins_replicated"]])[sig_prot_F, "Genes"],
+  rowData(dia_qf[["proteins_replicated"]])[sig_prot_F, "Genes"],
   sig_prot_F
 )
 

@@ -67,7 +67,9 @@ The key columns we will use in our analysis are:
 - **`Protein.Ids`**: every UniProt accession the precursor matches, before protein inference
 - **`Genes`**: the gene symbol(s) associated with the identified proteins
 - **`Run`**: the identifier for the sample run --- one value per LC-MS sample injection
-- **`Precursor.Quantity`**: the quantified abundance of the precursor in that run
+- **`Precursor.Normalised`**: the quantified abundance of the precursor in that run, after DIA-NN's cross-run normalisation (described below)
+- **`Precursor.Quantity`**: the same abundance before normalisation
+- **`Normalisation.Factor`**: the factor DIA-NN multiplied `Precursor.Quantity` by to give `Precursor.Normalised`
 - **Q-value columns** (`Q.Value`, `PG.Q.Value`, `Lib.Q.Value`, `Lib.PG.Q.Value` and others): the estimated false discovery rates for each identification, described in the DIA-NN Q-value callout in lesson 01
 
 The report also contains chromatographic quality metrics per precursor per run.
@@ -165,18 +167,64 @@ diann_df %>%
   head()
 ```
 
+## Normalisation in DIA-NN
+
+Even when the same amount of material is intended to go into every run, technical factors make the measured abundances differ between runs.
+For example, pipetting errors change the total amount injected, and other effects act differently on different peptides.
+Normalisation removes these non-biological differences so that abundances can be compared between samples.
+
+DIA-NN normalises the precursor quantities itself, once it has processed all the runs, and reports both versions: `Precursor.Quantity` before normalisation and `Precursor.Normalised` after it.
+The [DIA-NN documentation](https://github.com/vdemichev/DiaNN) describes two modes:
+
+- **Global normalisation** corrects for differences in the total amount of material injected into each run.
+- **Retention-time-dependent normalisation**, the default, also corrects for effects that act differently on peptides according to their hydrophobicity, which is reflected in their retention time (RT).
+
+For each precursor in each run, `Normalisation.Factor` records the factor that was applied.
+If DIA-NN had applied only a global correction, every precursor in a run would share the same factor.
+Plotting the factors against retention time for a few runs shows that this is not the case.
+
+```{r}
+#| label: plot-normalisation-factors
+#| fig-width: 7
+#| fig-height: 5
+diann_df %>%
+  filter(runCol %in% unique(runCol)[1:4]) %>%
+  ggplot(aes(x = RT, y = log2(Normalisation.Factor))) +
+  geom_point(size = 0.3, alpha = 0.3) +
+  facet_wrap(~runCol) +
+  theme_bw() +
+  labs(x = "Retention time", y = "log2(Normalisation factor)")
+```
+
+Within each run the factor follows a curve along the retention time axis, and the shape of the curve differs between runs.
+So DIA-NN has applied a different correction to each part of the chromatographic gradient.
+
+We import `Precursor.Normalised` rather than normalising the data ourselves.
+DIA-NN normalises at an earlier stage of the analysis, on individual precursors, where more information is available: it knows when each precursor eluted in each run.
+After we aggregate to protein level, that information is lost, because the precursors of one protein elute at different times across the gradient.
+A protein-level method, such as shifting each sample's median to a common value, can apply only one correction per sample.
+
+::: {.callout-note}
+#### When not to use the normalised quantities
+
+Generic normalisation like this assumes that most peptides do not differ in abundance between samples, so that the differences remaining between runs are technical.
+We make this assumption for these plasma samples, but it does not hold for every experiment.
+For experiments such as protein fractionation, where many peptides are expected to differ between samples, the DIA-NN documentation suggests a custom normalisation.
+This can be applied to `Precursor.Quantity`, or to data from DIA-NN run with normalisation disabled.
+:::
+
 ## Reading into a `QFeatures` object
 
 We use the `readQFeaturesFromDIANN` function to import the cleaned DIA-NN data into a `QFeatures` object.
 This function creates one `SummarizedExperiment` per run, with each set containing the precursor-level quantification data for that run.
-The `runCol` argument specifies which column in the input data frame identifies the run.
+The `runCol` argument specifies which column in the input data frame identifies the run, and `quantCols` specifies the column of quantities to import, here `Precursor.Normalised`.
 
 ```{r}
 #| label: explore-missing-values
 dia_qf <-
   readQFeaturesFromDIANN(
     diann_df,
-    quantCols = "Precursor.Quantity",
+    quantCols = "Precursor.Normalised",
     fnames = "Precursor.Id",
     runCol = "runCol",
     colData = sample_metadata
@@ -379,6 +427,7 @@ save(dia_qf, file = "preprocessed/lesson02.rda")
 #### Key Points
 
 - DIA-NN outputs a `.parquet` format report file containing precursor- and protein-level quantification data for each sample
+- DIA-NN normalises precursor quantities across runs using retention-time-dependent factors; we import these normalised quantities (`Precursor.Normalised`) because DIA-NN can correct each precursor according to its elution time, which a protein-level normalisation cannot
 - The `readQFeaturesFromDIANN` function imports DIA-NN output into a `QFeatures` object, creating one `SummarizedExperiment` per sample run
 - Sample metadata is stored in the `colData` of the `QFeatures` object and can be used to annotate samples with experimental group information
 - The `rowData` of each per-sample `SummarizedExperiment` contains quality metrics from DIA-NN (e.g. FWHM, Q-values) that can be used to explore data quality and guide downstream filtering decisions

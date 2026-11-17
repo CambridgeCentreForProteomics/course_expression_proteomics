@@ -1,5 +1,5 @@
 ---
-title: Normalisation and aggregation
+title: Log transformation and aggregation
 bibliography: ../course_refs.bib
 editor_options:
   chunk_output_type: console
@@ -10,7 +10,6 @@ editor_options:
 
 - Know how to log2 transform DIA precursor data within a `QFeatures` object
 - Understand how to use `robustSummary` to summarise precursor-level data to protein-level abundance, including in the presence of missing values
-- Be able to normalise protein-level data using the `diff.median` method
 - Understand the importance of visualising missing values at the protein level
 :::
 
@@ -31,17 +30,17 @@ library("naniar")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
-library("patchwork")
 
 load("preprocessed/lesson03.rda", verbose = TRUE)
 ```
 
 Having filtered our DIA-NN data to retain only high-confidence identifications and removed precursors with excessive missing values, we are now ready to continue processing.
-In this lesson we will log2 transform the precursor-level data, aggregate to protein-level abundances, and normalise the protein-level data ready for downstream statistical analysis.
+The precursor quantities were normalised by DIA-NN before we imported them.
+In this lesson we will log2 transform the precursor-level data and aggregate to protein-level abundances ready for downstream statistical analysis.
 
 ## Logarithmic transformation
 
-If we look at the distribution of raw precursor intensities, we will see that the abundance values are dramatically skewed towards zero.
+If we look at the distribution of untransformed precursor intensities, we will see that the abundance values are dramatically skewed towards zero.
 
 ```{r}
 #| label: check-aggregation
@@ -54,7 +53,7 @@ dia_qf[["precursors_filtered_missing"]] %>%
   ggplot(aes(x = value)) +
   geom_histogram() +
   theme_bw() +
-  xlab("Abundance (raw)")
+  xlab("Abundance (untransformed)")
 ```
 
 {{< include ../_shared/_log_transformation.md >}}
@@ -182,7 +181,7 @@ shown.</details>
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
-#| label: normalise-median-centering
+#| label: plot-missingness-upset
 #| fig-height: 10
 #| fig-width: 10
 #| warning: false
@@ -207,58 +206,8 @@ This is biologically informative but has implications for imputation: left-censo
 :::::
 :::
 
-## Normalisation
-
-{{< include ../_shared/_normalisation_intro.md >}}
-
-{{< include ../_shared/_median_normalisation.md >}}
-
-We apply the `diff.median` method, which shifts each sample's intensity distribution so that all sample medians match the grand median across all samples.
-
-::: {.callout-note}
-#### Alternative normalisation methods
-
-More sophisticated normalisation approaches may be appropriate depending on the data.
-For example, the authors of the original study from which this dataset is derived [@Wang2022] used cyclic loess normalisation, available via `limma::normalizeCyclicLoess()`, which corrects for intensity-dependent biases rather than applying a simple global shift.
-However, applying it within the QFeatures pipeline requires extracting and replacing the assay matrix manually, and because cyclic loess is sensitive to missing values, additional care is needed --- complexity beyond the scope of this course.
-:::
-
 ```{r}
-#| label: qfeatures-normalise
-
-dia_qf <- normalize(
-  dia_qf,
-  i = "proteins",
-  name = "norm_proteins",
-  method = "diff.median"
-)
-```
-
-We can visualise the effect of normalisation by plotting density curves of protein abundance per sample before and after normalisation.
-
-```{r}
-#| label: visualise-normalization-effect
-#| warning: false
-
-pre_norm <- longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
-  ggplot(aes(x = value, colour = group, group = colname)) +
-  geom_density() +
-  theme_classic() +
-  xlab("log2 (Abundance)") +
-  ggtitle('Pre-normalisation')
-
-post_norm <- longForm(dia_qf[,, 'norm_proteins'], colvars = 'group') %>%
-  ggplot(aes(x = value, colour = group, group = colname)) +
-  geom_density() +
-  theme_classic() +
-  xlab("log2 (Abundance)") +
-  ggtitle('Post-normalisation')
-
-pre_norm + post_norm
-```
-
-```{r}
-#| label: verify-normalization
+#| label: save-lesson04
 #| include: false
 
 save(dia_qf, file = "preprocessed/lesson04.rda")
@@ -271,7 +220,6 @@ save(dia_qf, file = "preprocessed/lesson04.rda")
 - `robustSummary` is the recommended summarisation method for DIA data, as it can handle missing values at the precursor level without requiring imputation
 - Proteins where all precursors are missing in a given sample will still have missing protein-level abundances, even with `robustSummary` --- these should be explored and handled appropriately
 - Upset plots are a useful way to visualise patterns of missingness across samples, helping to identify whether missing values are random or associated with particular groups
-- `diff.median` normalisation corrects for sample-level systematic differences by shifting each sample's intensity distribution to have the same median
 :::
 
 ## References {-}

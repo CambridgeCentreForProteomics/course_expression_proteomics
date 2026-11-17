@@ -30,7 +30,7 @@ library("patchwork")
 ## getWithColData extracts a SummarizedExperiment from the QFeatures object,
 ## carrying the colData across so we can subset directly by group.
 
-se <- getWithColData(dia_qf, "norm_proteins")
+se <- getWithColData(dia_qf, "proteins")
 print(se)
 
 ## Keep only proteins quantified in >= 3 samples of every group.

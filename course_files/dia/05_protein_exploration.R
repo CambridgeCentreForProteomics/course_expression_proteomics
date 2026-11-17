@@ -28,7 +28,7 @@ library("patchwork")
 ## Plotting quantification values for proteins of interest
 ## ---------------------------------------------------------------------------------------------------------
 
-## Convert normalised protein-level data to long format, carrying across
+## Convert protein-level data to long format, carrying across
 ## both sample-level and feature-level metadata for plotting.
 
 
