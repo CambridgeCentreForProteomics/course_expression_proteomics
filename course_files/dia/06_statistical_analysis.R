@@ -44,6 +44,19 @@ for (g in unique(se$group)) {
 
 print(table(tokeep))
 
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Which proteins does the replication filter remove?
+##
+## 1. For the proteins removed by the filter, count the quantified samples in
+##    each group.
+## 2. How many are removed because of a single group, with the other two groups
+##    well quantified?
+## 3. Find CRP in the table. What does its pattern suggest, and can we say
+##    anything about it with this workflow?
+## ---------------------------------------------------------------------------------------------------------
+
+
 ## Add new set with only the replicated proteins
 
 
@@ -158,6 +171,9 @@ print(table(tokeep))
 ## correcting each contrast separately. BH correction is valid under the positive
 ## correlation structure typical of multi-contrast proteomics experiments.
 
+
+
+## Write the final results for every protein in every contrast to a CSV file
 
 
 ## How many significant changes in each contrast?
