@@ -1,0 +1,93 @@
+---
+title: Adapting the workflow to your own data
+---
+
+::: {.callout-tip}
+#### Learning Objectives
+
+- Know which steps of the workflow depend on the dataset, and what to check at each one before running it on your own DIA-NN output
+:::
+
+The lessons apply each step to one dataset: plasma from 31 patients in three groups, acquired on a SCIEX instrument and processed with DIA-NN using match-between-runs.
+Most of the code runs unchanged on another DIA-NN report.
+The steps below are the ones that depend on the dataset, in the order they appear in the lessons.
+
+## Importing the data (lesson 02)
+
+- **The report.**
+  We read DIA-NN's main report from a `.parquet` file with `arrow::read_parquet()`.
+  If your report is a tab-separated text file, read it with `read.delim()` instead.
+  Check with `names()` that the columns used in the lessons (`Run`, `Precursor.Id`, `Protein.Group`, `Genes`, `Precursor.Normalised` and the Q-value columns) are present, since column names can differ between DIA-NN versions.
+- **The metadata.**
+  You need one row per run, with a column of sample names that match the cleaned run names, a column called `runCol`, and one column for each variable in your design.
+  Building it as a spreadsheet and reading it with `readxl::read_excel()` works for any size of experiment.
+- **Run names.**
+  The regular expression in `sub('\\..*', '', Run)` removes everything after the first full stop, which suits the SCIEX file names in this dataset.
+  Print `unique(diann_df$Run)` for your own report and write the pattern that turns those names into your sample names.
+  Keep the `stopifnot()` check that follows it: it is what tells you that a run has failed to match the metadata, rather than being dropped silently.
+
+## Filtering (lesson 03)
+
+- **Q-values.**
+  With match-between-runs, filter on the run-level (`Q.Value`, `PG.Q.Value`) and library-level (`Lib.Q.Value`, `Lib.PG.Q.Value`) Q-values, as in lesson 03.
+  Without match-between-runs, use `Global.Q.Value` and `Global.PG.Q.Value` in place of the library-level columns.
+  Check how many precursors each filter removes: if DIA-NN already filtered the report at the same threshold, some filters will remove nothing.
+- **Contaminants.**
+  The `Cont_` prefix comes from the contaminant sequences added to the FASTA file for this search.
+  Look at `Protein.Ids` in your own report to find the prefix your contaminant library uses, or whether it has one at all.
+- **Sparse precursors.**
+  `filterNA(pNA = 0.75)` keeps precursors observed in at least 25% of samples.
+  Compare that threshold with your smallest group: a precursor detected only in a group smaller than 25% of your samples is removed at this step.
+- **Samples.**
+  If the checks in lesson 02 show a failed run, remove it by subsetting the `QFeatures` object by column, as shown at the end of lesson 03.
+
+## Aggregation (lesson 04)
+
+- We aggregate precursors to proteins on `Protein.Group`, the protein group DIA-NN inferred for each precursor.
+  This step does not need changing.
+- We import `Precursor.Normalised` and do not normalise again at the protein level.
+  This assumes that most peptides do not differ in abundance between your samples.
+  If that is not true of your experiment, see "When not to use the normalised quantities" in lesson 02.
+
+## Statistical analysis (lesson 06)
+
+- **Replication filter.**
+  The filter keeps proteins quantified in at least 3 samples of every group.
+  With 3 samples per group, this requires a protein to be quantified in every sample.
+  Choose the minimum from your smallest group, and check which proteins it removes, as in the challenge in lesson 06.
+- **Design and contrasts.**
+  Change the factor levels in `factor(dia_qf$group, levels = ...)` to your groups, with the reference group first, and write one contrast for each comparison you want to make.
+  With two groups, skip the F-test (see "Experiments with two groups" in lesson 06).
+- **Save the results.**
+  Write the results table to a file at the end of the analysis, so that it can be opened outside R.
+
+## Functional enrichment (lesson 08)
+
+- **Organism.**
+  `org.Hs.eg.db` is the human annotation package.
+  For another organism, install and load the `OrgDb` package for that organism and pass it as `OrgDb` to `enrichGO()` and `bitr()`.
+- **Identifiers.**
+  Check how many of your tested proteins map to the annotation, as in the challenge in lesson 08, before interpreting the enrichment.
+  If many fail to map, run the enrichment on gene symbols with `keyType = "SYMBOL"`.
+- **Universe.**
+  Use all the proteins you tested as the universe, mapped in the same way as the proteins of interest.
+
+## Recording what you ran
+
+At the end of your analysis script, record the versions of R and of every package that was loaded:
+
+```{r}
+#| label: session-info
+#| eval: false
+sessionInfo()
+```
+
+Package updates can change results, for example when an annotation package is updated, so keep this output with your results.
+
+::: {.callout-tip}
+#### Key Points
+
+- Most of the workflow runs unchanged on another DIA-NN report; the steps that depend on the dataset are the run-name clean-up, the Q-value columns, the contaminant prefix, the missing-value thresholds, the design and contrasts, and the annotation package
+- Each missing-value threshold should be set from the size of the smallest group, and the proteins it removes should be checked
+- Save the results table and the output of `sessionInfo()` together
+:::

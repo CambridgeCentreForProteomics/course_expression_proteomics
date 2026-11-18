@@ -14,12 +14,20 @@ bibliography: ../course_refs.bib
 :::
 
 ```{r}
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/tmt"))
+```
+
+```{r}
 #| label: load-tmt-qfeatures
 #| echo: false
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.002.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.002.png"), error = FALSE)
 ```
 
 ```{r}
@@ -36,9 +44,8 @@ library("patchwork")
 library("tidyverse")
 library("pheatmap")
 library("ggupset")
-library("here")
 
-load(here("course_files/tmt/preprocessed/lesson02.rda"), verbose = TRUE)
+load("preprocessed/lesson02.rda", verbose = TRUE)
 ```
 
 Now that we have our PSM level quantitative data stored in a `QFeatures` object, the next step is to carry out some data cleaning.
@@ -317,7 +324,7 @@ cc_qf
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.003.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.003.png"), error = FALSE)
 ```
 
 As well as the completion of standard data cleaning steps which are common to all quantitative proteomics experiments (see above), different experimental methods are accompanied by additional data processing considerations.
@@ -385,7 +392,7 @@ For code and more information please see @Hutchings2023.
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.004.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.004.png"), error = FALSE)
 ```
 
 The data cleaning steps that we have carried out so far have mainly been concerned with achieving high quality quantitation.
@@ -424,7 +431,7 @@ In this way, the FDR can be thought of as the proportion of false positives abov
 #| out-width: "50%"
 #| fig-cap: "An illustration of the local FDR calculation used to assign each PSM an FDR."
 
-knitr::include_graphics("figs/local_fdr.png")
+knitr::include_graphics(here::here("materials/tmt/figs/local_fdr.png"), error = FALSE)
 ```
 
 In the parameters for our identification search using Proteome Discoverer we specified a PSM level FDR threshold.
@@ -607,7 +614,7 @@ For more information about how FDR values are calculated and used see @Prieto201
 #| fig-align: "center"
 #| out-width: "90%"
 
-knitr::include_graphics("figs/flow_chart/flow_chart.005.png", error = FALSE)
+knitr::include_graphics(here::here("materials/tmt/figs/flow_chart/flow_chart.005.png"), error = FALSE)
 ```
 
 {{< include ../_shared/_missing_values.md >}}
@@ -826,7 +833,7 @@ For a more in-depth discussion of imputation and how to complete this within the
 #| label: show-saved-data-info
 #| include: false
 
-save(cc_qf, file = here("course_files/tmt/preprocessed/lesson03.rda"))
+save(cc_qf, file = "preprocessed/lesson03.rda")
 ```
 
 ::: {.callout-tip}

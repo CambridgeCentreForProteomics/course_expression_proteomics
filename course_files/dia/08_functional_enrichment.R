@@ -28,7 +28,7 @@ library("dplyr")
 ## Subset results to the contrast of interest
 ## ---------------------------------------------------------------------------------------------------------
 
-## We focus on COVID-19 vs Control as the comparison of primary biological interest.
+## We use COVID-19 vs Control as the example; the same steps apply to the other contrasts.
 
 
 
@@ -38,6 +38,50 @@ library("dplyr")
 
 ## We test proteins with significantly decreased abundance in COVID-19 vs Control.
 ## The universe is all proteins that were tested (all quantified proteins).
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Which proteins were tested?
+##
+## enrichGO ran without telling us how many of our proteins it was able to use.
+## The GeneRatio and BgRatio columns of the results record the number of proteins
+## that were tested: the denominator of GeneRatio is the size of the protein list
+## and the denominator of BgRatio is the size of the background.
+##
+## 1. Convert go_down to a data frame and compare the denominators of GeneRatio
+##    and BgRatio with the number of proteins in sig_down and in the full set of
+##    tested proteins.
+## 2. The bitr function translates between ID types and reports the proportion of
+##    IDs that it fails to map. Use it to translate the UniProt IDs of the tested
+##    proteins to Entrez IDs. Which proteins fail to map? What do their IDs have
+##    in common?
+## 3. How many of the significantly decreased proteins are affected? How might
+##    losing these proteins change the enrichment results, and what could we do
+##    about it?
+##
+## Hint: bitr(limma_results_covid_control$UniprotID, fromType = "UNIPROT",
+## toType = "ENTREZID", OrgDb = org.Hs.eg.db) returns the IDs that mapped in its
+## UNIPROT column. Use %in% to find the tested proteins that are missing from it.
+## ---------------------------------------------------------------------------------------------------------
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Mapping by gene symbol
+##
+## Most of the proteins that failed to map in the previous exercise have a gene
+## name in the Genes column, and enrichGO accepts gene symbols with
+## keyType = "SYMBOL".
+##
+## 1. Make a gene symbol for each tested protein by taking the first entry in
+##    Genes, and drop the proteins with no gene name.
+## 2. Rerun the enrichment for the significantly decreased proteins with
+##    keyType = "SYMBOL", using the symbols of all tested proteins as the universe.
+## 3. Compare the new result with go_down: the sizes of the protein list and the
+##    background, the number of significant terms, and the top terms. Which
+##    proteins were added, and why did the results change the way they did?
+##
+## Hint: sub(";.*", "", Genes) keeps the text before the first ";".
+## ---------------------------------------------------------------------------------------------------------
 
 
 ## ---------------------------------------------------------------------------------------------------------

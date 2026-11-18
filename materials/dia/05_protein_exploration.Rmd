@@ -15,10 +15,17 @@ editor_options:
 :::
 
 ```{r}
-#| label: load-processed-data
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
+
+```{r}
+#| label: load-packages-and-data
 #| include: false
 
-library("here")
 library("QFeatures")
 library("limma")
 library("factoextra")
@@ -30,10 +37,10 @@ library("ggrepel")
 library("ggbeeswarm")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
-Having cleaned, aggregated, and normalised our data, we are now ready to explore the protein-level data before carrying out formal statistical testing.
+Having cleaned our data and aggregated it to protein level, we are now ready to explore the protein-level data before carrying out formal statistical testing.
 This includes visualising the abundance of specific proteins of interest, assessing overall sample structure using PCA, and tracing individual proteins across data levels to verify the processing pipeline has behaved as expected.
 
 ## Plotting quantification values for proteins of interest
@@ -44,9 +51,9 @@ We can plot the quantification values for these proteins to inspect them directl
 We first convert the protein-level data to long format using `longForm`, extracting both sample-level metadata (group, runCol) and feature-level metadata (gene names, protein names).
 
 ```{r}
-#| label: examine-sample-distributions
+#| label: protein-long-form
 long_form_protein <- longForm(
-  dia_qf[,, "norm_proteins"],
+  dia_qf[,, "proteins"],
   colvars = c('runCol', 'group'),
   rowvars = c('Genes', 'Protein.Names')
 ) %>%
@@ -57,7 +64,7 @@ long_form_protein <- longForm(
 We can then filter to a set of proteins of interest and plot abundance values per sample, grouped by condition.
 
 ```{r}
-#| label: plot-protein-abundance-distributions
+#| label: plot-proteins-of-interest
 #| fig-height: 6
 #| fig-width: 8
 #| warning: false
@@ -65,8 +72,8 @@ We can then filter to a set of proteins of interest and plot abundance values pe
 proteins_of_interest <- c(
   'P02766', # TTR
   'P18428', # LBP
-  'P13796'
-) # LCP1
+  'P13796' # LCP1
+)
 
 long_form_protein %>%
   # filter to the proteins of interest
@@ -100,12 +107,22 @@ long_form_protein %>%
 - What impact might this have on the PCA result and its biological interpretation?
 :::
 
+::: {.callout-answer collapse="true"}
+`prcomp` needs a complete matrix: it cannot place a sample along a component using a protein it has no value for.
+
+We keep `r nrow(filterNA(dia_qf[["proteins"]]))` of the `r nrow(dia_qf[["proteins"]])` proteins.
+Lesson 03 showed that values are more often missing at low intensity, so the proteins we keep are mostly the abundant, consistently detected ones.
+
+The PCA therefore describes those proteins.
+A protein detected mainly in one group cannot contribute, however strongly it differs between groups.
+:::
+
 Since PCA requires a complete data matrix, we first remove proteins with any missing values using `filterNA`.
-We then extract the normalised protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
+We then extract the protein-level assay, transpose so that samples are rows, and pass to `prcomp`.
 
 ```{r}
-#| label: create-boxplots
-protein_pca <- dia_qf[["norm_proteins"]] %>%
+#| label: run-pca
+protein_pca <- dia_qf[["proteins"]] %>%
   filterNA() %>%
   assay() %>%
   t() %>%
@@ -114,26 +131,19 @@ protein_pca <- dia_qf[["norm_proteins"]] %>%
 summary(protein_pca)
 ```
 
+The PCA uses the `r nrow(filterNA(dia_qf[["proteins"]]))` proteins with no missing values, out of `r nrow(dia_qf[["proteins"]])` in total.
+
 We plot a scree plot to inspect how much variance each PC explains.
 
 ```{r}
-#| label: create-violins
+#| label: pca-scree-plot
 fviz_screeplot(protein_pca)
 ```
-
-::: {.callout-discussion}
-#### Discussion
-
-- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples?
-  Is this what you expected based on the experimental design?
-- Are there any samples that look like outliers or behave differently?
-  What might explain this?
-:::
 
 We then plot the samples in PCA space, colouring by group and using shape to indicate age group.
 
 ```{r}
-#| label: hierarchical-clustering-heatmap
+#| label: plot-pca
 p <- protein_pca$x %>%
   merge(colData(dia_qf), by = 'row.names') %>%
   data.frame() %>%
@@ -145,6 +155,46 @@ print(p)
 print(p + aes(x = PC3, y = PC4))
 ```
 
+::: {.callout-discussion}
+#### Discussion
+
+- Looking at the PCA plot, which factor(s) appears to drive the most variation between samples?
+  Is this what you expected based on the experimental design?
+- Are there any samples that look like outliers or behave differently?
+  What might explain this?
+:::
+
+::: {.callout-answer collapse="true"}
+```{r}
+#| label: pca-discussion-values
+#| include: false
+pca_df <- data.frame(
+  protein_pca$x[, 1:4],
+  colData(dia_qf)[rownames(protein_pca$x), c("group", "age.group")]
+)
+
+pc1_var <- round(100 * summary(protein_pca)$importance["Proportion of Variance", "PC1"])
+pc1_group_r2 <- summary(lm(PC1 ~ group, data = pca_df))$r.squared
+max_age_r2 <- max(sapply(paste0("PC", 1:4), function(pc) {
+  summary(lm(pca_df[[pc]] ~ pca_df$age.group))$r.squared
+}))
+pc2_extreme <- rownames(pca_df)[c(which.max(pca_df$PC2), which.min(pca_df$PC2))]
+pc1_overlap <- rownames(pca_df)[
+  pca_df$group != "control" & pca_df$PC1 <= max(pca_df$PC1[pca_df$group == "control"])
+]
+```
+
+PC1 (`r pc1_var`% of the variance) largely separates the controls from the infected patients: only `r length(pc1_overlap)` of the `r sum(pca_df$group != "control")` infected samples `r ifelse(length(pc1_overlap) == 1, "lies", "lie")` within the range of the controls.
+Group explains `r round(100 * pc1_group_r2)`% of the variance along PC1.
+The MPXV and COVID-19 samples overlap on PC1 and PC2, so the two infections are more like each other than like the controls.
+Age group explains at most `r round(100 * max_age_r2)`% of the variance on any of the first four components.
+
+`r pc2_extreme[1]` and `r pc2_extreme[2]` sit far out on PC2, in opposite directions.
+PC2 is not related to group or age, so it is driven by something particular to these samples.
+To decide whether that matters, we would check them in the plot of precursors per sample in lesson 02, and look at which proteins have the largest loadings on PC2 (`protein_pca$rotation`).
+We keep all samples, as explained in lesson 03.
+:::
+
 ## The `subsetByFeature` function
 
 As well as visualising all proteins, it can be useful to extract all data levels corresponding to a specific protein of interest.
@@ -154,7 +204,7 @@ It takes a `QFeatures` object and one or more feature names, and returns a new `
 Let's look at TTR (Transthyretin; UniProt ID P02766), one of the proteins of interest plotted above.
 
 ```{r}
-#| label: visualize-pca
+#| label: subset-ttr
 TTR <- subsetByFeature(dia_qf, "P02766")
 
 experiments(TTR)
@@ -166,7 +216,7 @@ We can use this subset to visualise how the precursor data was aggregated to pro
 Note that some of the precursors were not quantified in all samples (broken lines in the plot), but the protein-level quantification is complete across all samples.
 
 ```{r}
-#| label: create-correlation-heatmap
+#| label: plot-ttr-precursors-proteins
 #| warning: false
 #| message: false
 
@@ -193,7 +243,7 @@ We can modify the intensities to put them on the same scale and make this cleare
 Now we can clearly see how similar the precursor profiles are and how this is summarised in the protein-level quantification.
 
 ```{r}
-#| label: plot-protein-correlations
+#| label: plot-ttr-centred
 #| warning: false
 #| message: false
 
@@ -222,17 +272,12 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
 We can go one step further and also facet by condition so we can see the differences between the conditions more clearly.
 
 ```{r}
-#| label: variance-analysis
+#| label: plot-ttr-centred-by-group
 TTR[,, c("precursors_filtered_missing", "proteins")] %>%
-  longForm() %>%
+  longForm(colvars = "group") %>%
   as_tibble() %>%
   mutate(
-    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value),
-    condition = case_when(
-      grepl('COVID', colname) ~ 'Covid19',
-      grepl('Ctr', colname) ~ 'control',
-      grepl('MPX', colname) ~ 'MPXV'
-    )
+    value = ifelse(assay == 'precursors_filtered_missing', log2(value), value)
   ) %>%
   group_by(rowname) %>%
   mutate(value = value - mean(value, na.rm = TRUE)) %>%
@@ -244,7 +289,7 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 7),
     legend.position = 'none'
   ) +
-  facet_grid(assay ~ condition, scales = 'free_x') +
+  facet_grid(assay ~ group, scales = 'free_x') +
   labs(x = 'Sample', y = 'Intensity (log2)')
 ```
 
@@ -252,7 +297,7 @@ TTR[,, c("precursors_filtered_missing", "proteins")] %>%
 #### Key Points
 
 - Plotting protein abundances for specific proteins of interest is a useful way to inspect the data before formal statistical testing
-- PCA wiht `prcomp` uses only the complete data matrix.
+- PCA with `prcomp` uses only the complete data matrix.
 - Colouring PCA plots by all potential sources of variation (e.g., group, age group) helps identify which factors drive the observed structure in the data
 - The `subsetByFeature` function provides a convenient way to extract all data levels for a protein of interest from a `QFeatures` object.
   We can use this to visualise how the precursor-level data was aggregated to protein level for a specific feature, and to verify that the processing pipeline has behaved as expected.

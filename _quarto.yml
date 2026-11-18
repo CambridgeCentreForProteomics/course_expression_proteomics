@@ -21,6 +21,9 @@ filters:
 execute:
   freeze: true
 
+exercises:
+  hide-answers: false # set to true to hide exercise answers in the rendered site
+
 knitr:
   opts_knit:
     cache.path: .knitr_cache

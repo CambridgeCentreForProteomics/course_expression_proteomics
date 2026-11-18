@@ -46,8 +46,21 @@ names(diann_df)
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Normalisation in DIA-NN
+## ---------------------------------------------------------------------------------------------------------
+
+## DIA-NN reports precursor quantities before (Precursor.Quantity) and after
+## (Precursor.Normalised) its retention-time-dependent normalisation.
+## Normalisation.Factor is the factor applied to each precursor in each run.
+## Plot log2(Normalisation.Factor) against RT for a few runs.
+
+
+
+## ---------------------------------------------------------------------------------------------------------
 ## Read into a QFeatures object
 ## ---------------------------------------------------------------------------------------------------------
+
+## Import the normalised quantities: quantCols = "Precursor.Normalised"
 
 
 

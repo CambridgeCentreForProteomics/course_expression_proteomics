@@ -30,21 +30,32 @@ library("patchwork")
 ## getWithColData extracts a SummarizedExperiment from the QFeatures object,
 ## carrying the colData across so we can subset directly by group.
 
-se <- getWithColData(dia_qf, "norm_proteins")
+se <- getWithColData(dia_qf, "proteins")
 print(se)
 
-## Subset by condition
-control <- se[, se$group == "control"]
-mpxv    <- se[, se$group == "MPXV"]
-cov     <- se[, se$group == "Covid19"]
+## Keep only proteins quantified in >= 3 samples of every group.
+## Looping over the groups means the same code works for any number of groups.
+tokeep <- rep(TRUE, nrow(se))
 
-## Keep only proteins quantified in >= 3 replicates per condition
-control_replicated <- rowSums(!is.na(assay(control))) >= 3
-mpxv_replicated    <- rowSums(!is.na(assay(mpxv))) >= 3
-cov_replicated     <- rowSums(!is.na(assay(cov))) >= 3
+for (g in unique(se$group)) {
+  n_quantified <- rowSums(!is.na(assay(se[, se$group == g])))
+  tokeep <- tokeep & n_quantified >= 3
+}
 
-tokeep <- control_replicated & mpxv_replicated & cov_replicated
 print(table(tokeep))
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Which proteins does the replication filter remove?
+##
+## 1. For the proteins removed by the filter, count the quantified samples in
+##    each group.
+## 2. How many are removed because of a single group, with the other two groups
+##    well quantified?
+## 3. Find CRP in the table. What does its pattern suggest, and can we say
+##    anything about it with this workflow?
+## ---------------------------------------------------------------------------------------------------------
+
 
 ## Add new set with only the replicated proteins
 
@@ -61,16 +72,22 @@ print(table(tokeep))
 
 
 ## ---------------------------------------------------------------------------------------------------------
-## Specifying contrasts
+## Fitting the linear model
 ## ---------------------------------------------------------------------------------------------------------
 
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Defining contrasts and moderating the variances
+## ---------------------------------------------------------------------------------------------------------
+
+## Define all three pairwise contrasts. The F-test and every pairwise result
+## are extracted from this one fit with topTable.
 
 ## Verify the contrasts matrix
 
 
-## ---------------------------------------------------------------------------------------------------------
-## Running the empirical Bayes-moderated test using limma
-## ---------------------------------------------------------------------------------------------------------
+## Apply the contrasts and moderate with eBayes (trend = TRUE, robust = TRUE)
 
 
 
@@ -84,10 +101,34 @@ print(table(tokeep))
 
 
 ## ---------------------------------------------------------------------------------------------------------
+## Challenge: Recognising a poorly behaved SA plot
+##
+## The SA plots shown in the lesson were drawn from the same protein-level data
+## as our model: our analysis, the same data after the lowest 10% of values
+## were removed and imputed with MinDet, and the same data after 10% of values
+## were removed at random and replaced by zero. There is nothing to run for this
+## exercise.
+##
+## 1. How does the trend line in each of the other two plots differ from the
+##    trend line in ours?
+## 2. Where do the red outlier proteins sit in each plot, and what do they tell
+##    us about those proteins?
+## 3. If you saw a plot like the second or third for your own data, what would
+##    you check first?
+## ---------------------------------------------------------------------------------------------------------
+
+
+## ---------------------------------------------------------------------------------------------------------
 ## F-test for overall significance across groups
 ## ---------------------------------------------------------------------------------------------------------
 
+## With two groups there is only one contrast and the F-test equals the
+## moderated t-test (F = t^2), so this step can be skipped.
+
 ## coef = NULL returns the F-statistic for overall significance across all groups.
+
+
+## Challenge: Interpreting the F-test p-value distribution
 
 
 ## ---------------------------------------------------------------------------------------------------------
@@ -132,6 +173,9 @@ print(table(tokeep))
 
 
 
+## Write the final results for every protein in every contrast to a CSV file
+
+
 ## How many significant changes in each contrast?
 
 
@@ -142,6 +186,30 @@ print(table(tokeep))
 # extract data for highlighting
 
 # plot
+
+
+## ---------------------------------------------------------------------------------------------------------
+## Challenge: Fold-change thresholds on a volcano plot
+##
+## A common way to call a protein differentially abundant is to require both a
+## significant adjusted p-value and a fold change of at least 2 (a log2 fold
+## change of +1 or -1).
+##
+## Using limma_results_all_contrasts, plot a volcano plot for the MPXV_Covid19
+## contrast only, with vertical dashed lines at a log2 fold change of -1 and +1.
+##
+## 1. How many proteins have adj.P.Val < 0.05 and lie outside the two lines?
+## 2. Are there significant proteins that lie inside the lines? Are there
+##    proteins outside the lines that are not significant?
+## 3. The x-axis shows a single estimate of the fold change for each protein,
+##    with no indication of its uncertainty. How confident can we be in the size
+##    of the fold change for a protein just outside a line, compared with one far
+##    outside it?
+##
+## Hint: Filter with filter(contrast == "MPXV_Covid19") and add
+## geom_vline(xintercept = c(-1, 1), linetype = "dashed") to the volcano plot
+## code above.
+## ---------------------------------------------------------------------------------------------------------
 
 
 ## ---------------------------------------------------------------------------------------------------------

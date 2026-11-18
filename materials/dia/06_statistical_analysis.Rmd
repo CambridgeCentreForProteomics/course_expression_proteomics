@@ -16,10 +16,17 @@ editor_options:
 :::
 
 ```{r}
-#| label: prepare-limma-design
+#| label: setup
+#| include: false
+#| purl: false
+
+knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
+```
+
+```{r}
+#| label: load-packages-and-data
 #| include: false
 
-library("here")
 library("QFeatures")
 library("limma")
 library("tidyr")
@@ -29,12 +36,12 @@ library("ggplot2")
 library("ggrepel")
 library("patchwork")
 
-load(here("course_files/dia/preprocessed/lesson04.rda"), verbose = TRUE)
+load("preprocessed/lesson04.rda", verbose = TRUE)
 ```
 
 ## Differential abundance analysis
 
-Having cleaned our data, aggregated from precursor to protein level, log2 transformed and normalised, we are now ready to carry out statistical analysis.
+Having cleaned our data, log2 transformed it and aggregated from precursor to protein level, we are now ready to carry out statistical analysis.
 
 The aim of this section is to answer the question: *"Which proteins show a significant change in abundance between MPXV-infected patients, COVID-19 patients, and healthy controls?"*.
 
@@ -57,63 +64,103 @@ There are a few aspects of our data that we need to consider prior to deciding w
 
 ## Handling missing values prior to testing
 
-DIA data contains a higher proportion of missing values than TMT data.
+Label-free DIA data has many missing values at the protein level.
 Before statistical testing, we need to decide how to handle proteins that are not quantified in enough samples within each group to support a reliable estimate of group-level abundance.
 
 We only want to test proteins which are quantified in at least 3 replicates of each condition.
-We first split the data by group, then count the number of finite (non-missing) values per protein within each group.
 
-We begin by extracting the normalised protein level data `"norm_protiens"` in
-the QF object. This contains `r `nrow(dia_qf[["norm_proteins"]])` proteins common
-across all conditions.
+We begin by extracting the protein-level data `"proteins"` from
+the QFeatures object. This contains all `r nrow(dia_qf[["proteins"]])`
+proteins, before any filtering on replication.
 
 ```{r}
-#| label: setup-contrasts
-se <- getWithColData(dia_qf, "norm_proteins")
+#| label: extract-proteins
+se <- getWithColData(dia_qf, "proteins")
 print(se)
 ```
 
-Now let's subset the dataset by condition,
+For each group in turn, we count the number of non-missing values per protein and keep only proteins quantified in at least 3 samples of every group.
+Looping over the groups means the same code works for any number of groups.
 
 ```{r}
-#| label: fit-linear-model
-control <- se[, se$group == "control"]
-mpxv <- se[, se$group == "MPXV"]
-cov <- se[, se$group == "Covid19"]
-```
+#| label: filter-replicated-proteins
+tokeep <- rep(TRUE, nrow(se))
 
-Finally, we keep only proteins quantified in at least 3 replicates.
+for (g in unique(se$group)) {
+  n_quantified <- rowSums(!is.na(assay(se[, se$group == g])))
+  tokeep <- tokeep & n_quantified >= 3
+}
 
-```{r}
-#| label: fit-contrasts
-control_replicated <- rowSums(!is.na(assay(control))) >= 3
-mpxv_replicated <- rowSums(!is.na(assay(mpxv))) >= 3
-cov_replicated <- rowSums(!is.na(assay(cov))) >= 3
-
-# Keep proteins common in all conditions
-tokeep <- control_replicated & mpxv_replicated & cov_replicated
 print(table(tokeep))
 ```
+
+::: {.callout-exercise}
+#### Challenge: Which proteins does the replication filter remove?
+
+{{< level 2 >}}
+
+1. For the proteins removed by the filter, count the quantified samples in each group.
+2. How many are removed because of a single group, with the other two groups well quantified?
+3. Find CRP in the table. What does its pattern suggest, and can we say anything about it with this workflow?
+
+::::: {.callout-answer collapse="true"}
+
+```{r}
+#| label: replication-filter-removed
+removed <- se[!tokeep, ]
+
+n_quantified <- sapply(unique(removed$group), function(g) {
+  rowSums(!is.na(assay(removed[, removed$group == g])))
+})
+rownames(n_quantified) <- rowData(removed)$Genes
+
+n_quantified[order(n_quantified[, "control"]), ]
+```
+
+```{r}
+#| label: replication-filter-removed-counts
+#| include: false
+passes <- n_quantified >= 3
+n_mpxv_only <- sum(!passes[, "MPXV"] & passes[, "control"] & passes[, "Covid19"])
+n_control_only <- sum(!passes[, "control"] & passes[, "MPXV"] & passes[, "Covid19"])
+group_sizes <- table(se$group)
+```
+
+`r sum(!tokeep)` proteins are removed.
+`r n_mpxv_only` of them fail in MPXV alone: with only `r group_sizes[["MPXV"]]` MPXV samples, requiring 3 of them is the strictest part of the filter.
+`r n_control_only` fail in the controls alone, with at least 3 quantified samples in both infected groups.
+
+CRP is quantified in `r n_quantified["CRP", "control"]` of `r group_sizes[["control"]]` controls, `r n_quantified["CRP", "Covid19"]` of `r group_sizes[["Covid19"]]` COVID-19 samples and `r n_quantified["CRP", "MPXV"]` of `r group_sizes[["MPXV"]]` MPXV samples.
+CRP rises sharply in plasma during inflammation, so the most likely explanation is that it is below the detection limit in most controls.
+Here the missing values carry the signal, but `limma` only sees the control values that were detected, and these are the highest ones.
+Any fold change estimated from them would be too small, so the filter is right to exclude CRP from testing.
+We can still report the detection counts.
+For a quantitative test, these proteins need a method that uses the missing values as information, such as `limpa`, introduced in the data processing lesson.
+
+These are only the proteins that passed the precursor filter in the data processing lesson.
+A protein detected only in the `r group_sizes[["MPXV"]]` MPXV samples never reaches this point, because `pNA = 0.75` requires each precursor to be observed in at least 25% of the `r ncol(se)` samples.
+:::::
+:::
 
 We now add a new set containing only the proteins that pass the replication
 filter, and link it to the parent set. We see we are left with 
 `r table(tokeep)["TRUE"]` proteins to test.
 
 ```{r}
-#| label: extract-results-mpxv-vs-ctrl
-dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "norm_proteins_replicated")
+#| label: add-replicated-set
+dia_qf <- addAssay(dia_qf, y = se[tokeep, ], name = "proteins_replicated")
 
 dia_qf <- addAssayLink(
   dia_qf,
-  from = "norm_proteins",
-  to = "norm_proteins_replicated"
+  from = "proteins",
+  to = "proteins_replicated"
 )
 
 dia_qf
 ```
 
 ```{r}
-#| label: extract-results-covid-vs-ctrl
+#| label: plot-qfeatures-sets
 #| fig-height: 8
 
 plot(dia_qf)
@@ -126,7 +173,7 @@ Since we have three groups and are interested in all pairwise comparisons, we us
 This means the model estimates the mean abundance for each group directly.
 
 ```{r}
-#| label: examine-top-results
+#| label: define-design-matrix
 group <- factor(dia_qf$group, levels = c("control", "MPXV", "Covid19"))
 
 limma_design <- model.matrix(formula(~ 0 + group))
@@ -138,11 +185,26 @@ colnames(limma_design) <- levels(group)
 limma_design
 ```
 
-We then define the **contrasts** --- the specific pairwise comparisons we wish to make.
-The `makeContrasts` function creates a contrast matrix specifying how differences between group means should be calculated.
+## Fitting the linear model
+
+We fit the linear model to the replicated protein data using `lmFit`.
+This estimates the mean abundance of each group for every protein.
 
 ```{r}
-#| label: multiple-testing-correction
+#| label: fit-limma-model
+data <- assay(dia_qf[['proteins_replicated']])
+
+limma_fit <- lmFit(data, limma_design)
+```
+
+## Defining contrasts and moderating the variances
+
+A **contrast** is a comparison between group means that we want to test.
+We are interested in all three pairwise comparisons between the groups.
+The `makeContrasts` function creates a contrast matrix specifying how each difference between group means is calculated.
+
+```{r}
+#| label: pairwise-contrasts-matrix
 ## Specify contrasts of interest
 contrasts_matrix <- makeContrasts(
   MPXV_control = MPXV - control,
@@ -155,22 +217,12 @@ contrasts_matrix <- makeContrasts(
 contrasts_matrix
 ```
 
-{{< include ../_shared/_callout_f_value.md >}}
-
-{{< include ../_shared/_callout_t_p_value.md >}}
-
-## Running the empirical Bayes-moderated test using `limma`
-
-We fit the linear model to the replicated protein data, apply the contrasts, and then update the model using the `eBayes` function with `trend = TRUE` and `robust = TRUE` to account for the intensity-dependent variance trend typical in quantitative proteomics data.
+We apply the contrasts to the fitted model and update it using the `eBayes` function with `trend = TRUE` and `robust = TRUE` to account for the intensity-dependent variance trend typical in quantitative proteomics data.
 
 {{< include ../_shared/_trend_robust_args.md >}}
 
 ```{r}
-#| label: volcano-plot-mpxv
-data <- assay(dia_qf[['norm_proteins_replicated']])
-
-limma_fit <- lmFit(data, limma_design)
-
+#| label: pairwise-contrasts-ebayes
 limma_fit_contrasts <- contrasts.fit(
   fit = limma_fit,
   contrasts = contrasts_matrix
@@ -179,12 +231,14 @@ limma_fit_contrasts <- contrasts.fit(
 limma_fit_contrasts <- eBayes(limma_fit_contrasts, trend = TRUE, robust = TRUE)
 ```
 
+All of the results in this lesson, the F-test and each pairwise comparison, are extracted from this one fit using `topTable`.
+
 ### Diagnostic plots to verify suitability of our statistical model
 
 {{< include ../_shared/_diagnostic_plots1.md >}}
 
 ```{r}
-#| label: examine-log-fold-changes
+#| label: plot-sa
 plotSA(fit = limma_fit_contrasts, cex = 0.5, xlab = "Average log2 abundance")
 ```
 
@@ -197,24 +251,66 @@ plotSA(fit = limma_fit_contrasts, cex = 0.5, xlab = "Average log2 abundance")
 #| fig-align: "center"
 #| out-width: "100%"
 
-knitr::include_graphics("../_shared/figs/phist_shapes.png", error = FALSE)
+knitr::include_graphics(here::here("materials/_shared/figs/phist_shapes.png"), error = FALSE)
 ```
+
+::: {.callout-exercise}
+#### Challenge: Recognising a poorly behaved SA plot
+
+{{< level 2 >}}
+
+The SA plots below were drawn from the same protein-level data as our model.
+The left panel is our analysis.
+In the other two panels, values were removed or replaced before the model was refitted with the same `eBayes(trend = TRUE, robust = TRUE)` settings.
+
+```{r}
+#| label: sa-plot-examples
+#| echo: false
+#| fig-cap: "SA plots for our analysis (left), after the lowest 10% of values were removed and imputed with `MinDet` (middle) and after 10% of values were removed at random and replaced by zero (right)."
+#| fig-align: "center"
+#| out-width: "100%"
+
+knitr::include_graphics(here::here("materials/_shared/figs/sa_plot_examples.png"), error = FALSE)
+```
+
+1. How does the trend line in each of the other two panels differ from the trend line in ours?
+2. Where do the red outlier proteins sit in each panel, and what do they tell us about those proteins?
+3. If you saw a plot like the middle or right panel for your own data, what would you check first?
+
+::::: {.callout-answer collapse="true"}
+Our trend line is close to flat, and the proteins scatter evenly around it across the whole abundance range.
+
+In the middle panel the trend line falls steeply at the lowest abundances, and the red outliers sit at the very left edge with a residual standard deviation much smaller than the other proteins.
+`MinDet` replaces the missing values in each sample with a single low value, so the imputed values in a protein are almost identical to each other and its variance is artificially small.
+
+In the right panel the whole cloud moves up to a residual standard deviation of around 2, and the proteins extend down to much lower average abundances than in the other panels.
+A zero on the log2 scale is far below any measured abundance, so each imputed zero adds a large artificial variance to its protein.
+The red outliers are proteins whose variance is far below the trend.
+
+In both cases the variance of many proteins reflects the imputation rather than the measurements.
+We would check how many values were imputed, whether they are concentrated in a few samples or proteins, and whether the imputed values are plausible for the abundance range of the data.
+:::::
+:::
 
 ## F-test for overall significance across groups
 
-::: {.callout-discussion}
-#### Discussion
+{{< include ../_shared/_callout_f_value.md >}}
 
-- Before running individual pairwise contrasts, why might it be useful to first test for any significant difference across all groups simultaneously?
-- What null hypothesis does the F-test test, and how does it differ from a pairwise t-test?
-- After running the code below, look at the p-value distribution --- what shape would you expect if many proteins are truly differentially abundant, and does this plot match your expectation?
+We first ask whether a protein differs between *any* of the three groups, using an F-test.
+In `limma`, the F-test tests whether all of the contrasts in the fit are zero at the same time.
+The MPXV versus Covid19 contrast is the difference between the other two, so it adds no information to the F-test, which is based on the two independent comparisons among three groups.
+
+::: {.callout-tip}
+#### Experiments with two groups
+
+With two groups there is only one contrast, and the F-test is the same as the moderated t-test for that contrast (the F-statistic is the square of the t-statistic).
+In that case this step can be skipped and the analysis can go straight to the pairwise results below.
 :::
 
-We can first test for an overall significant difference across all groups using an F-test.
 Setting `coef = NULL` in `topTable` returns the F-statistic for each protein, which tests the null hypothesis that the mean abundance is equal across all groups.
 
 ```{r}
-#| label: volcano-plot-covid
+#| label: f-test-results
 ## Format results
 limma_results_F <- topTable(
   fit = limma_fit_contrasts,
@@ -225,8 +321,25 @@ limma_results_F <- topTable(
   rownames_to_column("UniprotID")
 
 head(limma_results_F)
+```
 
-# Check distribution of p-values
+::: {.callout-exercise}
+#### Challenge: Interpreting the F-test p-value distribution
+
+{{< level 2 >}}
+
+Using `limma_results_F`, plot a histogram of the raw F-test p-values (`P.Value`) and compare it with the example p-value histograms above.
+
+1. Does the distribution match what you would expect if many proteins are truly differentially abundant?
+2. Is there anything in its shape that suggests a problem with the model?
+3. What does a small F-test p-value tell us about a protein, and what does it not tell us?
+4. How could we find out which groups differ?
+
+<details><summary>Hint</summary>`ggplot(limma_results_F, aes(x = P.Value)) + geom_histogram()` is a good starting point.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: f-test-pvalue-histogram
 limma_results_F %>%
   ggplot(aes(x = P.Value)) +
   geom_histogram() +
@@ -234,14 +347,29 @@ limma_results_F %>%
   ggtitle("Distribution of p-values for F-test")
 ```
 
+The histogram has a sharp peak close to 0 and a lower, roughly flat distribution across the rest of the range.
+This is the shape expected when many proteins truly differ and the remaining proteins follow the null.
+There is no sign of a problem such as a peak near 1 or a U shape.
+
+A small F-test p-value tells us that the mean abundance of at least one group differs from the others.
+It does not tell us which groups differ, in which direction, or by how much.
+To find out, we test the individual pairwise comparisons using t-tests on the contrasts.
+:::::
+:::
+
 ## Pairwise contrasts
 
-We start by extracting results for a single contrast of particular biological interest: MPXV versus control.
+The F-test identifies proteins that differ somewhere across the groups.
+To find out which groups differ and in which direction, we extract the moderated t-test results for each pairwise contrast from the same fit.
+
+{{< include ../_shared/_callout_t_p_value.md >}}
+
+We start by extracting results for a single contrast, MPXV versus control.
 We use `topTable` with `coef = "MPXV_control"` to get the results for this specific comparison.
 We also merge in gene name annotations from the `rowData`.
 
 ```{r}
-#| label: plot-gene-expression
+#| label: results-mpxv-control
 limma_results_mpxv_control <- topTable(
   limma_fit_contrasts,
   coef = "MPXV_control",
@@ -251,7 +379,7 @@ limma_results_mpxv_control <- topTable(
   data.frame() %>%
   rownames_to_column('UniprotID')
 
-uniprot_annotations <- rowData(dia_qf[['norm_proteins_replicated']]) %>%
+uniprot_annotations <- rowData(dia_qf[['proteins_replicated']]) %>%
   data.frame() %>%
   select(Genes, Protein.Names)
 
@@ -269,7 +397,7 @@ limma_results_mpxv_control %>%
 How many significant changes in abundance are there?
 
 ```{r}
-#| label: create-upset-plot
+#| label: count-sig-mpxv-control
 table(
   sig = limma_results_mpxv_control$adj.P.Val < 0.05,
   ifelse(limma_results_mpxv_control$logFC > 0, 'Increased', 'Decreased')
@@ -290,10 +418,23 @@ table(
 - Look at the proteins near the significance threshold --- what does this tell you about treating `adj.P.Val < 0.05` as a hard cut-off?
 :::
 
+::: {.callout-answer collapse="true"}
+Each point shows a protein's estimated change (x axis) against the strength of evidence for that change (y axis).
+The plot does not show the protein's abundance, how many samples it was quantified in, or the uncertainty on its fold change.
+The y axis shows the raw p-value, while the colour uses the adjusted p-value.
+
+A large fold change can fail to reach significance when the protein varies a lot between samples, is quantified in few samples, or sits at low abundance where the variance trend is high.
+In MPXV vs control, `r sum(abs(limma_results_mpxv_control$logFC) > 1 & limma_results_mpxv_control$adj.P.Val >= 0.05)` proteins have a fold change greater than 2 but are not significant.
+
+`r sum(limma_results_mpxv_control$adj.P.Val > 0.03 & limma_results_mpxv_control$adj.P.Val < 0.08)` proteins have adjusted p-values between 0.03 and 0.08.
+The evidence for a protein at 0.04 is hardly different from the evidence for one at 0.06.
+The cut-off is a convenience for reporting, and ranking proteins or reading the evidence as continuous describes the result better.
+:::
+
 We produce a volcano plot for the MPXV vs Control contrast, labelling the top 30 most significant proteins by gene name.
 
 ```{r}
-#| label: heatmap-top-proteins
+#| label: volcano-mpxv-control
 data_for_highlighting <- limma_results_mpxv_control %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -330,7 +471,7 @@ Rather than extracting results for each contrast separately, we can loop through
 This format is well-suited for downstream visualisation with `ggplot2`.
 
 ```{r}
-#| label: advanced-heatmap-annotation
+#| label: results-all-contrasts
 contrasts <- colnames(contrasts_matrix)
 
 limma_results_all_contrasts_list <- vector('list', length(contrasts))
@@ -352,7 +493,7 @@ for (contrast in contrasts) {
 ```
 
 ```{r}
-#| label: get-significant-proteins
+#| label: bind-contrast-results
 # bind into one data.frame
 limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 ```
@@ -366,8 +507,29 @@ limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 - Which contrast shows the strongest signal, and what does that suggest about the biology?
 :::
 
+::: {.callout-answer collapse="true"}
 ```{r}
-#| label: compare-regulation-directions
+#| label: pvalue-discussion-values
+#| include: false
+pct_p05 <- limma_results_all_contrasts %>%
+  group_by(contrast) %>%
+  summarise(pct = round(100 * mean(P.Value < 0.05))) %>%
+  tibble::deframe()
+
+n_group <- table(dia_qf$group)
+```
+
+If no protein changed, the histograms would be flat, with about 5% of p-values below 0.05.
+COVID-19 vs control and MPXV vs control both have a large peak near zero, with `r pct_p05["Covid19_control"]`% and `r pct_p05["MPXV_control"]`% of p-values below 0.05, so many proteins differ between infected patients and controls.
+MPXV vs COVID-19 is close to flat (`r pct_p05["MPXV_Covid19"]`% below 0.05), so few proteins differ between the two infections.
+
+COVID-19 vs control shows the strongest signal, and the two infections appear to share much of their effect on the plasma proteome.
+Group size matters too: there are `r n_group["control"]` control, `r n_group["Covid19"]` COVID-19 and `r n_group["MPXV"]` MPXV samples.
+The contrasts involving MPXV have less power, and MPXV vs COVID-19 compares the two smallest groups, so its flat histogram partly reflects power.
+:::
+
+```{r}
+#| label: pvalue-histograms-all-contrasts
 limma_results_all_contrasts %>%
   ggplot(aes(P.Value)) +
   geom_histogram() +
@@ -381,19 +543,59 @@ limma_results_all_contrasts %>%
 ::: {.callout-discussion}
 #### Discussion
 
-- Why do we need to adjust p-values when testing thousands of proteins across multiple contrasts?
+- Why do we need to adjust p-values when testing hundreds of proteins across multiple contrasts?
 - What is the difference between adjusting each contrast separately versus adjusting globally across all contrasts and proteins?
 - Which approach is more conservative, and in what circumstances might that matter?
 :::
 
-When testing thousands of proteins across multiple contrasts, p-values must be adjusted for multiple testing.
-The standard Benjamini-Hochberg method was designed for independent tests, but our contrasts share data and are positively correlated.
-Fortunately, BH remains valid under this kind of positive dependence (formally called Positive Regression Dependency on a Subset, PRDS), so applying BH globally across all contrasts is statistically justified and more rigorous than correcting each contrast separately.
+::: {.callout-answer collapse="true"}
+We run `r nrow(limma_results_all_contrasts)` tests (`r length(unique(limma_results_all_contrasts$UniprotID))` proteins in each of `r length(contrasts)` contrasts).
+If no protein changed, a threshold of p < 0.05 would still give about `r round(0.05 * nrow(limma_results_all_contrasts))` false positives.
+
+Adjusting each contrast separately controls the false discovery rate within each contrast's list of proteins.
+Adjusting globally controls it across the combined list from all contrasts.
+
+Neither approach is always the more conservative.
+The `adj.P.Val` column from `topTable` is still adjusted within each contrast, so we can compare the two directly:
 
 ```{r}
-#| label: get-down-regulated-proteins
+#| label: compare-adjustment-scope
+limma_results_all_contrasts %>%
+  mutate(adj_global = p.adjust(P.Value, method = "BH")) %>%
+  group_by(contrast) %>%
+  summarise(
+    sig_per_contrast = sum(adj.P.Val < 0.05),
+    sig_global = sum(adj_global < 0.05)
+  )
+```
+
+The Benjamini-Hochberg threshold depends on how many small p-values are in the pool being adjusted.
+A contrast with few small p-values, pooled with two that have many, gets a more lenient threshold than it would on its own.
+This matters when one contrast has little signal, since its hits under global adjustment rely on the signal in the other contrasts, and when a contrast is later reported on its own.
+:::
+
+When testing hundreds of proteins across multiple contrasts, p-values must be adjusted for multiple testing.
+The standard Benjamini-Hochberg method was designed for independent tests, but our contrasts share data and are positively correlated.
+BH remains valid under positive dependence between tests, which is the kind expected between contrasts that share a control group, so we apply it once across all contrasts.
+
+```{r}
+#| label: adjust-globally
 limma_results_all_contrasts <- limma_results_all_contrasts %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
+```
+
+This overwrites the `adj.P.Val` column, which `topTable` had adjusted within each contrast, with values adjusted across all contrasts together.
+The number of significant MPXV vs control proteins below can therefore differ from the number in the MPXV vs control table above.
+
+This table holds the final results for every protein in every contrast, so we write it to a file that can be opened outside R.
+
+```{r}
+#| label: write-results-table
+write.csv(
+  limma_results_all_contrasts,
+  file = "limma_results_all_contrasts.csv",
+  row.names = FALSE
+)
 ```
 
 How many significant changes in abundance are there in each contrast?
@@ -406,8 +608,28 @@ How many significant changes in abundance are there in each contrast?
   What biological explanations might account for what you see?
 :::
 
+::: {.callout-answer collapse="true"}
 ```{r}
-#| label: examine-go-candidates
+#| label: count-discussion-values
+#| include: false
+sig_counts <- limma_results_all_contrasts %>%
+  filter(adj.P.Val < 0.05) %>%
+  group_by(contrast) %>%
+  summarise(n = n(), up = sum(logFC > 0), down = sum(logFC < 0)) %>%
+  tibble::column_to_rownames("contrast")
+```
+
+COVID-19 vs control has `r sig_counts["Covid19_control", "n"]` significant proteins (`r sig_counts["Covid19_control", "up"]` increased, `r sig_counts["Covid19_control", "down"]` decreased) and MPXV vs control has `r sig_counts["MPXV_control", "n"]` (`r sig_counts["MPXV_control", "up"]` increased, `r sig_counts["MPXV_control", "down"]` decreased).
+MPXV vs COVID-19 has `r sum(limma_results_all_contrasts$contrast == "MPXV_Covid19" & limma_results_all_contrasts$adj.P.Val < 0.05)`.
+Both infections change the plasma proteome relative to controls, in both directions, while the two infections barely differ from each other.
+
+Part of the difference between the COVID-19 and MPXV counts is power, since there are only `r sum(dia_qf$group == "MPXV")` MPXV samples.
+A response common to infection, such as changes in proteins secreted into plasma during inflammation, would produce this pattern.
+The scatter plot of fold changes in the next lesson shows whether the same proteins change in both infections.
+:::
+
+```{r}
+#| label: count-sig-all-contrasts
 table(
   sig = limma_results_all_contrasts$adj.P.Val < 0.05,
   ifelse(limma_results_all_contrasts$logFC > 0, 'Increased', 'Decreased'),
@@ -418,7 +640,7 @@ table(
 ### Volcano plots for all contrasts
 
 ```{r}
-#| label: create-ranking-for-go
+#| label: volcano-all-contrasts
 data_for_highlighting_all_contrasts <- limma_results_all_contrasts %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -452,6 +674,65 @@ ggplot(
 ```
 
 ::: {.callout-exercise}
+#### Challenge: Fold-change thresholds on a volcano plot
+
+{{< level 2 >}}
+
+A common way to call a protein differentially abundant is to require both a significant adjusted p-value and a fold change of at least 2 (a log2 fold change of +1 or -1).
+
+Using `limma_results_all_contrasts`, plot a volcano plot for the `MPXV_Covid19` contrast only, with vertical dashed lines at a log2 fold change of -1 and +1.
+
+1. How many proteins have `adj.P.Val < 0.05` and lie outside the two lines?
+2. Are there significant proteins that lie inside the lines?
+   Are there proteins outside the lines that are not significant?
+3. The x-axis shows a single estimate of the fold change for each protein, with no indication of its uncertainty.
+   How confident can we be in the size of the fold change for a protein just outside a line, compared with one far outside it?
+
+<details><summary>Hint</summary>Filter with `filter(contrast == "MPXV_Covid19")` and add `geom_vline(xintercept = c(-1, 1), linetype = "dashed")` to the volcano plot code above.</details>
+
+::::: {.callout-answer collapse="true"}
+```{r}
+#| label: volcano-fold-change-thresholds
+limma_results_mpxv_covid <- limma_results_all_contrasts %>%
+  filter(contrast == "MPXV_Covid19")
+
+ggplot(
+  limma_results_mpxv_covid,
+  aes(
+    logFC,
+    -log10(P.Value),
+    colour = adj.P.Val < 0.05,
+    alpha = adj.P.Val < 0.05
+  )
+) +
+  geom_point(pch = 20, size = 3) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+  theme_classic() +
+  xlab("Log2 Fold Change (MPXV vs Covid19)") +
+  ylab("-Log10 P-value") +
+  scale_colour_manual(values = c('grey', 'orangered3')) +
+  scale_alpha_manual(values = c(0.2, 1)) +
+  theme(legend.position = "none")
+
+table(
+  significant = limma_results_mpxv_covid$adj.P.Val < 0.05,
+  outside_lines = abs(limma_results_mpxv_covid$logFC) > 1
+)
+```
+
+The table gives the number of proteins in each combination of significance and fold-change threshold.
+The two criteria measure different things: the adjusted p-value reflects how well the difference is supported by the data given the variability and the number of replicates, whereas the fold-change threshold reflects only the size of the estimated difference.
+Proteins can therefore be significant with a small fold change, or have a large fold change without being significant.
+
+The fold change is a point estimate and the plot shows no error on it.
+A protein just outside a line may have an estimate that is within error of the threshold, so whether it truly exceeds a 2-fold change is uncertain.
+A protein far outside the line is more likely to exceed it, but a large estimate is not by itself evidence of a reliable one.
+The p-value is the only measure of uncertainty on the plot, and it tests whether the fold change differs from zero, not whether it exceeds 2-fold.
+Testing against a fold-change threshold directly is the aim of the next exercise.
+:::::
+:::
+
+::: {.callout-exercise}
 #### Challenge: Using `treat` to test against a fold-change threshold
 
 {{< level 2 >}}
@@ -467,7 +748,7 @@ The `treat` function from `limma` instead tests the null hypothesis that the abs
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
-#| label: advanced-ranking-analysis
+#| label: treat-all-contrasts
 limma_fit_treat <- treat(
   limma_fit_contrasts,
   fc = 1.2,
@@ -475,14 +756,18 @@ limma_fit_treat <- treat(
   robust = TRUE
 )
 
-limma_results_treat_list <- lapply(
-  colnames(contrasts_matrix),
-  function(contrast) {
-    topTreat(limma_fit_treat, coef = contrast, n = Inf) %>%
-      rownames_to_column("UniprotID") %>%
-      mutate(contrast = contrast)
-  }
-)
+limma_results_treat_list <- vector('list', length(contrasts))
+names(limma_results_treat_list) <- contrasts
+
+for (contrast in contrasts) {
+  limma_results_treat_list[[contrast]] <- topTreat(
+    limma_fit_treat,
+    coef = contrast,
+    n = Inf
+  ) %>%
+    rownames_to_column("UniprotID") %>%
+    mutate(contrast = contrast)
+}
 
 limma_results_treat_all <- bind_rows(limma_results_treat_list) %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
@@ -502,14 +787,14 @@ This reduces the number of hits compared to `eBayes`, retaining only those chang
 
 
 ```{r}
-#| label: examine-ranking-distribution
+#| label: save-lesson06
 #| include: false
 
 save(
   dia_qf,
   limma_results_F,
   limma_results_all_contrasts,
-  file = here("course_files/dia/preprocessed/lesson06.rda")
+  file = "preprocessed/lesson06.rda"
 )
 ```
 

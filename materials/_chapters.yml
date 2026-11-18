@@ -14,6 +14,7 @@ book:
         - materials/dia/06_statistical_analysis.Rmd
         - materials/dia/07_visualisations.Rmd
         - materials/dia/08_functional_enrichment.Rmd
+        - materials/dia/09_own_data.Rmd
     - part: "TMT proteomics"
 
       chapters:
