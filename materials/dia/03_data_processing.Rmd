@@ -24,7 +24,7 @@ knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 ```
 
 ```{r}
-#| label: load-dia-data
+#| label: load-packages-and-data
 #| include: false
 
 library("QFeatures")
@@ -83,7 +83,7 @@ We apply a standard 1% FDR threshold (Q-value ≤ 0.01) to all four columns.
 Since we want to apply the Q-value filter across all per-sample `SummarizedExperiment`s simultaneously, we do not pass an `i` argument --- this causes `filterFeatures` to apply the filter to every set in the `QFeatures` object.
 
 ```{r}
-#| label: filter-fdr-proteome
+#| label: filter-qvalues
 dia_qf
 
 dia_qf <- dia_qf %>%
@@ -98,7 +98,7 @@ dia_qf
 We can see how many precursors remain per sample after filtering by inspecting the number of rows in each per-sample set.
 
 ```{r}
-#| label: examine-filter-results
+#| label: histogram-precursors-after-qvalue-filter
 #| fig-height: 4
 #| fig-width: 4
 
@@ -117,7 +117,7 @@ This merges all per-sample sets into a single combined set called `"precursors"`
 Where a precursor was not detected in a particular sample, the corresponding entry will be `NA`.
 
 ```{r}
-#| label: isobaric-correction-setup
+#| label: join-sets
 dia_qf <- joinAssays(
   x = dia_qf,
   i = names(dia_qf),
@@ -131,7 +131,7 @@ This is expected: these per-run quality metrics were used for filtering in the p
 We can confirm which columns are dropped by comparing the `rowData` names before and after joining.
 
 ```{r}
-#| label: check-isobaric-data
+#| label: compare-rowdata-columns
 # rowData columns in the per-sample sets
 sample_level_rdata_names <- rowDataNames(dia_qf)[[1]]
 
@@ -199,7 +199,7 @@ The `sampleMap` is an internal table in a `QFeatures` object that records which 
 We can inspect it before removing the per-sample sets --- at this point it contains one row per sample per assay, so with 31 samples, it has 62 rows - one row each for the original per-sample assay and for the `"precursors"` assay.
 
 ```{r}
-#| label: apply-isobaric-correction
+#| label: show-samplemap
 sampleMap(dia_qf)
 ```
 
@@ -207,7 +207,7 @@ After calling `removeAssay`, the 31 per-sample assays are dropped and their corr
 You will see a message indicating that sampleMap rows have been harmonised --- this is expected behaviour.
 
 ```{r}
-#| label: examine-corrected-data
+#| label: remove-per-sample-sets
 sets_to_rm <- which(names(dia_qf) != "precursors")
 dia_qf <- removeAssay(dia_qf, i = sets_to_rm)
 
@@ -227,7 +227,7 @@ The entries in this contaminant database are named with a `Cont_` prefix, which 
 We can inspect the `rowData` to check the contaminants can be identified as expected.
 
 ```{r}
-#| label: summarise-to-protein-level
+#| label: count-contaminants
 # Extract the rowData
 rd <- rowData(dia_qf[['precursors']]) %>%
   data.frame()
@@ -244,7 +244,7 @@ After filtering, this set will contain only precursors that do not originate fro
 We use `plot` to visualise the assay structure before and after adding the link.
 
 ```{r}
-#| label: check-aggregation-results
+#| label: add-no-contaminant-set
 #| fig-height: 3
 #| fig-width: 3
 
@@ -262,7 +262,7 @@ We specify the `i` argument to apply the filter only to the `"precursors_no_cont
 This retains the original `"precursors"` assay with all precursors for reference, while the new set contains only precursors from non-contaminant proteins.
 
 ```{r}
-#| label: examine-aggregation-sums
+#| label: filter-contaminants
 dia_qf <- filterFeatures(
   dia_qf,
   ~ !grepl("Cont_", Protein.Ids),
@@ -280,7 +280,7 @@ Before filtering, it is important to understand the extent and distribution of m
 We use the `nNA` function to calculate the proportion of missing values per precursor (row) and per sample (column).
 
 ```{r}
-#| label: verify-protein-values
+#| label: count-missing-values
 precursors_missing <- nNA(dia_qf, i = "precursors_no_cont")
 
 print(precursors_missing)
@@ -311,7 +311,7 @@ values.</details>
 **Task 1**
 
 ```{r}
-#| label: apply-log2-transformation
+#| label: histogram-missing-per-precursor
 hist(
   precursors_missing$nNArows$pNA,
   xlab = "Proportion missing values",
@@ -322,7 +322,7 @@ hist(
 **Task 2**
 
 ```{r}
-#| label: examine-normalised-data
+#| label: barplot-missing-per-sample
 precursors_missing$nNAcols %>%
   as_tibble() %>%
   merge(data.frame(colData(dia_qf)), by.x = "name", by.y = "runCol") %>%
@@ -460,7 +460,7 @@ Further filtering will be applied at the protein level in the statistical analys
 We create a copy called `"precursors_filtered_missing"` --- after filtering, this set will contain only precursors that meet the missing value threshold.
 
 ```{r}
-#| label: filter-missing-values
+#| label: add-filtered-missing-set
 #| fig-height: 3
 #| fig-width: 3
 
@@ -480,7 +480,7 @@ dia_qf <- addAssayLink(
 Now we perform the missing value filtering on the new assay, again specifying the `i` argument to apply the filter to only the desired set.
 
 ```{r}
-#| label: verify-filter-results
+#| label: filter-sparse-precursors
 dia_qf <- dia_qf %>%
   filterNA(pNA = 0.75, i = "precursors_filtered_missing")
 
@@ -503,7 +503,7 @@ dia_qf <- dia_qf[, dia_qf$runCol != "Ctr_A1"]
 ```
 
 ```{r}
-#| label: create-final-dataset
+#| label: save-lesson03
 #| include: false
 
 save(dia_qf, file = "preprocessed/lesson03.rda")

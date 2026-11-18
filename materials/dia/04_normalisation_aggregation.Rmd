@@ -22,7 +22,7 @@ knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 ```
 
 ```{r}
-#| label: aggregate-precursor-to-protein
+#| label: load-packages-and-data
 #| include: false
 
 library("QFeatures")
@@ -42,7 +42,7 @@ In this lesson we will log2 transform the precursor-level data and aggregate to 
 If we look at the distribution of untransformed precursor intensities, we will see that the abundance values are dramatically skewed towards zero.
 
 ```{r}
-#| label: check-aggregation
+#| label: histogram-untransformed-abundance
 #| warning: false
 #| message: false
 
@@ -68,7 +68,7 @@ Here we apply it **before** aggregation to protein level, because we use `robust
 We apply a log2 transformation to the filtered precursor data using the `logTransform` function, which creates a new set in our `QFeatures` object.
 
 ```{r}
-#| label: subset-for-analysis
+#| label: log-transform
 dia_qf <- logTransform(
   dia_qf,
   base = 2,
@@ -120,7 +120,7 @@ The `colvars` argument specifies which columns from the `colData` to carry acros
 Run the following code and inspect the output --- what does each row represent?
 
 ```{r}
-#| label: filter-missing-high-proportion
+#| label: show-protein-long-form
 # dia_qf[,,'proteins'] subsets the QFeatures object to the "proteins" set
 longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
   data.frame() %>%
@@ -140,7 +140,7 @@ per group using `sum(is.finite(value))`.</details>
 Each row in the long-format data represents one protein--sample observation, with `value` containing the protein abundance and `group` indicating which experimental group that sample belongs to.
 
 ```{r}
-#| label: examine-filtered-data
+#| label: histogram-quantified-samples-per-group
 longForm(dia_qf[,, 'proteins'], colvars = 'group') %>%
   data.frame() %>%
   group_by(rowname, group) %>%

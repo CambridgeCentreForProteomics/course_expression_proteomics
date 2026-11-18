@@ -22,7 +22,7 @@ knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 ```
 
 ```{r}
-#| label: load-annotation-data
+#| label: load-packages-and-data
 #| include: false
 
 library("QFeatures")
@@ -47,7 +47,7 @@ We use **Gene Ontology (GO) over-representation analysis (ORA)**, which tests wh
 We use the COVID-19 vs Control contrast as the example; the same steps apply to either of the other two contrasts.
 
 ```{r}
-#| label: prepare-gene-list
+#| label: subset-covid-control
 limma_results_covid_control <- limma_results_all_contrasts %>%
   filter(contrast == 'Covid19_control')
 ```
@@ -267,7 +267,7 @@ We produce a dotplot of the significant GO terms.
 The size of each dot represents the number of proteins annotated with that term, and the colour indicates the adjusted p-value.
 
 ```{r}
-#| label: go-enrichment-results
+#| label: dotplot-go-down
 dotplot(
   go_down,
   x = "Count",
@@ -286,7 +286,7 @@ The `simplify` function from `clusterProfiler` computes the semantic similarity 
 Separately, `pairwise_termsim` from `enrichplot` stores the pairwise similarities between terms in the enrichment result, using GO data built by `godata` from the `GOSemSim` package; the treeplot below is drawn from this object.
 
 ```{r}
-#| label: plot-go-enrichment
+#| label: simplify-go-terms
 gd <- godata('org.Hs.eg.db', ont = "BP")
 
 go_down_similarity <- pairwise_termsim(go_down, method = "Wang", semData = gd)
@@ -302,7 +302,7 @@ go_down_simplified <- simplify(
 We can now re-visualise the simplified results, which should be more interpretable with less redundancy.
 
 ```{r}
-#| label: filter-top-go-terms
+#| label: dotplot-go-simplified
 dotplot(
   go_down_simplified,
   x = "Count",
@@ -322,7 +322,7 @@ The `treeplot` function from `enrichplot` hierarchically clusters the significan
 <!--  worked! -->
 
 ```{r}
-#| label: enrichment-network
+#| label: treeplot-go
 #| fig-height: 6
 #| fig-width: 10
 
@@ -350,7 +350,7 @@ Because we set `readable = TRUE` in our `enrichGO` call, the `geneID` column of 
 We can extract these directly from the enrichment result and use `AnnotationDbi::select` to map them to UniProt accessions, filtering to proteins present in our experiment.
 
 ```{r}
-#| label: semantic-similarity-analysis
+#| label: map-lipoprotein-clearance-genes
 pm_lipo_part_clear <- go_down@result %>%
   filter(Description == "plasma lipoprotein particle clearance") %>%
   pull(geneID) %>%
@@ -387,7 +387,7 @@ Do the samples cluster by condition on these proteins alone?
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
-#| label: reduce-redundancy-go-terms
+#| label: plot-lipoprotein-clearance-precursors
 #| fig-height: 10
 #| fig-width: 20
 
@@ -424,7 +424,7 @@ dia_qf_lipids[,, c("precursors_filtered_missing", "proteins")] %>%
 ```
 
 ```{r}
-#| label: visualise-simplified-enrichment
+#| label: heatmap-lipoprotein-clearance
 #| fig-height: 6
 #| fig-width: 6
 

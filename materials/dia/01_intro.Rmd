@@ -7,7 +7,6 @@ bibliography: ../course_refs.bib
 #### Learning Objectives
 
 - Understand the aim and design of the use-case DIA expression proteomics experiment
-- Know how label-free relative quantitation is achieved in Data-Independent Acquisition (DIA) proteomics
 - Understand what DIA-NN does and what data it outputs for downstream analysis
 :::
 
@@ -16,11 +15,15 @@ bibliography: ../course_refs.bib
 As a use case, we will analyse a label-free DIA plasma proteomics dataset comparing patients infected with Monkeypox virus (MPXV), patients with COVID-19, and healthy controls.
 The aim of the experiment was to identify proteins that are differentially abundant between these groups, providing insight into the host response to MPXV infection and how it compares to another viral infection.
 
-Plasma samples were collected from three groups:
+Plasma samples were collected from 31 patients in three groups:
 
-- **MPXV**: patients with confirmed Monkeypox virus infection
-- **COVID-19**: patients with confirmed COVID-19 infection
-- **Control**: healthy control individuals
+- **MPXV**: 6 patients with confirmed Monkeypox virus infection
+- **COVID-19**: 10 patients with confirmed COVID-19 infection
+- **Control**: 15 healthy individuals
+
+All 31 patients are male, and each falls into one of three age bands (21–30, 31–40 and 41–50).
+Each sample was run once, so each run is a separate patient.
+The groups differ in size and MPXV is the smallest, which affects how we filter missing values and how much power each comparison has.
 
 Proteins were extracted and digested to peptides for bottom-up mass spectrometry analysis.
 Samples were run individually (label-free) on the mass spectrometer using a Data-Independent Acquisition (DIA) method.
@@ -77,6 +80,15 @@ Without MBR, filter on the run-level and experiment-level Q-values; with MBR, fi
 :::
 
 We will use these values to filter our data to high-confidence identifications.
+
+## Starting from precursors
+
+The DIA-NN report also contains protein-level quantities: `PG.MaxLFQ` for each protein group and `Genes.MaxLFQ` for each gene, already summarised from the precursors.
+These are a reasonable starting point, but we start from the precursor quantities and build the protein level ourselves, for three reasons.
+
+- **We decide which precursors contribute.** Before any protein is summarised, we filter precursors on their Q-values, remove contaminants and remove precursors with too many missing values (lesson 03). In a protein matrix, DIA-NN has already made those choices.
+- **We see how they are combined.** DIA-NN's own summarisation would be acceptable for this dataset, but doing the step ourselves makes it visible and lets us choose the method. We use `robustSummary` (lesson 04), which uses only the observed precursors, so nothing is imputed, and fits a robust regression, so a precursor that disagrees with the others has less influence.
+- **We keep the link back to the evidence.** In a `QFeatures` object, each protein stays linked to its precursors. We can count how many precursors support a protein and look at them when a result is surprising (lesson 05).
 
 ## Summary
 

@@ -24,7 +24,7 @@ knitr::opts_knit$set(root.dir = here::here("course_files/dia"))
 ```
 
 ```{r}
-#| label: prepare-limma-design
+#| label: load-packages-and-data
 #| include: false
 
 library("QFeatures")
@@ -74,7 +74,7 @@ the QFeatures object. This contains all `r nrow(dia_qf[["proteins"]])`
 proteins, before any filtering on replication.
 
 ```{r}
-#| label: extract-norm-proteins
+#| label: extract-proteins
 se <- getWithColData(dia_qf, "proteins")
 print(se)
 ```
@@ -369,7 +369,7 @@ We use `topTable` with `coef = "MPXV_control"` to get the results for this speci
 We also merge in gene name annotations from the `rowData`.
 
 ```{r}
-#| label: plot-gene-expression
+#| label: results-mpxv-control
 limma_results_mpxv_control <- topTable(
   limma_fit_contrasts,
   coef = "MPXV_control",
@@ -397,7 +397,7 @@ limma_results_mpxv_control %>%
 How many significant changes in abundance are there?
 
 ```{r}
-#| label: create-upset-plot
+#| label: count-sig-mpxv-control
 table(
   sig = limma_results_mpxv_control$adj.P.Val < 0.05,
   ifelse(limma_results_mpxv_control$logFC > 0, 'Increased', 'Decreased')
@@ -471,7 +471,7 @@ Rather than extracting results for each contrast separately, we can loop through
 This format is well-suited for downstream visualisation with `ggplot2`.
 
 ```{r}
-#| label: advanced-heatmap-annotation
+#| label: results-all-contrasts
 contrasts <- colnames(contrasts_matrix)
 
 limma_results_all_contrasts_list <- vector('list', length(contrasts))
@@ -493,7 +493,7 @@ for (contrast in contrasts) {
 ```
 
 ```{r}
-#| label: get-significant-proteins
+#| label: bind-contrast-results
 # bind into one data.frame
 limma_results_all_contrasts <- bind_rows(limma_results_all_contrasts_list)
 ```
@@ -529,7 +529,7 @@ The contrasts involving MPXV have less power, and MPXV vs COVID-19 compares the 
 :::
 
 ```{r}
-#| label: compare-regulation-directions
+#| label: pvalue-histograms-all-contrasts
 limma_results_all_contrasts %>%
   ggplot(aes(P.Value)) +
   geom_histogram() +
@@ -579,7 +579,7 @@ The standard Benjamini-Hochberg method was designed for independent tests, but o
 BH remains valid under positive dependence between tests, which is the kind expected between contrasts that share a control group, so we apply it once across all contrasts.
 
 ```{r}
-#| label: get-down-regulated-proteins
+#| label: adjust-globally
 limma_results_all_contrasts <- limma_results_all_contrasts %>%
   mutate(adj.P.Val = p.adjust(P.Value, method = 'BH'))
 ```
@@ -629,7 +629,7 @@ The scatter plot of fold changes in the next lesson shows whether the same prote
 :::
 
 ```{r}
-#| label: examine-go-candidates
+#| label: count-sig-all-contrasts
 table(
   sig = limma_results_all_contrasts$adj.P.Val < 0.05,
   ifelse(limma_results_all_contrasts$logFC > 0, 'Increased', 'Decreased'),
@@ -640,7 +640,7 @@ table(
 ### Volcano plots for all contrasts
 
 ```{r}
-#| label: create-ranking-for-go
+#| label: volcano-all-contrasts
 data_for_highlighting_all_contrasts <- limma_results_all_contrasts %>%
   filter(adj.P.Val < 0.05) %>%
   arrange(P.Value) %>%
@@ -748,7 +748,7 @@ The `treat` function from `limma` instead tests the null hypothesis that the abs
 
 ::::: {.callout-answer collapse="true"}
 ```{r}
-#| label: advanced-ranking-analysis
+#| label: treat-all-contrasts
 limma_fit_treat <- treat(
   limma_fit_contrasts,
   fc = 1.2,
@@ -787,7 +787,7 @@ This reduces the number of hits compared to `eBayes`, retaining only those chang
 
 
 ```{r}
-#| label: examine-ranking-distribution
+#| label: save-lesson06
 #| include: false
 
 save(
